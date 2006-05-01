@@ -33,7 +33,6 @@
 
 #ifndef WIN32
 #include "windows.h"
-#endif
 
 struct DisplayDevice {
 	LPSTR		szName;
@@ -41,6 +40,7 @@ struct DisplayDevice {
 	GUID*		lpGUID;
 	GUID	DisplayGUID;
 	HMONITOR	hMon;
+#endif
 	RECT		rect;
 };
 

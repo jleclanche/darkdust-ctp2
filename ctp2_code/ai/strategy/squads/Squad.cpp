@@ -9,6 +9,9 @@
 
 
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4786)
+#endif
 
 #include "c3.h"
 

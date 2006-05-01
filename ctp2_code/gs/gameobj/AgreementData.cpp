@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Agreement data
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -143,9 +143,9 @@ void AgreementData::Init()
 	m_agreement = AGREEMENT_TYPE_NULL;		
   
 	m_round = -1;
-    m_expires = k_EXPIRATION_NEVER;	
+    m_expires = -1;	
 	m_isBroken = FALSE;
-    m_targetCity = Unit(); 
+    m_targetCity = Unit(0); 
 }
 
 

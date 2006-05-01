@@ -144,8 +144,8 @@ str_ldl_Pollution_Level	"Verschm.-Niveau:"
 
 
 
-CANT_ATTACK_HAVE_TREATY	"Mit dieser Aktion verstoßen wir gegen unser Abkommen mit den {player[0].civ_name_plural#DAT}. Wollen Sie wirklich fortfahren?"
-AT_LEAST_ONE_COULDNT_BE_EXPELLED	"Unser Territorium bietet nicht genug Platz für alle Einheiten {player[0].civ_name_plural#ARTICLE_GEN}, daher bitten sie darum, dass wir ihre Truppen so schnell wie möglich vertreiben."
+CANT_ATTACK_HAVE_TREATY	"Mit dieser Aktion verstoßen wir gegen unser Abkommen mit den {player[1].civ_name_plural#DAT}. Wollen Sie wirklich fortfahren?"
+AT_LEAST_ONE_COULDNT_BE_EXPELLED	"Unser Territorium bietet nicht genug Platz für alle Einheiten {player[1].civ_name_plural#ARTICLE_GEN}, daher bitten sie darum, dass wir ihre Truppen so schnell wie möglich vertreiben."
 
 
 str_ldl_RES_CHANGE_BUTTON	"Auflösung"
@@ -269,6 +269,10 @@ str_tbl_ldl_FAIR	"Schlecht"
 str_tbl_ldl_AVERAGE	"Durchschn."
 str_tbl_ldl_GOOD	"Gut"
 str_tbl_ldl_EXCELLENT	"Bestens"
+##
+
+## rsh011899 - added for civ status screen
+str_ldl_CAPS_GOVERNMENT	"Regierung"
 ##
 
 str_ldl_POPSCIENCE	"In Wissenschaft umgewandeltes Gold"
@@ -514,6 +518,22 @@ str_ldl_CAPS_DOMESTIC	"Inland"
 str_ldl_CAPS_FOREIGN	"Ausland"
 
 str_ldl_NEXT	"Weiter"
+
+# Age Names
+AGE_NAME_ANCIENT	"Die Antike"
+AGE_NAME_RENAISS	"Die Renaissance"
+AGE_NAME_MODERN	"Die Moderne"
+AGE_NAME_GENETIC	"Die Genetische Ära"
+AGE_NAME_DIAMOND	"Die Diamantene Ära"
+
+
+
+
+
+
+
+
+
 
 # strings for victory window
 str_ldl_YOUR_CIVILIZATION_SCORE_IS_COLON	"Ihr Punktestand beträgt:"
@@ -3127,59 +3147,55 @@ str_ldl_CantDisbandLastCity		"Sie können Ihre letzte Stadt nicht auflösen."
 
 # Profile strings (Advanced options list)
 
-str_profile_UnitAnim                            "Animierte Einheiten"
-str_profile_GoodAnim                            "Animierte Güter"
-str_profile_TradeAnim                           "Animierte Handelswege"
-str_profile_WonderMovies                        "Wunderfilme ein"
-str_profile_EnemyMoves                          "Feindbewegung ein"
-str_profile_RevoltWarning                       "<OBS>"
-str_profile_EnemyIntrude                        "<OBS>"
-str_profile_UnitLostWarning                     "<OBS>"
-str_profile_TradeLostWarning                    "<OBS>"
-str_profile_CityLostWarning                     "<OBS>"
-str_profile_AutoCenter                          "Auf aktive Einheit oder Stadt zentrieren"
-str_profile_AutoSave                            "Automatisches Speichern ein"
-str_profile_AutoGroup                           "<OBS>"
-str_profile_AutoDeselect                        "Einheit automatisch deaktivieren"
-str_profile_AutoSelectNext                      "Automatische Auswahl nächste Einheit"
-str_profile_AutoSelectFirstUnit                 "Automatische Auswahl erste Einheit"
-str_profile_AutoTurnCycle                       "Automatische Rundenumschaltung"
-str_profile_ShowZoomedCombat                    "Kampfansicht ein"
-str_profile_UseFingerPrinting                   "<OBS>"
-str_profile_UseRedbookAudio                     "CD Audio abspielen"
-str_profile_TryWindowsResolution                "<OBS>"
-str_profile_ScreenResWidth                      "<OBS>"
-str_profile_ScreenResHeight                     "<OBS>"
-str_profile_ZoomedCombatAlways                  "Alle Kämpfe in Kampfansicht"
-str_profile_AttackEveryone                      "<OBS>"
-str_profile_NonRandomCivs                       "<OBS>"
-str_profile_AutoEndMultiple                     "Autom. Mehrfach-Rundenumschaltung"
-str_profile_UnitCompleteMessages                "Fertigstellung Einheiten ein"
-str_profile_NonContinuousUnitCompleteMessages   "Fertigstellung Einheiten immer ein"
-str_profile_ShowCityNames                       "Stadtnamen ein"
-str_profile_ShowTradeRoutes                     "Handelswege ein"
-str_profile_UnitSpeed                           "Animationsgeschw. Einheiten"
-str_profile_MouseSpeed                          "Mausgeschwindigkeit"
-str_profile_LeftHandedMouse                     "Linkshändermaus ein"
-str_profile_CityBuiltMessage                    "<OBS>"
-str_profile_UseAttackMessages                   "<OBS>"
-str_profile_MoveHoldTime                        "<OBS>"
-str_profile_BattleSpeed                         "Kampfgeschw. in Kampfansicht"
-str_profile_ScrollDelay                         "Maus-Verzögerung (0,10 Sek.)"
-str_profile_AutoSwitchTabs                      "Autom. Umschaltung Bedienfeldregister"
-str_profile_AutoRenameCities                    "Stadtbenennung bei Ansiedelung ein"
-str_profile_AutoOpenCityWindow                  "Baumanager bei Stadtgründung ein"
-str_profile_ShowEnemyHealth                     "Lebenspunkte Feindeinheit ein"
-str_profile_ShowCityInfluence                   "Stadteinfluss ein"
-str_profile_ShowPoliticalBorders                "Politische Grenzen ein"
-str_profile_CloseOnEyepoint                     "Meldung schließ. bei Klick auf Auge"
-str_profile_ShowExpensive                       "Kosten für Terrainverbes. immer anzeigen"
-str_profile_ShowOrderUnion                      "Alle Armeebefehle anzeigen"
-str_profile_RecentAtTop                         "Neue Meldungen oben anzeigen"
-str_profile_CityClick                           "Wähle Stadt anstatt Armee"
-str_profile_DebugSlic                           "Slic-Debug-Meldungen"
-str_profile_EndTurnWithEmptyBuildQueues         "Rundenende mit leerer Bauliste"
-str_profile_RunInBackground                     "Rundenende im Hintergrund"
+str_profile_UnitAnim "Animierte Einheiten"
+str_profile_GoodAnim "Animierte Güter"
+str_profile_TradeAnim "Animierte Handelswege"
+str_profile_WonderMovies "Wunderfilme ein"
+str_profile_EnemyMoves "Feindbewegung ein"
+str_profile_RevoltWarning "<OBS>"
+str_profile_EnemyIntrude "<OBS>"
+str_profile_UnitLostWarning "<OBS>"
+str_profile_TradeLostWarning "<OBS>"
+str_profile_CityLostWarning "<OBS>"
+str_profile_AutoCenter "Auf aktive Einheit oder Stadt zentrieren"
+str_profile_AutoSave "Automatisches Speichern ein"
+str_profile_AutoGroup "<OBS>"
+str_profile_AutoDeselect "Einheit automatisch deaktivieren"
+str_profile_AutoSelectNext "Automatische Auswahl nächste Einheit"
+str_profile_AutoSelectFirstUnit "Automatische Auswahl erste Einheit"
+str_profile_AutoTurnCycle "Automatische Rundenumschaltung"
+str_profile_ShowZoomedCombat "Kampfansicht ein"
+str_profile_UseFingerPrinting "<OBS>"
+str_profile_UseRedbookAudio "CD Audio abspielen"
+str_profile_TryWindowsResolution "<OBS>"
+str_profile_ScreenResWidth "<OBS>"
+str_profile_ScreenResHeight "<OBS>"
+str_profile_ZoomedCombatAlways "Alle Kämpfe in Kampfansicht"
+str_profile_AttackEveryone "<OBS>"
+str_profile_NonRandomCivs "<OBS>"
+str_profile_AutoEndMultiple "Autom. Mehrfach-Rundenumschaltung"
+str_profile_UnitCompleteMessages "Fertigstellung Einheiten ein"
+str_profile_NonContinuousUnitCompleteMessages "Fertigstellung Einheiten immer ein"
+str_profile_ShowCityNames "Stadtnamen ein"
+str_profile_ShowTradeRoutes "Handelswege ein"
+str_profile_UnitSpeed "Animationsgeschw. Einheiten"
+str_profile_MouseSpeed "Mausgeschwindigkeit"
+str_profile_LeftHandedMouse "Linkshändermaus ein"
+str_profile_CityBuiltMessage "<OBS>"
+str_profile_UseAttackMessages "<OBS>"
+str_profile_MoveHoldTime "<OBS>"
+str_profile_BattleSpeed "Kampfgeschw. in Kampfansicht"
+str_profile_ScrollDelay "Maus-Verzögerung (0,10 Sek.)"
+str_profile_AutoSwitchTabs "Autom. Umschaltung Bedienfeldregister"
+str_profile_AutoRenameCities "Stadtbenennung bei Ansiedelung ein"
+str_profile_AutoOpenCityWindow "Baumanager bei Stadtgründung ein"
+str_profile_ShowEnemyHealth "Lebenspunkte Feindeinheit ein"
+str_profile_ShowCityInfluence "Stadteinfluss ein"
+str_profile_ShowPoliticalBorders "Politische Grenzen ein"
+str_profile_CloseOnEyepoint "Meldung schließ. bei Klick auf Auge"
+str_profile_ShowExpensive "Kosten für Terrainverbes. immer anzeigen"
+str_profile_ShowOrderUnion "Alle Armeebefehle anzeigen"
+str_profile_RecentAtTop	"Neue Meldungen oben anzeigen"
 
 str_ldl_Pw_COLON_	"Siedler:"
 
@@ -3196,4 +3212,9 @@ str_tbl_ldl_Gamestate_Debug		"Debugspielstatus (Playtest)"
 str_tbl_ldl_Rand_Test			"Zufallstest (Playtest)"
 str_tbl_ldl_Command_Enter		"Kommando eingeben (Playtest)"
 str_tbl_ldl_Command_Enter_Alternate	"Alternativkommando eingeben (Playtest)"
+
+# Added for extended National Management 6/2004 L. Hirth
+str_ldl_ND_RTL_WORKER		"Arb."
+str_ldl_ND_RTL_SLAVE		"Skl."
+str_ldl_ND_RTL_COMBAT_UNITS	"Mil."
 

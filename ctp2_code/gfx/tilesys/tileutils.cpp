@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Tile utilities
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -70,7 +70,7 @@ Pixel16		g_grayValueR = 0x0025;
 Pixel16		g_grayValueG = 0x0025;
 Pixel16		g_grayValueB = 0x0045;
 
-extern sint32		g_is565Format;
+extern BOOL		g_is565Format;
 
 Pixel32 *tileutils_LowPassFilter(Pixel32 *image, uint32 width, uint32 height)
 {
@@ -408,7 +408,7 @@ Pixel16 *tileutils_EncodeTile(Pixel32 *buf, uint16 width, uint16 height, uint32 
 			
             
 			if (firstNonEmpty != -1)
-				*table++ = (Pixel16) -1;
+				*table++ = (unsigned) -1;
             
 		}
 	}
@@ -698,7 +698,7 @@ Pixel16 *tileutils_EncodeTile16(Pixel16 *buf, uint16 width, uint16 height, uint3
 			
             
 			if (firstNonEmpty != -1)
-				*table++ = (Pixel16) -1;
+				*table++ = (unsigned) -1;
             
 		}
 	}
@@ -1538,7 +1538,7 @@ void tileutils_BorkifyTile(uint16 tileNum, MBCHAR ageChar, uint16 baseType, BOOL
 
 	bork = tileutils_CreateBorkBork();
 
-	sprintf(filename, "source" FILE_SEP "basetiles" FILE_SEP "GT%cB%.4d.tif", ageChar, tileNum);
+	sprintf(filename, "source" FILE_SEP "basetiles" FILE_SEP "GT%cB%4d.tif", ageChar, tileNum);
 
 	if (baseType == TERRAIN_WATER_BEACH) {
 		
@@ -1652,8 +1652,8 @@ void tileutils_BorkifyTile(uint16 tileNum, MBCHAR ageChar, uint16 baseType, BOOL
 
 
 
-	Assert(len >= 0);
-	baseTile->SetTileDataLen(static_cast<uint16>(len*2));
+	
+	baseTile->SetTileDataLen(len*2);
 
 	
 	Pixel16		*dataCopy = new Pixel16[len];
@@ -1891,11 +1891,12 @@ sint32 tileutils_ParseTileset(MBCHAR *filename)
 
 				megaTileLengths[numMegaTiles] = len;
 
+				MegaTileStep	*steps = new MegaTileStep[len];
+
 				for (i=0; i<len; i++) {
+					uint8		dir = 0;
 
 					if (!token_ParseKeywordNext(theToken, TOKEN_TILESET_MEGATILE_INFO)) return FALSE;
-
-					uint8		dir = 0;
 
 					switch (configStr[i]) {
 					case k_MEGATILE_DIRECTION_CHAR_X : dir = k_MEGATILE_DIRECTION_X; break;

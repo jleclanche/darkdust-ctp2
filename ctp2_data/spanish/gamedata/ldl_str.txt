@@ -146,8 +146,8 @@ str_ldl_Pollution_Level	"Nivel de contamin."
 
 
 
-CANT_ATTACK_HAVE_TREATY	"Esta acción romperá tu tratado con los {player[0].civ_name_plural}.  ¿Quieres continuar?"
-AT_LEAST_ONE_COULDNT_BE_EXPELLED	"Los {player[0].civ_name_plural} no encuentran alojamiento para todos sus ejércitos en nuestro territorio. Prometen retirar sus unidades tan pronto como sea posible."
+CANT_ATTACK_HAVE_TREATY	"Esta acción romperá tu tratado con los [player.1.civ_name_plural].  ¿Quieres continuar?"
+AT_LEAST_ONE_COULDNT_BE_EXPELLED	"Los [player.1.civ_name_plural] no encuentran alojamiento para todos sus ejércitos en nuestro territorio. Prometen retirar sus unidades tan pronto como sea posible."
 
 
 str_ldl_RES_CHANGE_BUTTON	"Tamaño de pantalla"
@@ -3121,14 +3121,10 @@ str_profile_AutoOpenCityWindow                  "Abrir Cola de construc. al crea
 str_profile_ShowEnemyHealth                     "Mostrar Estado de salud enemigos"
 str_profile_ShowCityInfluence                   "Mostrar influencia ciudad"
 str_profile_ShowPoliticalBorders                "Mostrar fronteras nacionales"
-str_profile_CloseOnEyepoint                     "Close Message When Clicking Eyeball"
-str_profile_ShowExpensive                       "Show Expensive Tile Improvement Effects"
+str_profile_CloseOnEyepoint			"Close Message When Clicking Eyeball"
+str_profile_ShowExpensive			"Show Expensive Tile Improvement Effects"
 str_profile_ShowOrderUnion                      "Show All Army Orders" 
-str_profile_RecentAtTop                         "Put New Messages At Top"
-str_profile_CityClick                           "Select City Instead Of Army"
-str_profile_DebugSlic                           "Slic Debug Messages"
-str_profile_EndTurnWithEmptyBuildQueues         "End turn with empty build queues"
-str_profile_RunInBackground                     "Allow end turn in background"
+str_profile_RecentAtTop				"Put New Messages At Top"
 
 str_ldl_City_Manager_Title  "A D M I N I S T R A C I Ó N    D E   L A   C I U D A D"
 
@@ -3145,3 +3141,8 @@ str_tbl_ldl_Gamestate_Debug		"Eliminar errores del estado del juego (playtest)"
 str_tbl_ldl_Rand_Test			"Prueba al azar (playtest)"
 str_tbl_ldl_Command_Enter		"Insertar comando (playtest)"
 str_tbl_ldl_Command_Enter_Alternate	"Insertar comando alterno (playtest)"
+
+# Añadido para Extender el Manejo Nacional 6/2004 L. Hirth
+str_ldl_ND_RTL_WORKER		"Tra."
+str_ldl_ND_RTL_SLAVE		"Esc."
+str_ldl_ND_RTL_COMBAT_UNITS	"Mil."

@@ -57,9 +57,7 @@ public:
 	ROUTE_TYPE GetAskingType() const { return m_askingType; }
 	sint32 GetAskingResource() const { return m_askingResource; }
 
-	BOOL Accept(sint32 player, const Unit &sourceCity, Unit &destCity);
-
-	
+	BOOL Accept(sint32 player, const Unit &sourceCity, const Unit &destCity);
 	
 	void Serialize(CivArchive &archive);
 };

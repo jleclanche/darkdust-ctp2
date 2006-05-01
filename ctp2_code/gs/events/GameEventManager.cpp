@@ -5,11 +5,10 @@
 
 
 #include "c3.h"
-#include "GameEventManager.h"
-
 #include "c3errors.h"
 #include "c3debug.h"
 
+#include "GameEventManager.h"
 #include "GameEventHook.h"
 #include "GameEventDescription.h"
 #include "GameEventArgList.h"
@@ -26,7 +25,6 @@
 #include "TradeRoute.h"
 
 #include "director.h"
-#include "SelItem.h"                // g_selected_item
 
 GameEventManager *g_gevManager = NULL;
 
@@ -38,78 +36,260 @@ extern BOOL g_eventLog;
 
 void gameEventManager_Initialize()
 {
-    delete g_gevManager;
 	g_gevManager = new GameEventManager();
 }
 
 void gameEventManager_Cleanup()
 {
-	delete g_gevManager;
-	g_gevManager = NULL;
+	if(g_gevManager) {
+		delete g_gevManager;
+		g_gevManager = NULL;
+	}
 }
 
 GameEventManager::GameEventManager()
-:
-	m_eventList         (new PointerList<GameEvent>),
-#if defined(_DEBUG)
-	m_eventHistory      (new PointerList<GameEvent>),
-#endif
-    // 	GameEventHook *m_hooks[GEV_MAX];
-    m_processing        (false),
-	m_processingEvent   (GEV_MAX),
-	m_serial            (0),
-    m_needUserInput     (false),
-    m_pauseCount        (0)
 {
+	m_eventList = new PointerList<GameEvent>;
+	m_processing = false;
+	m_processingEvent = GEV_MAX;
+	m_needUserInput = false;
+	m_pauseCount = 0;
+
 #ifdef _DEBUG
-	FILE *  f = fopen(EVENTLOGNAME, "w");
+	m_eventHistory = new PointerList<GameEvent>;
+
+	
+	FILE *f = fopen(EVENTLOGNAME, "w");
 	fclose(f);
 #endif
 
-	std::fill(m_hooks, m_hooks + GEV_MAX, (GameEventHook *) NULL);
+	sint32 i;
+	for(i = 0; i < GEV_MAX; i++) {
+		
+		m_hooks[i] = NULL;
+	}
+
+	m_serial = 0;
 }
 
 GameEventManager::~GameEventManager()
 {
-	if (m_eventList) 
-    {
+	if(m_eventList) {
 		m_eventList->DeleteAll();
 		delete m_eventList;
+		m_eventList = NULL;
 	}
 
 #ifdef _DEBUG
-	if (m_eventHistory) 
-    {
+	if(m_eventHistory) {
 		m_eventHistory->DeleteAll();
 		delete m_eventHistory;
+		m_eventHistory = NULL;
 	}
 #endif
 
-	for (size_t i = 0; i < GEV_MAX; ++i) 
-    {
-		delete m_hooks[i];
+	sint32 i;
+	for(i = 0; i < GEV_MAX; i++) {
+		if(m_hooks[i]) {
+			delete m_hooks[i];
+			m_hooks[i] = NULL;
+		}
 	}
 }
 
 
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2 };
+	const void* args[] = { &a1 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, int a2,
+				GAME_EVENT_ARGUMENT t3)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3 };
+	const void* args[] = { &a1, &a2 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, int a2,
+				GAME_EVENT_ARGUMENT t3, int a3,
+				GAME_EVENT_ARGUMENT t4)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3, t4 };
+	const void* args[] = { &a1, &a2, &a3 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, int a2,
+				GAME_EVENT_ARGUMENT t3, int a3,
+				GAME_EVENT_ARGUMENT t4, int a4,
+				GAME_EVENT_ARGUMENT t5)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3, t4, t5 };
+	const void* args[] = { &a1, &a2, &a3, &a4 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, int a2,
+				GAME_EVENT_ARGUMENT t3, int a3,
+				GAME_EVENT_ARGUMENT t4, int a4,
+				GAME_EVENT_ARGUMENT t5, int a5,
+				GAME_EVENT_ARGUMENT t6)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3, t4, t5, t6 };
+	const void* args[] = { &a1, &a2, &a3, &a4, &a5 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, const MapPoint& a1,
+				GAME_EVENT_ARGUMENT t2)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2 };
+	const void* args[] = { &a1 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, const MapPoint& a2,
+				GAME_EVENT_ARGUMENT t3)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3 };
+	const void* args[] = { &a1, &a2 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, int a2,
+				GAME_EVENT_ARGUMENT t3, const MapPoint& a3,
+				GAME_EVENT_ARGUMENT t4)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3, t4 };
+	const void* args[] = { &a1, &a2, &a3 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, const MapPoint& a2,
+				GAME_EVENT_ARGUMENT t3, int a3,
+				GAME_EVENT_ARGUMENT t4)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3, t4 };
+	const void* args[] = { &a1, &a2, &a3 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, const MapPoint& a2,
+				GAME_EVENT_ARGUMENT t3, const MapPoint& a3,
+				GAME_EVENT_ARGUMENT t4)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3, t4 };
+	const void* args[] = { &a1, &a2, &a3 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, const MapPoint& a2,
+				GAME_EVENT_ARGUMENT t3, int a3,
+				GAME_EVENT_ARGUMENT t4, int a4,
+				GAME_EVENT_ARGUMENT t5)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3, t4, t5 };
+	const void* args[] = { &a1, &a2, &a3, &a4 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, int a2,
+				GAME_EVENT_ARGUMENT t3, const MapPoint& a3,
+				GAME_EVENT_ARGUMENT t4, int a4,
+				GAME_EVENT_ARGUMENT t5)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3, t4, t5 };
+	const void* args[] = { &a1, &a2, &a3, &a4 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, Path* a2,
+				GAME_EVENT_ARGUMENT t3, const MapPoint& a3,
+				GAME_EVENT_ARGUMENT t4, int a4,
+				GAME_EVENT_ARGUMENT t5)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3, t4, t5 };
+	const void* args[] = { &a1, &a2, &a3, &a4 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, const MapPoint& a2,
+				GAME_EVENT_ARGUMENT t3, int a3,
+				GAME_EVENT_ARGUMENT t4, int a4,
+				GAME_EVENT_ARGUMENT t5, int a5,
+				GAME_EVENT_ARGUMENT t6)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3, t4, t5, t6 };
+	const void* args[] = { &a1, &a2, &a3, &a4, &a5 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, int a2,
+				GAME_EVENT_ARGUMENT t3, int a3,
+				GAME_EVENT_ARGUMENT t4, int a4,
+				GAME_EVENT_ARGUMENT t5, const MapPoint& a5,
+				GAME_EVENT_ARGUMENT t6)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3, t4, t5, t6 };
+	const void* args[] = { &a1, &a2, &a3, &a4, &a5 };
+	return AddEvent(insert, type, argTypes, args);
+}
+
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT t1, int a1,
+				GAME_EVENT_ARGUMENT t2, const MapPoint& a2,
+				GAME_EVENT_ARGUMENT t3, int a3,
+				GAME_EVENT_ARGUMENT t4, int a4,
+				GAME_EVENT_ARGUMENT t5, int a5,
+				GAME_EVENT_ARGUMENT t6, int a6,
+				GAME_EVENT_ARGUMENT t7, int a7,
+				GAME_EVENT_ARGUMENT t8)
+{
+	const GAME_EVENT_ARGUMENT argTypes[] = { t1, t2, t3, t4, t5, t6, t7, t8 };
+	const void* args[] = { &a1, &a2, &a3, &a4, &a5, &a6, &a7 };
+	return AddEvent(insert, type, argTypes, args);
+}
 
 
-
-
-GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert,
-										  GAME_EVENT type, ...)
+GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+	const GAME_EVENT_ARGUMENT* argTypes, const void** args)
 {
 	Assert(type >= (GAME_EVENT)0);
 	Assert(type < GEV_MAX);
 	if(type < (GAME_EVENT)0 || type >= GEV_MAX)
 		return GEV_ERR_BadEvent;
-	
-	
-	
-	
-	
-	
-	
 	
 	if(g_slicEngine->AtBreak()) {
 		return GEV_ERR_AtBreak;
@@ -120,11 +300,7 @@ GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert,
 	}
 	EVENTLOG(("AddEvent: %s(", g_eventDescriptions[type].name));
 
-	va_list vl;
-	va_start(vl, type);
-
-	BOOL argsOk = VerifyArgs(type, &vl);
-	va_end(vl);
+	BOOL argsOk = VerifyArgs(type, argTypes, args);
 
 	EVENTLOG(("): Serial: %d\n", m_serial));
 
@@ -133,11 +309,7 @@ GAME_EVENT_ERR GameEventManager::AddEvent(GAME_EVENT_INSERT insert,
 		return GEV_ERR_WrongArguments;
 	}
 
-	va_start(vl, type);
-
-	GameEventArgList *argList = new GameEventArgList(&vl);
-
-	va_end(vl);
+	GameEventArgList *argList = new GameEventArgList(argTypes, args);
 
 	return ArglistAddEvent(insert, type, argList);
 }
@@ -154,6 +326,7 @@ GAME_EVENT_ERR GameEventManager::ArglistAddEvent(GAME_EVENT_INSERT insert,
 	
 	GameEvent *newEvent = new GameEvent(type, argList, m_serial++, m_processingEvent);
 
+	newEvent->SetType(type);	
 	switch(insert) {
 		case GEV_INSERT_Front:
 			m_eventList->AddHead(newEvent);
@@ -173,36 +346,52 @@ GAME_EVENT_ERR GameEventManager::ArglistAddEvent(GAME_EVENT_INSERT insert,
 	
 	g_director->IncrementPendingGameActions();
 
-	return Process();
+	
+	Process();
+
+	return GEV_ERR_OK;
 }
 
 GAME_EVENT_ERR GameEventManager::Process()
 {
-    if (m_processing)   // busy already?
-    {
-        return GEV_ERR_OK;
-    }
+	if(m_processing)
+		
+		return GEV_ERR_OK;
 
-    m_processing        = true;
-	GAME_EVENT_ERR  err = GEV_ERR_OK;
-
-    while ((GEV_ERR_OK == err) 
-            && m_eventList->GetHead()
-            && !g_slicEngine->AtBreak() 
-            && !m_needUserInput
-            && !m_pauseCount
-          )
-    {
-        err             = ProcessHead();
-    }
-	m_processing        = false;
-
-	if (GEV_ERR_NeedUserInput == err)
-    {		
-		m_needUserInput = true;
+	
+	if(!m_eventList->GetHead()) {
 		return GEV_ERR_OK;
 	}
 
+	if(g_slicEngine->AtBreak() || m_needUserInput || m_pauseCount)
+		return GEV_ERR_OK;
+
+	EVENTLOG(("\nGameEventManager::Process()\n"));
+
+	
+	m_processing = true;
+
+	GAME_EVENT_ERR err = GEV_ERR_OK;
+
+	do {
+		
+		err = ProcessHead();
+	} while(m_eventList->GetHead() && err == GEV_ERR_OK && !g_slicEngine->AtBreak() && !m_needUserInput && !m_pauseCount);
+
+	switch(err) {
+		case GEV_ERR_OK:
+			err = GEV_ERR_OK;
+			break;
+		case GEV_ERR_NeedUserInput:
+			
+			
+			err = GEV_ERR_OK;
+			m_needUserInput = true;
+			break;
+		default:
+			break;
+	}
+	m_processing = false;
 	return err;
 }
 
@@ -276,19 +465,28 @@ GAME_EVENT_ERR GameEventManager::RemoveCallback(GAME_EVENT type,
 	return GEV_ERR_OK;
 }
 
-GAME_EVENT_ERR GameEventManager::ActivateHook
-(
-    GAME_EVENT          type, 
+GAME_EVENT_ERR GameEventManager::ActivateHook(GAME_EVENT type, 
 											  GameEventArgList *args,
-	sint32              startIndex,
-	sint32 &            resumeIndex
-)
+											  sint32 &resumeIndex)
 {
 	Assert(type < GEV_MAX);
 	if((type >= GEV_MAX) || !m_hooks[type])
+		
 		return GEV_ERR_OK;
 
-	return m_hooks[type]->Activate(args, 0, resumeIndex);
+	return m_hooks[type]->Activate(args, resumeIndex);
+}
+
+GAME_EVENT_ERR GameEventManager::ResumeHook(GAME_EVENT type,
+											GameEventArgList *args,
+											sint32 startIndex,
+											sint32 &resumeIndex)
+{
+	if(!m_hooks[type])
+		
+		return GEV_ERR_OK;
+
+	return m_hooks[type]->Resume(args, startIndex, resumeIndex);
 }
 
 char *GameEventManager::ArgCharToName(char want)
@@ -349,7 +547,7 @@ BOOL GameEventManager::CheckArg(sint32 num, char got, char want)
 	EVENTLOG(("%s ", ArgCharToName(got)));
 
 	if(got != want) {
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(WIN32)
 		c3errors_ErrorDialog("GameEventManager", "Argument %d should be of type %s.  Stack: %s", num, ArgCharToName(want), c3debug_StackTrace());
 #endif
 		return FALSE;
@@ -420,7 +618,7 @@ sint32 GameEventManager::GetNumArgs(GAME_EVENT type)
 }
 	
 	
-BOOL GameEventManager::VerifyArgs(GAME_EVENT type, va_list *vl)
+BOOL GameEventManager::VerifyArgs(GAME_EVENT type, const GAME_EVENT_ARGUMENT* argTypes, const void** args)
 {
 	Assert(type >= (GAME_EVENT)0);
 	Assert(type < GEV_MAX);
@@ -431,21 +629,17 @@ BOOL GameEventManager::VerifyArgs(GAME_EVENT type, va_list *vl)
 	char *argString = desc->args;
 
 	BOOL done = FALSE;
-	GAME_EVENT_ARGUMENT nextArg;
+	GAME_EVENT_ARGUMENT nextArgType;
 
-	sint32 argNum = 0;
+	sint32 argNum = 0; // argNum is the number of the expected argument we are looking for
+	uint32 givenArgNum = 0; // givenArgNum is the number of the argument provided to us we are looking at
 	bool isOptional = false;
 
 	while(!done) {
-		nextArg = va_arg(*vl, GAME_EVENT_ARGUMENT);
+		nextArgType = argTypes[givenArgNum];
 
-		if(nextArg == GEA_End && *argString == 0)
+		if(nextArgType == GEA_End && *argString == 0)
 			return TRUE;
-
-		
-		
-		
-		
 		
 		if(!isOptional) {
 			
@@ -461,9 +655,7 @@ BOOL GameEventManager::VerifyArgs(GAME_EVENT type, va_list *vl)
 				return FALSE;
 		}
 
-		if(isOptional && nextArg == GEA_End) {
-			
-			
+		if(isOptional && nextArgType == GEA_End) {
 			return TRUE;
 		}
 		
@@ -492,76 +684,76 @@ BOOL GameEventManager::VerifyArgs(GAME_EVENT type, va_list *vl)
 #define DG_PRINT(fn, fmt, val)
 #endif
 
-		switch(nextArg) {
+		switch(nextArgType) {
 			case GEA_Army:
 				if(!CheckArg(argNum, *argString, GEAC_ARMY)) return FALSE;
-				a = va_arg(*vl, Army);
+				a = *(Army*)args[givenArgNum];
 				DG_PRINT(EVENTLOGNAME, "0x%lx, ", a.m_id);
 				break;
 			case GEA_Unit:
 				if(!CheckArg(argNum, *argString, GEAC_UNIT)) return FALSE;
-				u = va_arg(*vl, Unit);
+				u = *(Unit*)args[givenArgNum];
 				DG_PRINT(EVENTLOGNAME, "0x%lx, ", u.m_id);
 				break;
 			case GEA_City:
 				if(!CheckArg(argNum, *argString, GEAC_CITY)) return FALSE;
-				c = va_arg(*vl, Unit);
+				c = *(Unit*)args[givenArgNum];
 				DG_PRINT(EVENTLOGNAME, "0x%lx, ", c.m_id);
 				break;
 			case GEA_Gold:
 				if(!CheckArg(argNum, *argString, GEAC_GOLD)) return FALSE;
-				value = va_arg(*vl, sint32);
+				value = *(sint32*)args[givenArgNum];
 				DG_PRINT(EVENTLOGNAME, "%d, ", value);
 				break;
 			case GEA_Path:
 				if(!CheckArg(argNum, *argString, GEAC_PATH)) return FALSE;
-				path = va_arg(*vl, Path *);
+				path = *(Path**)args[givenArgNum];
 				DG_PRINT(EVENTLOGNAME, "0x%lx, ", path);
 				break;
 			case GEA_MapPoint:
 				if(!CheckArg(argNum, *argString, GEAC_MAPPOINT)) return FALSE;
-				pos = va_arg(*vl, MapPoint);
+				pos = *(MapPoint*)args[givenArgNum];
 				EVENTLOG(("(%d,%d), ", pos.x, pos.y));
 				break;
 			case GEA_Player:
 				if(!CheckArg(argNum, *argString, GEAC_PLAYER)) return FALSE;
-				value = va_arg(*vl, sint32);
+				value = *(sint32*)args[givenArgNum];
 				DG_PRINT(EVENTLOGNAME, "%d, ", value);
 				break;
 			case GEA_Int:
 				if(!CheckArg(argNum, *argString, GEAC_INT)) return FALSE;
-				value = va_arg(*vl, sint32);
+				value = *(sint32*)args[givenArgNum];
 				DG_PRINT(EVENTLOGNAME, "%d, ", value);
 				break;
 			case GEA_Direction:
 				if(!CheckArg(argNum, *argString, GEAC_DIRECTION)) return FALSE;
-				value = va_arg(*vl, sint32);
+				value = *(sint32*)args[givenArgNum];
 				DG_PRINT(EVENTLOGNAME, "%d, ", value);
 				break;
 
 			case GEA_Wonder:
 				if(!CheckArg(argNum, *argString, GEAC_WONDER)) return FALSE;
-				value = va_arg(*vl, sint32);
+				value = *(sint32*)args[givenArgNum];
 				DG_PRINT(EVENTLOGNAME, "%d, ", value);
 				break;
 			case GEA_Advance:
 				if(!CheckArg(argNum, *argString, GEAC_ADVANCE)) return FALSE;
-				value = va_arg(*vl, sint32);
+				value = *(sint32*)args[givenArgNum];
 				DG_PRINT(EVENTLOGNAME, "%d, ", value);
 				break;
 			case GEA_Improvement:
 				if(!CheckArg(argNum, *argString, GEAC_IMPROVEMENT)) return FALSE;
-				imp = va_arg(*vl, TerrainImprovement);
+				imp = *(TerrainImprovement*)args[givenArgNum];
 				DG_PRINT(EVENTLOGNAME, "0x%lx, ", imp.m_id);
 				break;
 			case GEA_TradeRoute:
 				if(!CheckArg(argNum, *argString, GEAC_TRADEROUTE)) return FALSE;
-				route = va_arg(*vl, TradeRoute);
+				route = *(TradeRoute*)args[givenArgNum];
 				DG_PRINT(EVENTLOGNAME, "0x%lx, ", route.m_id);
 				break;
 			case GEA_End:
 				if(*(argString) != 0) {
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(WIN32)
 					c3errors_ErrorDialog("GameEventManager", "Not enough arguments.  Stack: %s", c3debug_StackTrace());
 #endif
 					return FALSE;
@@ -572,6 +764,7 @@ BOOL GameEventManager::VerifyArgs(GAME_EVENT type, va_list *vl)
 				return FALSE;
 		}
 		argString++;
+		givenArgNum++;
 	}
 	return FALSE;
 }

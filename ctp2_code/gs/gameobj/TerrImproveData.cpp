@@ -3,7 +3,6 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Terrain improvement data
-// Id           : $Id$
 //
 //----------------------------------------------------------------------------
 //
@@ -17,9 +16,7 @@
 //----------------------------------------------------------------------------
 //
 // Compiler flags
-//
-// - None
-//
+// 
 //----------------------------------------------------------------------------
 //
 // Modifications from the original Activision code:
@@ -31,7 +28,6 @@
 //   visualized. - Oct. 16th 2004 Martin Gühmann
 // - Moved network handling from TerrainImprovementData constructor to prevent 
 //   reporting the temporary when completing the tile improvement.
-// - Restored save game compatibilty. (April 22nd 2006 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
 
@@ -73,8 +69,7 @@ TerrainImprovementData::TerrainImprovementData(ID id,
 	m_transformType     (extraData),
 	m_materialCost      (terrainutil_GetProductionCost(type, pnt, extraData)),
     m_isComplete        (false),
-    m_isBuilding        (false),
-	m_materialBonus     (terrainutil_GetBonusProductionExport(type, pnt, extraData)) //EMOD 4-5-2006
+    m_isBuilding        (false)
 {
 }
 
@@ -134,10 +129,11 @@ BOOL TerrainImprovementData::Complete(void)
 
 	terrainutil_DoVision(m_point);
 
-	sint32 intRad;
-    sint32 sqRad;
-	if (rec->GetIntBorderRadius(intRad) && rec->GetSquaredBorderRadius(sqRad)) 
-    {
+	if(rec->GetIntBorderRadius() && rec->GetSquaredBorderRadius()) {
+		sint32 intRad, sqRad;
+		rec->GetIntBorderRadius(intRad);
+		rec->GetSquaredBorderRadius(sqRad);
+
 		GenerateBorders(m_point, m_owner, intRad, sqRad);
 	}
 

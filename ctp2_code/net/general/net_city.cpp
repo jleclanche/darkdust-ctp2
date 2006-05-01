@@ -204,7 +204,7 @@ void NetCity::Unpacketize(uint16 id, uint8* buf, uint16 size)
 
 		bool resync = false;
 
-#define PLCHK(x) { sint32 tmp = x; PULLLONG(x); if(cityData->GetOwner() == g_network.GetPlayerIndex() && !m_isInitialPacket) { Assert(tmp == x); if(tmp != x) resync = true; }}
+#define PLCHK(x) { sint32 tmp = (x); PULLLONG((x)); if(cityData->GetOwner() == g_network.GetPlayerIndex() && !m_isInitialPacket) { Assert(tmp == (signed) (x)); if(tmp != (signed) (x)) resync = true; }}
 #define PSCHK(x) { sint16 tmp = x; PULLSHORT(x); if(cityData->GetOwner() == g_network.GetPlayerIndex() && !m_isInitialPacket) { Assert(tmp == x); if(tmp != x) resync = true; }}
 #define PL64CHK(x) { uint64 tmp = x; PULLLONG64(x); if(cityData->GetOwner() == g_network.GetPlayerIndex() && !m_isInitialPacket) { Assert(tmp == x); if(tmp != x) resync = true; }}
 		PLCHK(cityData->m_slaveBits);
@@ -453,6 +453,10 @@ void NetCity2::Unpacketize(uint16 id, uint8 *buf, uint16 size)
 
 	PULLBYTETYPE(m_data->m_franchise_owner, sint8);
 	PULLBYTETYPE(m_data->m_franchiseTurnsRemaining, sint8);
+	
+#ifdef _DEBUG
+	
+#endif
 	PULLBYTETYPE(m_data->m_watchfulTurns, sint8);
 	PULLBYTETYPE(m_data->m_bioInfectionTurns, sint8);
 	PULLBYTETYPE(m_data->m_nanoInfectionTurns, sint8);

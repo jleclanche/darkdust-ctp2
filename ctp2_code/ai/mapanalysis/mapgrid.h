@@ -17,6 +17,10 @@
 #define __MAP_GRID_H__
 
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4786)
+#endif
+
 #ifdef min
 	#undef min
 #endif
@@ -37,13 +41,9 @@
 #define RELAX_SHARED_SIDE (1.0)
 #define RELAX_DIAGONAL (0.41)   
 
-template<class _Ty>
+template<typename _Ty>
 class MapGrid {
-public:	
-	
-	typedef std::valarray< _Ty > MapGridArray;
-	
-	
+public:
 	MapGrid() 
 	{ 
 		m_xSize = 0;
@@ -56,10 +56,9 @@ public:
 
 	~MapGrid()
 	{
-		s_scratch.resize(0);
-		
-		
+#ifdef _MSC_VER
 		m_values.free();
+#endif
 	}
 	
 	
@@ -75,24 +74,6 @@ public:
 		m_xGridSize = (xSize / resolution)*2;
 		m_yGridSize = (ySize / resolution);
 
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-
 		if (xSize / resolution != 0)
 			m_xGridSize += 2;
 
@@ -107,7 +88,6 @@ public:
 	
 	void Clear()
 	{
-		
 		m_values = 0;
 		
 		
@@ -131,7 +111,7 @@ public:
 			     (xy_pos.x / m_resolution);
 
 		Assert(elem >= 0);
-		Assert(elem < m_values.size());
+		Assert((unsigned) elem < m_values.size());
 		
 		
 		Assert(((double) m_values[elem] + value) == (double) (m_values[elem] + value));
@@ -172,11 +152,12 @@ public:
 		
 		if (cycles <= 0) return;
 
-		MapGridArray *map_from_ptr = &m_values;
-		MapGridArray *map_to_ptr = &s_scratch;
+		std::valarray<_Ty> scratch;
+		scratch.resize(m_xGridSize*m_yGridSize);
 		
-		s_scratch.resize(m_xGridSize*m_yGridSize);
-
+		std::valarray<_Ty> *map_from_ptr = &m_values;
+		std::valarray<_Ty> *map_to_ptr = &scratch;
+		
 		while(cycles-- > 0)
 		{
 			
@@ -238,15 +219,11 @@ public:
 
 					
 					
-					max_value *= RELAX_DIAGONAL;
-					max_value *= coefficient;
-						
+					max_value = sint32(max_value * RELAX_DIAGONAL);
+					max_value = sint32(max_value * coefficient);
 					
 					
-
-					
-					
-     				cur_value = *pCurFrom;
+					cur_value = *pCurFrom;
 					if (max_value > cur_value) cur_value = max_value;
 
 					
@@ -264,17 +241,16 @@ public:
 			} 
 			
 			
-			MapGridArray *map_tmp_ptr;
+			std::valarray<_Ty> *map_tmp_ptr;
 			map_tmp_ptr = map_from_ptr;
 			map_from_ptr = map_to_ptr;
 			map_to_ptr = map_tmp_ptr;
 		} 
 		
-		
-		
-		
 		if (map_from_ptr != &m_values)
 			m_values = *map_from_ptr;
+		
+		scratch.resize(0);
 	}
 
 
@@ -294,9 +270,9 @@ public:
 		if (cycles <= 0)
 			return;
 		
-		MapGridArray *map_tmp_ptr;
-		MapGridArray *map_from_ptr = &m_values;
-		MapGridArray *map_to_ptr = &s_scratch;
+		std::valarray<_Ty> *map_tmp_ptr;
+		std::valarray<_Ty> *map_from_ptr = &m_values;
+		std::valarray<_Ty> *map_to_ptr = &s_scratch;
 		
 		
 		*map_to_ptr = *map_from_ptr;
@@ -388,7 +364,7 @@ public:
 		elem = ((xy_pos.y / m_resolution) * m_xGridSize) + 
 			    (xy_pos.x / m_resolution);
 		Assert(elem >= 0);
-		Assert(elem < m_values.size());
+		Assert((unsigned) elem < m_values.size());
 
 		return m_values[elem];
 	}
@@ -404,7 +380,7 @@ public:
 		elem = ((xy_pos.y / m_resolution) * m_xGridSize) + 
 			    (xy_pos.x / m_resolution);
 		Assert(elem >= 0);
-		Assert(elem < m_values.size());
+		Assert((unsigned) elem < m_values.size());
 
 		m_values[elem] = value;
 	}
@@ -447,7 +423,7 @@ public:
 	{
 		std::ostringstream ost;
 		
-		for (sint32 elem = 0; elem < m_values.size(); elem++)
+		for (sint32 elem = 0; (unsigned) elem < m_values.size(); elem++)
 		{	
 				ost.width( 3);
 				ost << m_values[elem];
@@ -471,7 +447,7 @@ private:
 	_Ty GetRelaxValue( const sint32 & src_elem, 
 		const sint8 & delta_x, 
 		const sint8 & delta_y, 
-		const MapGridArray & map_from ) const
+		const std::valarray<_Ty> & map_from ) const
 	{
 		
 		
@@ -522,10 +498,7 @@ private:
 	sint32 m_resolution;
 	
 	
-	static MapGridArray s_scratch;
-	
-	
-	MapGridArray m_values;
+	std::valarray<_Ty> m_values;
 	
 	
 	_Ty m_maxGridValue;

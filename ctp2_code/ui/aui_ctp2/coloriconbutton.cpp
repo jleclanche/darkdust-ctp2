@@ -35,6 +35,8 @@
 
 extern C3UI			*g_c3ui;
 extern CivPaths		*g_civPaths;
+extern ColorSet		*g_colorSet;
+
 
 ColorIconButton::ColorIconButton(
 	AUI_ERRCODE *retval,

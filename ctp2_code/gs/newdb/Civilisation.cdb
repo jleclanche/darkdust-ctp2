@@ -19,7 +19,6 @@
 #  Modifications from the original Activision code:
 #
 # - Created file. (Aug 21st 2005 Martin Gühmann)
-# - Added a lot of more stuff to implement. (E)
 #
 #-----------------------------------------------------------------------------
 
@@ -34,90 +33,9 @@ Civilisation{
    StringID              PersonalityDescription aka CIV_PERSONALITY_DESCRIPTION
    Record Personality    PersonalityMale        aka CIV_PERSONALITY_MALE
    Record Personality    PersonalityFemale      aka CIV_PERSONALITY_FEMALE
-   Int                   Parchment = 0          aka CIV_PARCHMENT
-   Int                   Capital = 0
-   Bit                   IsCapital              aka CITY_IS_CAPITAL
+   int                   Parchment = 0          aka CIV_PARCHMENT
+   int                   Capital = 0
+   bit                   IsCapital              aka CITY_IS_CAPITAL
    Record CityStyle      CityStyle              aka CIV_CITY_STYLE
    StringID[0..500]      CityName               aka CIV_CITY_NAME
-   Int                   HappyInc = 0
-
-//Civ Specific Bonuses
-
-   Int 		ProductionBonus = 0
-   Int 		FoodBonus = 0
-   Int 		CommerceBonus = 0
-   Int 		ScienceBonus = 0
-   Int		IncreaseBoatMovement = 0
-   Int		IncreaseHp = 0
-
-// for national flags
-//   StringID              NationUnitFlag      
-// from building.cdb to add Civilisation traits
-	Bit(Record Feat) TriggerFeat
-	Bit(Float) OffenseBonusLand
-	Bit(Float) OffenseBonusWater
-	Bit(Float) OffenseBonusAir
-    Bit        DoubleTelevangelists
-    //Bit(Float) ProductionPercent
-	//Bit(Float) FoodPercent
-	//Bit(Float) CommercePercent
-	//Bit(Float) SciencePercent
-    Bit        NoUnhappyPeople
-    Bit        NoRushBuyPenalty
-	Bit(Float) LowerCrime
-	Bit(Float) LowerPeaceMovement
-	Bit(Int)   GoldPerCitizen
-	Bit        ProtectFromNukes
-	Bit(Float) ProtectFromBioAgents
-	Bit(Float) ProtectFromNanoVirus
-	Bit        Television
-	Bit        Brokerage
-	Bit        NuclearPlant
-	Bit(Float) SciencePerPop
-	Bit(Int)   RaiseOvercrowdingLevel
-	Bit(Int)   RaiseMaxPopulation
-	Bit(Int)   StarvationProtection
-// from Wonder.cdb for additional civ attributes
-	Bit(Int) ReduceReadinessCost
-	Bit EmbassiesEverywhere
-	Bit(Int) DecCrimePercent
-	Bit(Int) IncKnowledgePercent
-	Bit(Int) DecEmpireSize
-	Bit(Int) IncHappinessEmpire
-	Bit(Int) IncConvertedCitiesFeePercent
-	Bit(Int) GoldPerWaterTradeRoute
-	Bit(Int) GoldPerTelevision
-	Bit GlobalRadar
-	Bit SpiesEverywhere
-	Bit(Int) GoldPerInternationalTradeRoute
-	Bit ProtectFromBiologicalWarfare
-	Bit(Int) PollutersToParks
-	Bit(Int) ReduceWorldPollution
-	Bit AllCitizensContent
-	Bit EliminateNukes
-	Bit AllBoatsDeepWater
-	//Bit(Int) IncreaseBoatMovement
-	Bit FreeTradeRoutes
-	Bit(Int) DecreaseMaintenance
-	Bit(Int) RandomAdvanceChance
-	//Bit(Int) IncreaseHp
-	Bit(Int) MultiplyTradeRoutes
-	Bit(Int) IncreaseScientists
-	Bit(Int) OtherCivRandomAdvanceChance
-	Bit(Int) IncreaseProduction
-	Bit(Int) BonusGold
-	Bit(Int) IncreaseFoodAllCities
-	Bit(Int) TemporaryFullHappiness
-	Bit RevoltingCitiesJoinPlayer
-	Bit NoPollutionUnhappiness
-	Bit EmbassiesEverywhereEvenAtWar
-	Bit(Int) IncreaseSpecialists
-	Bit(Int) IncreaseCathedrals
-	Bit(Int) IncreaseBrokerages
-	Bit(Int) IncreaseRegard
-	Bit PreventConversion
-	Bit ProtectFromBarbarians
-	Bit(Record Building) BuildingEverywhere
-	Bit(Float) PollutionPercent
-	Bit(Float) PollutionAmount
 }

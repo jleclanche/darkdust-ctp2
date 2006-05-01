@@ -13,19 +13,18 @@
 #include "ldl_data.hpp"
 #include "ldl_attr.hpp"
 #include "c3errors.h"
+#include <string>
 
 class LDLString {
-	char *m_name;
-  public:
-	LDLString(const char *text) {
-		m_name = new char[strlen(text) + 1];
-		strcpy(m_name, text);
+private:
+	std::string m_name;
+public:
+	LDLString(const char *text) : m_name((text == NULL) ? "" : text) {
 	}
 	~LDLString() {
-		delete [] m_name;
 	}
 
-	char *GetName() const { return m_name; }
+	const char *GetName() const { return m_name.c_str(); }
 };
 
 StringHash<LDLString> *s_ldlStringHash = NULL;
@@ -38,6 +37,7 @@ extern "C" { void ldlif_report_error(char *text); }
 
 void ldlif_report_error(char *text)
 {
+	fprintf(stderr, "%s\n", text);
 	c3errors_ErrorDialog("LDL", text);
 }
 
@@ -59,7 +59,7 @@ int ldlif_find_file(const char *filename, char *fullpath)
 	return 1;
 }
 
-char *ldlif_getnameptr(const char *name)
+const char *ldlif_getnameptr(const char *name)
 {
 	const LDLString *str = s_ldlStringHash->Get(name);
 	if(str) {
@@ -71,16 +71,16 @@ char *ldlif_getnameptr(const char *name)
 	return newstr->GetName();
 }
 
-char *ldlif_getstringptr(const char *text)
+const char *ldlif_getstringptr(const char *text)
 {
 	return ldlif_getnameptr(text);
 }
 
-void ldlif_add_name(void **newnames, char *name, void *oldnames)
+void ldlif_add_name(void **newnames, const char *name, void *oldnames)
 {
-	PointerList<char> *namelist = (PointerList<char> *)oldnames;
+	PointerList<const char> *namelist = (PointerList<const char> *)oldnames;
 	if(!namelist) {
-		namelist = new PointerList<char>;
+		namelist = new PointerList<const char>;
 	}
 	namelist->AddHead(name);
 	*newnames = (void *)namelist;
@@ -96,7 +96,7 @@ void ldlif_init_log()
 	}
 #endif
 }
-void ldlif_log(char *format, ...)
+void ldlif_log(const char *format, ...)
 {
 #ifdef _DEBUG
 	va_list list;
@@ -211,27 +211,27 @@ void *ldlif_add_empty_block(void *names)
 	return ldlif_end_block(names);
 }
 
-void ldlif_add_bool_attribute(char *name, int val)
+void ldlif_add_bool_attribute(const char *name, int val)
 {
 	ldl_attributeValue<bool> *attr = new ldl_attributeValue<bool>(name, ATTRIBUTE_TYPE_BOOL, val != 0);
 	s_blockStack->GetTail()->AddAttribute(attr);
 }
 
-void ldlif_add_int_attribute(char *name, int val)
+void ldlif_add_int_attribute(const char *name, int val)
 {
 	ldl_attributeValue<int> *attr = new ldl_attributeValue<int>(name, ATTRIBUTE_TYPE_INT, val);
 	s_blockStack->GetTail()->AddAttribute(attr);
 }
 
-void ldlif_add_float_attribute(char *name, double val)
+void ldlif_add_float_attribute(const char *name, double val)
 {
 	ldl_attributeValue<double> *attr = new ldl_attributeValue<double>(name, ATTRIBUTE_TYPE_DOUBLE, val);
 	s_blockStack->GetTail()->AddAttribute(attr);
 }
 
-void ldlif_add_string_attribute(char *name, char *val)
+void ldlif_add_string_attribute(const char *name, const char *val)
 {
-	ldl_attributeValue<char *> *attr = new ldl_attributeValue<char *>(name, ATTRIBUTE_TYPE_STRING, val);
+	ldl_attributeValue<const char *> *attr = new ldl_attributeValue<const char *>(name, ATTRIBUTE_TYPE_STRING, val);
 	s_blockStack->GetTail()->AddAttribute(attr);
 }
 

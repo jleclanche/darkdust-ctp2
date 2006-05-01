@@ -7,7 +7,7 @@
 #include "aui_window.h"
 
 #include "pixelutils.h"
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 #include "c3_coloredstatic.h"
 #include "patternbase.h"
 #include "pattern.h"
@@ -15,6 +15,7 @@
 #include "primitives.h"
 
 extern aui_UI		*g_ui;
+extern ColorSet		*g_colorSet;
 
 
 c3_ColoredStatic::c3_ColoredStatic(

@@ -7,6 +7,8 @@
 
 
 #include "c3.h"
+
+
 #include "sciencevictorydialog.h"
 
 
@@ -15,7 +17,7 @@
 #include "c3ui.h"
 #include "citydata.h"
 #include "civarchive.h"
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 #include "ctp2_button.h"
 #include "ctp2_listbox.h"
 #include "ctp2_listitem.h"
@@ -23,7 +25,6 @@
 #include "ctp2_Window.h"
 #include "EditQueue.h"
 #include "gaiacontroller.h"
-#include "Globals.h"            // k_GAME_OBJ_TYPE_IMPROVEMENT
 #include "installation.h"
 #include "player.h"
 #include "radarmap.h"
@@ -35,6 +36,8 @@
 
 
 extern C3UI		*g_c3ui;
+extern ColorSet	*g_colorSet;
+
 
 ScienceVictoryDialog *g_scienceVictoryDialog = NULL;
 
@@ -503,8 +506,8 @@ sint32 ScienceVictoryDialog::CompareMainframeCities(ctp2_ListItem *item1,
 {
 	
 	Unit city1, city2;
-	city1.m_id = reinterpret_cast<uint32>(item1->GetUserData());
-	city2.m_id = reinterpret_cast<uint32>(item2->GetUserData());
+	city1.m_id = *reinterpret_cast<uint32 *>(item1->GetUserData());
+	city2.m_id = *reinterpret_cast<uint32 *>(item2->GetUserData());
 
 	
 	Assert(city1.IsValid());
@@ -592,8 +595,8 @@ void ScienceVictoryDialog::BuildButtonActionCallback(aui_Control *control,
 		g_player[g_selected_item->GetVisiblePlayer()]->GetAllCitiesList();
 
 	
-	
-	for(sint32 cityIndex = 0; cityIndex < cityList->Num(); cityIndex++) {
+	sint32 cityIndex;	
+	for(cityIndex = 0; cityIndex < cityList->Num(); cityIndex++) {
 		
 		Unit city = cityList->Get(cityIndex);
 

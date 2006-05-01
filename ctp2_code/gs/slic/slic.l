@@ -27,8 +27,11 @@
 // - Exponetiation operator '**' added.
 //
 //----------------------------------------------------------------------------
-
-#include "y.tab.h"
+#include "ctp2_config.h"
+#include "ctp2_inttypes.h"
+#include "ysl.tab.h"
+#include <limits.h>
+#include <stdio.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -57,13 +60,13 @@ name		[a-zA-Z]+[a-zA-Z0-9_]*
 %%
 ^#include	{ BEGIN(incl); }
 ^#warnings   { g_slicWarnUndeclared = 1; }
-<incl>[ \t]* {}
+<incl>[ \t\r]* {}
 <incl>\"    { BEGIN(fname); }
 <fname>[a-zA-Z0-9_.\\]+\" { /* Got the include file name */
-  			if ( include_stack_ptr >= MAX_INCLUDE_DEPTH ) {
+ 			if ( include_stack_ptr >= MAX_INCLUDE_DEPTH ) {
 				slic_parse_error = SLIC_ERROR_INCLUDE;
 				yyterminate();
-            } else {
+			} else {
 
 				char buf[MAX_PATH];
 				char filename[MAX_PATH];
@@ -149,32 +152,32 @@ Const       { return KW_CONST; }
 
 Return      { return KW_RETURN; }
 
-{stringid}  { yylval.val = slicif_find_string(yytext); return STRINGID; }
+{stringid}  { yysllval.val = slicif_find_string(yytext); return STRINGID; }
 {name}		{ 
 			    int value;
 				void *dbptr;
 				if(slicif_find_const(yytext, &value)) {
-				    yylval.val = value;
+				    yysllval.val = value;
 					return NUMBER;
 				} else if(slicif_find_db(yytext, &dbptr)) {
-					yylval.dbptr = dbptr;
+					yysllval.dbptr = dbptr;
 					return DBREF;
 				} else {
-				    yylval.name = (char*)strdup(yytext); 
+				    yysllval.name = (char*)strdup(yytext); 
 				    return NAME;
 				}
 			}
-[0-9]+		{ yylval.val = atoi(yytext); return NUMBER; }
+[0-9]+		{ yysllval.val = atoi(yytext); return NUMBER; }
 {slicid}	{ 
-				yylval.name = malloc(strlen(yytext) - 1);
-				strncpy(yylval.name, yytext + 1, strlen(yytext) - 2);
-				yylval.name[strlen(yytext) - 2] = 0;
+				yysllval.name = malloc(strlen(yytext) - 1);
+				strncpy(yysllval.name, yytext + 1, strlen(yytext) - 2);
+				yysllval.name[strlen(yytext) - 2] = 0;
 				return IDENTIFIER; 
 			}
 {string}    { 
-                yylval.name = malloc(strlen(yytext) - 1);
-				strncpy(yylval.name, yytext + 1, strlen(yytext) - 2);
-				yylval.name[strlen(yytext) - 2] = 0;
+                yysllval.name = malloc(strlen(yytext) - 1);
+				strncpy(yysllval.name, yytext + 1, strlen(yytext) - 2);
+				yysllval.name[strlen(yytext) - 2] = 0;
 				return STRING;
 			}
 
@@ -186,7 +189,7 @@ Return      { return KW_RETURN; }
 \} 			{ /*slicif_end_block();*/ return yytext[0]; }
 
 \.       { return REF; }
-[ \t]		{}
+[ \t\r]		{}
 ==		{ return EQ; }
 \<		{ return LT; }
 \>		{ return GT; }

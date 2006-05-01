@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Battle view actor handling
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -40,18 +40,20 @@
 
 #include "soundmanager.h"
 #include "colorset.h"
+#include "aui_surface.h"
 
 extern SpriteGroupList  *g_unitSpriteGroupList;
 extern TiledMap         *g_tiledMap;
 extern UnitPool         *g_theUnitPool;
 extern SoundManager     *g_soundManager;
+extern ColorSet         *g_colorSet;
 
 BattleViewActor::BattleViewActor(SpriteState *ss, Unit id, sint32 unitType, const MapPoint &pos, sint32 owner)
 : Actor(ss)
 {
 	uint32 spriteID;
 
-	GetIDAndType(owner, ss, id, unitType, (MapPoint)pos, &spriteID, &m_type);
+	GetIDAndType(owner, ss, id, unitType, pos, &spriteID, &m_type);
 	m_spriteID = (sint32)spriteID;
 
 	m_spriteState = ss;
@@ -90,7 +92,7 @@ void BattleViewActor::Initialize(void)
 	AddIdle();
 }
 
-void BattleViewActor::GetIDAndType(sint32 owner, SpriteState *ss, Unit id, sint32 unitType, MapPoint &pos, 
+void BattleViewActor::GetIDAndType(sint32 owner, SpriteState *ss, Unit id, sint32 unitType, const MapPoint &pos, 
 								uint32 *spriteID, GROUPTYPE *groupType)
 {
 	*spriteID = ss->GetIndex();
@@ -121,11 +123,14 @@ BattleViewActor::~BattleViewActor()
 
 void BattleViewActor::AddIdle(BOOL NoIdleJustDelay)
 {
-	Anim * anim = CreateAnim(UNITACTION_IDLE);
+	Anim		*anim;
 
+	anim = GetAnim(UNITACTION_IDLE);
+
+	
 	if (anim == NULL) 
 	{
-		anim = CreateAnim(UNITACTION_MOVE);
+		anim = GetAnim(UNITACTION_MOVE);
 		Assert(anim != NULL);
 	}
 
@@ -272,7 +277,7 @@ void BattleViewActor::AddAction(Action *actionObj)
 
 }
 
-Anim *BattleViewActor::CreateAnim(UNITACTION action)
+Anim *BattleViewActor::GetAnim(UNITACTION action)
 {
 	Assert(m_unitSpriteGroup != NULL);
 	if (m_unitSpriteGroup == NULL) return NULL;
@@ -298,7 +303,9 @@ Anim *BattleViewActor::CreateAnim(UNITACTION action)
 		}
 	}
 
-	Anim * anim = new Anim(*origAnim);
+	Anim	*anim = new Anim();
+	*anim = *origAnim;
+	anim->SetSpecialCopyDelete(ANIMXEROX_COPY);
 
 	if(action == UNITACTION_IDLE)
 	{

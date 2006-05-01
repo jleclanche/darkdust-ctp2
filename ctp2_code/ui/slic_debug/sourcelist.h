@@ -75,7 +75,7 @@ public:
 
 public:
 	sint32 Initialize(MBCHAR *ldlBlock);
-	void   Cleanup();
+	sint32 Cleanup();
 	sint32 UpdateData();
 
 	void RemoveWindow();

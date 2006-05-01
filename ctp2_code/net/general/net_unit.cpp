@@ -129,20 +129,20 @@ void NetUnit::Unpacketize(uint16 id, uint8* buf, uint16 size)
 
 
 				g_director->AddMove(uid, pnt, m_unitData->m_pos, numRevealed, revealedActors, 
-										NULL, NULL, FALSE, uid.GetMoveSoundID()); 
+										0, NULL, FALSE, uid.GetMoveSoundID()); 
 			}
 		} 
 #if 0
 		else if(oldVisionRange != m_unitData->m_vision_range) {
 			g_player[m_unitData->GetOwner()]->RemoveUnitVision(m_unitData->m_pos, oldVisionRange);
 			g_player[m_unitData->GetOwner()]->AddUnitVision(m_unitData->m_pos, m_unitData->m_vision_range,
-															revealed_unexplored);
+			                                                revealed_unexplored);
 		}
 #endif
 
 		if(oldowner != m_unitData->m_owner) {
 			DPRINTF(k_DBG_NET, ("Resetting unit %lx (type %d) from owner %d to %d\n",
-								uid, m_unitData->m_type,
+								uid.m_id, m_unitData->m_type,
 								oldowner, m_unitData->m_owner));
 			if(g_theUnitDB->Get(m_unitData->m_type)->GetHasPopAndCanBuild()) {
 				DPRINTF(k_DBG_NET, ("But it's a city and I'm going to assert and ignore it.\n"));
@@ -150,7 +150,7 @@ void NetUnit::Unpacketize(uint16 id, uint8* buf, uint16 size)
 				Assert(ahaSoItDoesHappen);
 			} else {
 				g_player[oldowner]->RemoveUnitReference(uid, CAUSE_REMOVE_ARMY_UNKNOWN, m_unitData->m_owner);
-				g_player[m_unitData->m_owner]->InsertUnitReference(uid, CAUSE_NEW_ARMY_UNKNOWN, Unit());
+				g_player[m_unitData->m_owner]->InsertUnitReference(uid, CAUSE_NEW_ARMY_UNKNOWN, Unit(0));
 			}
 		}
 
@@ -183,13 +183,13 @@ void NetUnit::Unpacketize(uint16 id, uint8* buf, uint16 size)
 		sint32 trans_t = g_theUnitDB->Get(unitType)->GetTransType();
 		if(m_actorId.m_id != (0)) {
 			m_unitData = new UnitData(unitType, trans_t, uid, unitOwner,
-									  unitPos, Unit(),
+									  unitPos, Unit(0),
 									  m_actorId.AccessData()->m_actor);
 			m_actorId.AccessData()->m_actor = NULL;
 		} else {
 			if(!(flags & k_UDF_TEMP_SLAVE_UNIT)) {
 				m_unitData = new UnitData(unitType, trans_t,
-										  uid, unitOwner, unitPos, Unit());
+										  uid, unitOwner, unitPos, Unit(0));
 			} else {
 				m_unitData = new UnitData(unitType, trans_t,
 										  uid, unitOwner, unitPos);
@@ -236,10 +236,9 @@ void NetUnit::Unpacketize(uint16 id, uint8* buf, uint16 size)
 			} else if(!m_unitData->Flag(k_UDF_TEMP_SLAVE_UNIT)) {
 				g_theWorld->InsertUnit(m_unitData->m_pos, uid, revealed);
 			}
-			if (!m_unitData->Flag(k_UDF_TEMP_SLAVE_UNIT)) 
-            {
-				g_player[m_unitData->m_owner]->InsertUnitReference
-                    (uid, CAUSE_NEW_ARMY_NETWORK, Unit());
+			if(!m_unitData->Flag(k_UDF_TEMP_SLAVE_UNIT)) {
+				g_player[m_unitData->m_owner]->InsertUnitReference(
+																   uid, CAUSE_NEW_ARMY_NETWORK, Unit(0));
 			}
 		}
 	}
@@ -434,7 +433,7 @@ void NetUnitMove::Unpacketize(uint16 id, uint8 *buf, uint16 size)
 
 
 	g_director->AddMove(u, oldPos, ud->m_pos, numRevealed, revealedActors, 
-							NULL, NULL, FALSE, u.GetMoveSoundID()); 
+							0, NULL, FALSE, u.GetMoveSoundID()); 
 }
 
 void NetUnitHP::Packetize(uint8 *buf, uint16 &size)

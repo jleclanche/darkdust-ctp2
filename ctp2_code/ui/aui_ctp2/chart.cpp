@@ -15,7 +15,7 @@
 #include "c3_hypertipwindow.h"
 #include "aui_hypertextbox.h"
 
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 #include "c3windows.h"
 
 #include "ctp2_button.h"
@@ -36,6 +36,7 @@
 
 #include "advanceutil.h"
 
+extern ColorSet		*g_colorSet;
 extern C3UI			*g_c3ui;
 extern ProjectFile	*g_GreatLibPF;
 

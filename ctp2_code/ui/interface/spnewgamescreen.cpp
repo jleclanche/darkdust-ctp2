@@ -92,7 +92,7 @@
 
 #include "initialplaywindow.h"
 
-#include "globals.h"
+#include "Globals.h"
 
 #include "SlicEngine.h"
 
@@ -477,14 +477,11 @@ void spnewgamescreen_editorPress( aui_Control *control, uint32 action, uint32 da
 
 void spnewgamescreen_scenarioExitCallback(aui_Control *control, uint32 action, uint32 data, void *cookie )
 {
-	
-	
-
 	MBCHAR	tempPath[_MAX_PATH];
 
-	sprintf(tempPath, "%s\\%s", 
-						g_civPaths->GetCurScenarioPath(), 
-						k_SCENARIO_DEFAULT_SAVED_GAME_NAME);
+	sprintf(tempPath, "%s%s%s",
+	        g_civPaths->GetCurScenarioPath(), FILE_SEP,
+	        k_SCENARIO_DEFAULT_SAVED_GAME_NAME);
 
 	if (c3files_PathIsValid(tempPath)) {
 		if(!c3files_HasLegalCD())
@@ -510,10 +507,6 @@ void spnewgamescreen_scenarioExitCallback(aui_Control *control, uint32 action, u
 
 		return;
 	}
-
-	
-	
-
 	
 	g_spNewGameWindow->Update();
 }
@@ -761,8 +754,8 @@ spNew_ctp2_Button(AUI_ERRCODE *errcode,
 								buttonFlavor,
 								500, 10,
 								100, 20,
-								NULL,
-								callback);
+								callback,
+								NULL);
 
 	Assert( AUI_NEWOK(myButton, *errcode) );
 	return myButton;

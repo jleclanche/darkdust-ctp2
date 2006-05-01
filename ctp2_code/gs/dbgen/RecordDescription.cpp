@@ -57,8 +57,6 @@
 // - Added accessors for slic database array access. (Sep 16th 2005 Martin Gühman)
 // - Made float arrays possible. (Sep 16th 2005 Martin Gühman)
 // - Made value of int databases accessable. (Sep 16th 2005 Martin Gühman)
-// - If database records have no name a default name is generated. e.g.
-//   DIFFICULTY_5 for the sixth entry in the DifficultyDB. (Jan 3rd 2006 Martin Gühman)
 //
 //----------------------------------------------------------------------------
 #include "ctp2_config.h"
@@ -78,15 +76,14 @@
 extern "C" int g_generateRequirementWarnings;
 
 RecordDescription::RecordDescription(char *name)
-:
-	m_datumList                 (),
-	m_memberClasses             (),
-	m_hasGovernmentsModified    (false),
-	m_numBits                   (0),
-	m_addingToMemberClass       (false),
-	m_baseType                  (DATUM_NONE)
 {
 	strncpy(m_name, name, k_MAX_RECORD_NAME);
+	m_numBits = 0;
+
+		m_hasGovernmentsModified = false;	
+
+	m_addingToMemberClass = false;
+	m_baseType = DATUM_NONE;
 }
 
 RecordDescription::~RecordDescription()
@@ -128,6 +125,7 @@ void RecordDescription::SetBaseType(DATUM_TYPE type)
 
 void RecordDescription::ExportHeader(FILE *outfile)
 {
+	
 	fprintf(outfile, "#ifndef __%s_RECORD_H__\n#define __%s_RECORD_H__\n\n",
 			m_name, m_name);
 
@@ -167,8 +165,6 @@ void RecordDescription::ExportHeader(FILE *outfile)
 
 	fprintf(outfile, "    //GovMod Specific accessors\n");
 	fprintf(outfile, "    bool GetHasGovernmentsModified() const { return m_hasGovernmentsModified; }\n\n");
-	fprintf(outfile, "");
-	fprintf(outfile, "");
 	fprintf(outfile, "    sint32 GenericGetNumGovernmentsModified() {");
 	
 	if(!m_hasGovernmentsModified) 
@@ -276,8 +272,6 @@ void RecordDescription::AddDatum(DATUM_TYPE type, struct namelist *nameInfo,
 	if((!(nameInfo->flags & k_NAMEVALUE_HAS_VALUE)) &&
 	   (dat->m_maxSize <= 0)) {
 		switch(dat->m_type) {
-			default:
-				break;
 			case DATUM_INT:
 			case DATUM_FLOAT:
 			case DATUM_STRUCT:
@@ -285,6 +279,12 @@ void RecordDescription::AddDatum(DATUM_TYPE type, struct namelist *nameInfo,
 			case DATUM_FILE:
 			case DATUM_STRINGID:
 				dat->m_required = true;
+				break;
+			case DATUM_BIT:
+			case DATUM_BIT_GROUP:
+			case DATUM_BIT_PAIR:
+			case DATUM_RECORD:
+			case DATUM_NONE:
 				break;
 		}
 	} else {
@@ -473,8 +473,8 @@ void RecordDescription::ExportMethods(FILE *outfile)
 	fprintf(outfile, "    ~%sRecord();\n", m_name);
 
 	//Added by Martin Gühmann functions needs a return type
-	fprintf(outfile, "    void Init();\n", m_name);
-	fprintf(outfile, "    void Serialize(CivArchive &archive);\n\n", m_name);
+	fprintf(outfile, "    void Init();\n");
+	fprintf(outfile, "    void Serialize(CivArchive &archive);\n\n");
 
 	fprintf(outfile, "    // These methods are needed for records to conform to\n");
 	fprintf(outfile, "    // 'Orthodox Cannonical Form' and work with resizing STL vectors.\n");
@@ -490,7 +490,7 @@ void RecordDescription::ExportMethods(FILE *outfile)
 
 
 	fprintf(outfile, "    void CheckRequiredFields(DBLexer *lex);\n");
-	fprintf(outfile, "    sint32 Parse(DBLexer *lex, sint32 numRecords);\n\n");
+	fprintf(outfile, "    sint32 Parse(DBLexer *lex);\n\n");
 	fprintf(outfile, "    void ResolveDBReferences();\n");
 	fprintf(outfile, "    void Merge(const %sRecord & rval);\n", m_name);
 
@@ -609,12 +609,7 @@ void RecordDescription::ExportManagement(FILE *outfile)
 	fprintf(outfile, "    if(archive.IsStoring()) {\n");
 
 	fprintf(outfile, "        archive << m_index;\n");
-	fprintf(outfile, "        if(m_name >= 0){\n");
-	fprintf(outfile, "            archive << GetIDText();\n");
-	fprintf(outfile, "        }\n");
-	fprintf(outfile, "        else{\n");
-	fprintf(outfile, "            archive << static_cast<MBCHAR*>(NULL);\n");
-	fprintf(outfile, "        }\n");
+	fprintf(outfile, "        archive << GetNameText();\n");
 	for(i = 0; i  < ((m_numBits + 31)/ 32); i++) {
 		fprintf(outfile, "        archive << m_flags%d;\n", i);
 	}
@@ -736,33 +731,33 @@ void RecordDescription::ExportParser(FILE *outfile)
 		switch(dat->m_type) {
 			case DATUM_INT:
 				if(dat->m_maxSize < 0) {
-					fprintf(outfile, "    { &%sRecord::Get%s, NULL, NULL, NULL, NULL, NULL, NULL },\n", m_name, dat->m_name);
+					fprintf(outfile, "    { %sRecord::Get%s, NULL, NULL, NULL, NULL, NULL, NULL },\n", m_name, dat->m_name);
 				} else {
-					fprintf(outfile, "    { &%sRecord::GetNum%s, NULL, NULL, NULL, NULL, &%sRecord::Get%s, NULL}, /* %s (array) */\n", m_name, dat->m_name, m_name, dat->m_name, dat->m_name);
+					fprintf(outfile, "    { %sRecord::GetNum%s, NULL, NULL, NULL, NULL, %sRecord::Get%s, NULL}, /* %s (array) */\n", m_name, dat->m_name, m_name, dat->m_name, dat->m_name);
 				}
 				break;
 			case DATUM_RECORD:
 				if(dat->m_maxSize < 0) {
-					fprintf(outfile, "    { &%sRecord::Get%sIndex, NULL, NULL, NULL, NULL, NULL, NULL },\n", m_name, dat->m_name);
+					fprintf(outfile, "    { %sRecord::Get%sIndex, NULL, NULL, NULL, NULL, NULL, NULL },\n", m_name, dat->m_name);
 				} else {
-					fprintf(outfile, "    { &%sRecord::GetNum%s, NULL, NULL, NULL, NULL, &%sRecord::Get%sIndex, NULL}, /* %s (array) */\n", m_name, dat->m_name, m_name, dat->m_name, dat->m_name);
+					fprintf(outfile, "    { %sRecord::GetNum%s, NULL, NULL, NULL, NULL, %sRecord::Get%sIndex, NULL}, /* %s (array) */\n", m_name, dat->m_name, m_name, dat->m_name, dat->m_name);
 				}
 				break;
 			case DATUM_BIT:
-				fprintf(outfile, "    { NULL, &%sRecord::Get%s, NULL, NULL, NULL, NULL, NULL },\n", m_name, dat->m_name);
+				fprintf(outfile, "    { NULL, %sRecord::Get%s, NULL, NULL, NULL, NULL, NULL },\n", m_name, dat->m_name);
 				break;
 			case DATUM_FLOAT:
 				if(dat->m_maxSize < 0) {
-					fprintf(outfile, "    { NULL, NULL, &%sRecord::Get%s, NULL, NULL, NULL, NULL },\n", m_name, dat->m_name);
+					fprintf(outfile, "    { NULL, NULL, %sRecord::Get%s, NULL, NULL, NULL, NULL },\n", m_name, dat->m_name);
 				} else {
-					fprintf(outfile, "    { &%sRecord::GetNum%s, NULL, NULL, NULL, NULL, NULL, &%sRecord::Get%s}, /* %s (array) */\n", m_name, dat->m_name, m_name, dat->m_name, dat->m_name);
+					fprintf(outfile, "    { %sRecord::GetNum%s, NULL, NULL, NULL, NULL, NULL, %sRecord::Get%s}, /* %s (array) */\n", m_name, dat->m_name, m_name, dat->m_name, dat->m_name);
 				}
 				break;
 			case DATUM_BIT_PAIR:
 				if(dat->m_bitPairDatum->m_type == DATUM_INT) {
-					fprintf(outfile, "    { NULL, NULL, NULL, &%sRecord::Get%s, NULL, NULL, NULL },\n", m_name, dat->m_name);
+					fprintf(outfile, "    { NULL, NULL, NULL, %sRecord::Get%s, NULL, NULL, NULL },\n", m_name, dat->m_name);
 				} else if(dat->m_bitPairDatum->m_type == DATUM_FLOAT) {
-					fprintf(outfile, "    { NULL, NULL, NULL, NULL, &%sRecord::Get%s, NULL, NULL },\n", m_name, dat->m_name);
+					fprintf(outfile, "    { NULL, NULL, NULL, NULL, %sRecord::Get%s, NULL, NULL },\n", m_name, dat->m_name);
 				} else {
 					fprintf(outfile, "    { NULL, NULL, NULL, NULL, NULL, NULL, NULL }, /* %s */\n", dat->m_name);
 				}
@@ -837,7 +832,7 @@ void RecordDescription::ExportParser(FILE *outfile)
 	fprintf(outfile, "}\n");
 
 	fprintf(outfile, "\n");
-	fprintf(outfile, "sint32 %sRecord::Parse(DBLexer *lex, sint32 numRecords)\n", m_name);
+	fprintf(outfile, "sint32 %sRecord::Parse(DBLexer *lex)\n", m_name);
 	fprintf(outfile, "{\n");
 	if((m_baseType != DATUM_NONE)) {
 		
@@ -888,12 +883,7 @@ void RecordDescription::ExportParser(FILE *outfile)
 		fprintf(outfile, "}\n");
 	} else {
 		
-		char uppName[256];
-		strcpy(uppName, m_name);
-		for(short unsigned int i = 0; i < strlen(m_name); i++){
-			uppName[i] = toupper(m_name[i]);
-		}
-
+		
 		fprintf(outfile, "    bool done = false;\n");
 		fprintf(outfile, "    sint32 result = 0;\n");
 		fprintf(outfile, "    sint32 tok;\n");
@@ -907,27 +897,18 @@ void RecordDescription::ExportParser(FILE *outfile)
 		fprintf(outfile, "    }\n");
 
 		fprintf(outfile, "    if(tok != k_Token_Name) {\n");
-		fprintf(outfile, "        char newName[256];\n");
-		fprintf(outfile, "        sprintf(newName, \"%s_%s\", numRecords);\n", uppName, "%i");
-		fprintf(outfile, "        if(!g_theStringDB->GetStringID(\"newName\", m_name)) {\n");
-		
-		
-		fprintf(outfile, "            g_theStringDB->InsertStr(\"newName\", \"newName\");\n");
-		fprintf(outfile, "            if(!g_theStringDB->GetStringID(\"newName\", m_name))\n");
-		fprintf(outfile, "                SetTextName(\"newName\");\n");
-		fprintf(outfile, "        }\n");
+		fprintf(outfile, "        DBERROR((\"Record does not start with name\"));\n");
+		fprintf(outfile, "        return 0;\n");
 		fprintf(outfile, "    }\n");
-		fprintf(outfile, "    else{\n");
-		fprintf(outfile, "        if(!g_theStringDB->GetStringID(lex->GetTokenText(), m_name)) {\n");
+		fprintf(outfile, "    if(!g_theStringDB->GetStringID(lex->GetTokenText(), m_name)) {\n");
 		
 		
-		fprintf(outfile, "            g_theStringDB->InsertStr(lex->GetTokenText(), lex->GetTokenText());\n");
-		fprintf(outfile, "            if(!g_theStringDB->GetStringID(lex->GetTokenText(), m_name))\n");
-		fprintf(outfile, "                SetTextName(lex->GetTokenText());\n");
-		fprintf(outfile, "        }\n");
-		fprintf(outfile, "        tok = lex->GetToken();\n");
+		fprintf(outfile, "        g_theStringDB->InsertStr(lex->GetTokenText(), lex->GetTokenText());\n");
+		fprintf(outfile, "        if(!g_theStringDB->GetStringID(lex->GetTokenText(), m_name))\n");
+		fprintf(outfile, "            SetTextName(lex->GetTokenText());\n");
 		fprintf(outfile, "    }\n");
 		fprintf(outfile, "\n");
+		fprintf(outfile, "    tok = lex->GetToken();\n");
 
 		if(m_hasGovernmentsModified) {
 		fprintf(outfile, "    // Start of GovMod Specific lexical analysis\n");
@@ -1142,10 +1123,20 @@ void RecordDescription::ExportDataParsers(FILE *outfile)
 	while(walk.IsValid()) {
 		Datum *dat = walk.GetObj();
 		switch(dat->m_type) {
-			default:
-				break;
 			case DATUM_BIT_GROUP:
 				dat->ExportBitGroupParser(outfile, m_name);
+				break;
+			case DATUM_STRUCT:
+				break;
+			case DATUM_BIT:
+			case DATUM_BIT_PAIR:
+			case DATUM_FILE:
+			case DATUM_FLOAT:
+			case DATUM_INT:
+			case DATUM_RECORD:
+			case DATUM_STRING:
+			case DATUM_STRINGID:
+			case DATUM_NONE:
 				break;
 		}
 		walk.Next();

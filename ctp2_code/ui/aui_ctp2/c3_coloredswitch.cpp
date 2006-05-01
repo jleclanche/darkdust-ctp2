@@ -10,7 +10,7 @@
 
 #include "c3ui.h"
 #include "pixelutils.h"
-#include "colorset.h"               // g_colorSet
+#include "colorset.h"
 #include "c3_coloredswitch.h"
 #include "patternbase.h"
 #include "pattern.h"
@@ -20,6 +20,7 @@
 
 extern C3UI			*g_c3ui;
 extern SlicEngine	*g_slicEngine;
+extern ColorSet		*g_colorSet;
 
 
 c3_ColoredSwitch::c3_ColoredSwitch(

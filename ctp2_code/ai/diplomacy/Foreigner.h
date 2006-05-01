@@ -14,6 +14,10 @@
 #define __FOREIGNER_H__
 
 
+#ifdef _MSC_VER
+#pragma warning(disable: 4786)
+#endif
+
 #include <list>
 #include <deque>
 

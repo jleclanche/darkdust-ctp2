@@ -43,7 +43,7 @@
 #include "StrDB.h"
 #include "GameEventManager.h"
 
-#include "aicause.h"
+#include "AICause.h"
 
 #include "Diplomat.h"
 #include "mapanalysis.h"

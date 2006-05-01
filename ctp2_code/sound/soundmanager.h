@@ -20,6 +20,9 @@
 // _DEBUG
 // - Generate debug version
 //
+// _MSC_VER		
+// - Use Microsoft C++ extensions when set.
+//
 // USE_SDL
 // - Compile with sdl support instead of mss (define: civsound.h)
 //----------------------------------------------------------------------------
@@ -32,7 +35,7 @@
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -89,6 +92,8 @@ public:
 
 	void DumpAllSounds();
 
+	void ConvertCoordinates(const sint32 &x, const sint32 &y,
+                            sint32 &soundX, sint32 &soundY, sint32 &soundZ);
 	void ProcessRedbook(void);
 	void Process(const uint32 &target_milliseconds, uint32 &used_milliseconds);
 	
@@ -138,15 +143,19 @@ public:
 
 	
 	void StupidPlaySound(const sint32 &soundID);
+	void PlaySound(const MBCHAR *fullFilename, const bool &bNoWait);
 
 	void ReleaseSoundDriver();
 	void ReacquireSoundDriver();
 
 #if defined(USE_SDL)
-    void SDL_ChannelCompleteCB(int channel);
+        void SDL_ChannelCompleteCB(int channel);
 #endif
 
+        struct Data;
 private:
+	Data *m_pData;
+	
 	PointerList<CivSound>	*m_sfxSounds;
 	PointerList<CivSound>	*m_voiceSounds;
 

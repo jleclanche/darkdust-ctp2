@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : tiff image format utilities
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -28,10 +28,22 @@
 //
 //----------------------------------------------------------------------------
 
-#include "c3.h"
+#include "ctp2_config.h"
+// Whether we want to supply our own inttypes to libtiff
+// (size must match of course)
+#ifdef _TIFF_DATA_TYPEDEFS_
+#define CONFIG_TELLS_TO_DEFINE_TIFF_INTTYPES 1
+#endif
 
-#include "tiffutils.h"
+
+#include "c3.h"
+#ifdef CONFIG_TELLS_TO_DEFINE_TIFF_INTTYPES
+typedef sint8 int8;
+typedef sint16 int16;
+typedef sint32 int32;
+#endif
 #include <tiffio.h>
+#include "tiffutils.h"
 
 char *tiffutils_LoadTIF(const char *filename, uint16 *width, uint16 *height, size_t *size)
 {
@@ -77,7 +89,6 @@ char *tiffutils_LoadTIF(const char *filename, uint16 *width, uint16 *height, siz
 
 	return NULL;
 }
-
 
 char *TIF2mem(const char *filename, uint16 *width, uint16 *height, size_t *size)
 {
@@ -133,7 +144,6 @@ char *TIF2mem(const char *filename, uint16 *width, uint16 *height, size_t *size)
 
 	return image;
 }
-
 
 int TIFGetMetrics(const char *filename, uint16 *width, uint16 *height)
 {
@@ -237,7 +247,6 @@ int TIFLoadIntoBuffer16(const char *filename, uint16 *width, uint16 *height, uin
 
 
 
-
 char *StripTIF2Mem(const char *filename, uint16 *width, uint16 *height, size_t *size)
 {
 	uint32      imageLength;
@@ -256,7 +265,7 @@ char *StripTIF2Mem(const char *filename, uint16 *width, uint16 *height, size_t *
 	tif = TIFFOpen(filename, "r");
 
 	if (!tif)
-	   return NULL;
+		return NULL;
 	*width = static_cast<uint16>(-1);
 	*height = static_cast<uint16>(-1);
 
@@ -268,29 +277,28 @@ char *StripTIF2Mem(const char *filename, uint16 *width, uint16 *height, size_t *
 
 	LineSize = TIFFScanlineSize(tif);
 
-
-
 	stripSize = (sint32) TIFFStripSize(tif);
 	buf = (char *)malloc(stripSize);
 	outBuf = (char *)malloc(imageWidth * imageLength * 4);
 	if (size)
 		*size = imageWidth * imageLength * 4;
+
 	outBufPtr = outBuf;
 
 
 
 
-	for (row = 0; row < imageLength; row += RowsPerStrip)
-	  {
+	for (row = 0; row < imageLength; row += RowsPerStrip) 
+	{
 		nrow = (row + RowsPerStrip > imageLength ? imageLength - row : RowsPerStrip);
 		if (TIFFReadEncodedStrip(tif, TIFFComputeStrip(tif, row, 0), buf, nrow*LineSize)==-1) {
 			return NULL;
-		} else {
+		} else {  
 			for (l = 0; l < nrow; l++) {
 				memcpy(outBufPtr, &buf[(sint32) (l*LineSize)], (sint32) imageWidth*4);
 				outBufPtr += imageWidth * 4;
 			}
-		 }
+		}
 	}
 
 	free(buf);
@@ -300,6 +308,6 @@ char *StripTIF2Mem(const char *filename, uint16 *width, uint16 *height, size_t *
 	*width = (uint16)imageWidth;
 	*height = (uint16)imageLength;
 
-	return outBuf;
+	return outBuf;         
 }
 

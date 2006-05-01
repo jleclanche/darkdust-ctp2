@@ -62,33 +62,31 @@ uint32 aui_Region::m_regionClassId = aui_UniqueId();
 
 
 
-aui_Region::aui_Region
-(
-	AUI_ERRCODE *   retval,
-	uint32          id,
-	MBCHAR *        ldlBlock 
-)
-:
-    aui_Base()
+aui_Region::aui_Region(
+	AUI_ERRCODE *retval,
+	uint32 id,
+	MBCHAR *ldlBlock )
 {
-	*retval = InitCommonLdl(id, ldlBlock);
+	*retval = InitCommonLdl( id, ldlBlock );
+	Assert( AUI_SUCCESS(*retval) );
+	if ( !AUI_SUCCESS(*retval) ) return;
 }
 
 
 
-aui_Region::aui_Region
-(
-	AUI_ERRCODE *   retval,
-	uint32          id,
-	sint32          x,
-	sint32          y,
-	sint32          width,
-	sint32          height 
-)
-:
+aui_Region::aui_Region(
+	AUI_ERRCODE *retval,
+	uint32 id,
+	sint32 x,
+	sint32 y,
+	sint32 width,
+	sint32 height )
+	:
 	aui_Base()
 {
-	*retval = InitCommon(id, x, y, width, height);
+	*retval = InitCommon( id, x, y, width, height );
+	Assert( AUI_SUCCESS(*retval) );
+	if ( !AUI_SUCCESS(*retval) ) return;
 }
 
 
@@ -123,9 +121,11 @@ AUI_ERRCODE aui_Region::InitCommon( uint32 id, sint32 x, sint32 y, sint32 width,
 	m_showCallbackData = NULL;
 	m_hideCallbackData = NULL;
 
-	
-	
+#ifdef USE_SDL
+	m_doubleClickTimeOut = 375;
+#else	
 	m_doubleClickTimeOut = GetDoubleClickTime();
+#endif
 
 	m_ldlBlock = NULL;
 

@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Activision User Interface window
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -34,8 +34,8 @@
 #include "aui_directui.h"
 #include "aui_directsurface.h"
 #else
-#include "aui_ui.h"
-#include "aui_surface.h"
+#include "aui_sdlui.h"
+#include "aui_sdlsurface.h"
 #endif 
 
 #include "aui_uniqueid.h"
@@ -89,6 +89,7 @@ aui_Window::aui_Window(
 	Assert( AUI_SUCCESS(*retval) );
 	if ( !AUI_SUCCESS(*retval) ) return;
 }
+
 
 
 AUI_ERRCODE aui_Window::InitCommon( sint32 bpp, AUI_WINDOW_TYPE type )
@@ -147,11 +148,12 @@ AUI_ERRCODE aui_Window::CreateSurface( void )
 			m_bpp,
 			((aui_DirectUI *)g_ui)->DD() );
 #else
-		m_surface = new aui_Surface(
+		m_surface = new aui_SDLSurface(
 			&errcode,
 			m_width,
 			m_height,
-			m_bpp );
+			m_bpp,
+			((aui_SDLUI*) g_ui)->DD() );
 #endif 
 		Assert( AUI_NEWOK(m_surface,errcode) );
 		if ( !AUI_NEWOK(m_surface,errcode) ) return errcode;
@@ -167,13 +169,37 @@ AUI_ERRCODE aui_Window::CreateSurface( void )
 
 aui_Window::~aui_Window()
 {
-		delete m_surface;
-		delete m_dirtyList;
-	delete m_grabRegion;	
-		free(m_stencil);
-	delete m_focusControl;
-		delete m_focusList;
+	if ( m_grabRegion )
+	{
+		delete m_grabRegion;
+		m_grabRegion = NULL;
 	}
+
+	if ( m_surface )
+	{
+		delete m_surface;
+		m_surface = NULL;
+	}
+
+
+	if ( m_dirtyList )
+	{
+		delete m_dirtyList;
+		m_dirtyList = NULL;
+	}
+
+	if(m_stencil)
+	{
+		free(m_stencil);
+		m_stencil = NULL;
+	}
+
+	if(m_focusList)
+	{
+		delete m_focusList;
+		m_focusList = NULL;
+	}
+}
 
 
 AUI_ERRCODE aui_Window::Move( sint32 x, sint32 y )

@@ -16,16 +16,12 @@
 //----------------------------------------------------------------------------
 //
 // Compiler flags
-//
-// - None
-//
+// 
 //----------------------------------------------------------------------------
 //
 // Modifications from the original Activision code:
 //
 // - Option added to close a message box automatically on eyepoint clicking.
-// - Messages are closed if an open command is executed and there is already
-//   an open messages, enables left click close. (Oct 16th 2005 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
 
@@ -57,6 +53,7 @@
 #include "player.h"
 #include "director.h"
 #include "profileDB.h"				// g_theProfileDB
+#include "soundmanager.h" // g_soundManager
 
 extern RadarMap			*g_radarMap;
 extern C3UI				*g_c3ui;
@@ -88,18 +85,14 @@ void MessageOpenAction::Execute( aui_Control *control, uint32 action, uint32 dat
 		m_iconWindow->SetCurrentIconButton( m_iconWindow->GetIconButton() );
 		m_iconWindow->GetWindow()->ShowWindow( TRUE );
 	}
-	else{
-		m_iconWindow->SetCurrentIconButton( NULL );
-		m_iconWindow->GetWindow()->ShowWindow( FALSE );
-		return;
-	}
 
 	
 	MBCHAR *wavName = NULL;
-	if ( wavName = ( MBCHAR * ) message->AccessData()->GetMsgOpenSound() ) {
+	if ((wavName = ( MBCHAR * ) message->AccessData()->GetMsgOpenSound())) {
 		MBCHAR filename[ _MAX_PATH ]; 
 		g_civPaths->FindFile( C3DIR_SOUNDS, wavName, filename );
-		PlaySound( filename, NULL, SND_ASYNC | SND_FILENAME ); 
+		if (g_soundManager)
+			g_soundManager->PlaySound(filename, false);
 	}
 }
 
@@ -195,6 +188,7 @@ void MessageLibraryAction::Execute( aui_Control *control, uint32 action, uint32 
 // Remark(s)  : -
 //
 //----------------------------------------------------------------------------
+
 void MessageStandardEyePointAction::Execute( aui_Control *control, uint32 action, uint32 data )
 {
 	if ( action != ( uint32 )AUI_BUTTON_ACTION_EXECUTE ) return;

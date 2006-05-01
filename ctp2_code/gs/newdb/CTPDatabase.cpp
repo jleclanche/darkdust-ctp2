@@ -73,9 +73,6 @@
 // - Records can now be also parsed as quoted string. (Aug 26th 2005 Martin Gühmann)
 // - The new databases can now be ordered alphabethical like the old ones. (Aug 26th 2005 Martin Gühmann)
 // - Added the new risk database. (Aug 29th 2005 Martin Gühmann)
-// - Parser for struct ADVANCE_CHANCES of DiffDB.txt can now be generated. (Jan 3rd 2006 Martin Gühmann)
-// - If database records have no name a default name is generated. e.g.
-//   DIFFICULTY_5 for the sixth entry in the DifficultyDB. (Jan 3rd 2006 Martin Gühman)
 //
 //----------------------------------------------------------------------------
 
@@ -93,15 +90,15 @@
 
 
 template <class T> CTPDatabase<T>::CTPDatabase()
-:
-    m_numRecords        (0),
-    m_modifiedRecords   (),
-    m_indexToAlpha      (NULL),
-    m_alphaToIndex      (NULL),
-    m_allocatedSize     (k_INITIAL_DB_SIZE)
+:	m_numRecords(0),
+	m_modifiedRecords(),
+	m_indexToAlpha(NULL),
+	m_alphaToIndex(NULL)
 {
-    m_records       = new T *[m_allocatedSize];
-    m_modifiedList  = new PointerList<GovernmentModifiedRecordNode> *[m_allocatedSize];
+	m_allocatedSize = k_INITIAL_DB_SIZE;
+	m_records = new T *[m_allocatedSize];
+
+	m_modifiedList = new PointerList<GovernmentModifiedRecordNode> *[m_allocatedSize];
 }
 
 
@@ -120,16 +117,11 @@ template <class T> CTPDatabase<T>::~CTPDatabase()
 	delete [] m_alphaToIndex;
 
 
-    for 
-    (
-        std::vector<T *>::iterator p = m_modifiedRecords.begin();
-        p != m_modifiedRecords.end();
-        ++p
-    )
-    {
-        delete *p;
-    }
-    std::vector<T *>().swap(m_modifiedRecords);
+	for (size_t j = 0; j < m_modifiedRecords.size(); ++j)
+	{
+		delete m_modifiedRecords[j];
+	}
+	m_modifiedRecords.clear();
 
 	if (m_modifiedList) 
 	{
@@ -195,8 +187,7 @@ template <class T> void CTPDatabase<T>::Serialize(CivArchive &archive)
 		for(i = 0; i < m_numRecords; ++i){
 			const MBCHAR *str = m_records[i]->GetNameText();
 			sint32 a;
-			for (a = 0; a < i; ++a)
-			{
+			for(a = 0; a < i; ++a){
 				if(_stricoll(str, m_records[m_alphaToIndex[a]]->GetNameText()) < 0)
 				{
 					memmove(
@@ -204,6 +195,7 @@ template <class T> void CTPDatabase<T>::Serialize(CivArchive &archive)
 						m_alphaToIndex + a,
 						(i - a) * sizeof(sint32));
 
+				
 					for(sint32 j = 0; j < i; ++j)
 						if(m_indexToAlpha[j] >= a)
 							++m_indexToAlpha[j];
@@ -413,7 +405,7 @@ template <class T> sint32 CTPDatabase<T>::Parse(DBLexer *lex)
 	{
 		T * obj = new T();
 
-		if (obj->Parse(lex, m_numRecords))
+		if (obj->Parse(lex))
 		{
 			Add(obj);
 		}
@@ -437,8 +429,7 @@ template <class T> sint32 CTPDatabase<T>::Parse(DBLexer *lex)
 	for(sint32 i = 0; i < m_numRecords; ++i){
 		const MBCHAR *str = m_records[i]->GetNameText();
 		sint32 a;
-		for (a = 0; a < i; ++a)
-		{
+		for(a = 0; a < i; ++a){
 			if(_stricoll(str, m_records[m_alphaToIndex[a]]->GetNameText()) < 0)
 			{
 				memmove(
@@ -475,55 +466,6 @@ template <class T> bool CTPDatabase<T>::GetRecordFromLexer(DBLexer *lex, sint32 
 	err = DBPARSE_OK;
 
 	sint32 tok = lex->GetToken();
-	if(tok != k_Token_Name) {
-		if(tok == k_Token_Int) {
-			index = atoi(lex->GetTokenText());
-			return true;
-		}
-		else if(tok != k_Token_String){
-			DBERROR(("Expected record name1"));
-			err = DBPARSE_OTHER;
-			return false;
-		}
-	}
-
-	sint32 strId;
-	if(!g_theStringDB->GetStringID(lex->GetTokenText(), strId)) {
-
-		
-		sint32 i;
-		for(i = 0; i < m_numRecords; i++) {
-			if(!stricmp(m_records[i]->GetNameText(), lex->GetTokenText())) {
-				index = i;
-				return true;
-			}
-		}
-		
-		g_theStringDB->InsertStr(lex->GetTokenText(), lex->GetTokenText());
-		if(g_theStringDB->GetStringID(lex->GetTokenText(), strId)) {
-			index = strId | 0x80000000; 
-			err = DBPARSE_DEFER;
-			return true;
-		} else {
-			err = DBPARSE_OTHER;
-			return false;
-		}
-	}
-
-	if(GetNamedItem(strId, index)) {
-		return true;
-	} else {
-		index = strId | 0x80000000;
-		err = DBPARSE_DEFER;
-		return true;
-	}
-}
-
-template <class T> bool CTPDatabase<T>::GetCurrentRecordFromLexer(DBLexer *lex, sint32 &index, DBPARSE_ERROR &err)
-{
-	err = DBPARSE_OK;
-
-	sint32 tok = lex->GetCurrentToken();
 	if(tok != k_Token_Name) {
 		if(tok == k_Token_Int) {
 			index = atoi(lex->GetTokenText());
@@ -855,7 +797,4 @@ template class CTPDatabase<CivilisationRecord>;
 
 #include "RiskRecord.h" // 36
 template class CTPDatabase<RiskRecord>;
-
-#include "DifficultyRecord.h" // 37
-template class CTPDatabase<DifficultyRecord>;
 #endif // __TILETOOL__

@@ -68,7 +68,6 @@
 //   (ie the agent can be rollbacked and eventually be used for another goal)
 //   depending on NoRollback flag.
 // - Prevented crashes, and cleaned up the code somewhat.
-// - Deferred some derefences until used (hopefully preventing crashes).
 //
 //----------------------------------------------------------------------------
 
@@ -77,14 +76,14 @@
 
 #include "profileai.h"
 #include "debugassert.h"
-#include "squad.h"
-#include "goal.h"
-#include "Agent.h"
+#include "Squad.h"
+#include "Goal.h"
+#include "agent.h"
 #include "ArmyData.h"
 #include "ctpagent.h"
 #include "ctpgoal.h"
 #include "Scheduler.h"
-#include "squad_strength.h"
+#include "squad_Strength.h"
 #include "ctpaidebug.h"
 #include "ArmyPool.h"
 
@@ -388,7 +387,7 @@ sint32 Plan::Commit_Agents()
 {
 	Assert(m_the_goal);
 	Assert(m_the_squad);
-	Assert(m_matches.size() == m_the_squad->Get_Num_Agents());
+	Assert(m_matches.size() == (unsigned) m_the_squad->Get_Num_Agents());
 
     if (!m_the_goal || !m_the_squad)
     {
@@ -514,7 +513,10 @@ sint32 Plan::Commit_Agents()
 GOAL_RESULT Plan::Execute_Task()
 {
 	Assert(m_the_goal);
-	return m_the_goal ? m_the_goal->Execute_Task() : GOAL_FAILED;
+	if (m_the_goal)	{
+		return m_the_goal->Execute_Task();
+	}
+    return GOAL_FAILED;
 }
 
 
@@ -522,20 +524,30 @@ GOAL_RESULT Plan::Execute_Task()
 
 bool Plan::Commited_Agents_Need_Orders() const
 {
-	for 
-	(
-		Agent_Match_List::const_iterator match_iter = m_matches.begin();
-		match_iter != m_matches.end();
-		++match_iter
-	) 
-	{
-		if (match_iter->committed)
-		{
-			CTPAgent_ptr agent_ptr = (CTPAgent_ptr) *(match_iter->squad_index);
+	Assert(m_the_goal);
+	Assert(m_the_squad);
 
-			if (agent_ptr->Get_Army()->NumOrders() <= 0)
-				return true;
-		} 
+	sint16 rollback_agents = 0;
+    CTPAgent_ptr agent_ptr;
+
+	
+	CTPGoal_ptr ctpgoal_ptr = (CTPGoal_ptr) m_the_goal;
+
+	Agent_Match_List::const_iterator match_iter;
+	for (match_iter = m_matches.begin();
+		 match_iter != m_matches.end();
+		 match_iter++) {
+
+		
+		agent_ptr = (CTPAgent_ptr) *(match_iter->squad_index);
+
+		if (match_iter->committed)
+			{
+
+				if (agent_ptr->Get_Army()->NumOrders() <= 0)
+					return true;
+			} 
+
 	} 
 
 	return false;
@@ -571,9 +583,10 @@ sint32 Plan::Rollback_All_Agents()
 		    ++match_iter
         ) 
         {
+            CTPAgent_ptr agent_ptr = (CTPAgent_ptr) *(match_iter->squad_index);
+
 		    if (match_iter->committed)
 		    {
-			    CTPAgent_ptr agent_ptr = (CTPAgent_ptr) *(match_iter->squad_index);
 			    ctpgoal_ptr->Rollback_Agent(match_iter->goal_index);
 			    match_iter->committed   = false;
 			    match_iter->value       = Goal::BAD_UTILITY;
@@ -593,42 +606,66 @@ sint32 Plan::Rollback_All_Agents()
 
 void Plan::Move_All_Agents(Squad_ptr new_squad)
 {
-	Assert(m_the_goal && m_the_squad);
+	Assert(m_the_goal);
+	Assert(m_the_squad);
+
+	Agent_ptr agent_ptr;
+    Agent_List::const_iterator agent_iter;
+
+	
 	CTPGoal_ptr ctpgoal_ptr = (CTPGoal_ptr) m_the_goal;
 
-    for 
-    (
-        Agent_Match_List::iterator match_iter = m_matches.begin();
-	    match_iter != m_matches.end();
-        ++match_iter
-    ) 
-    {
+	Agent_Match_List::iterator match_iter;
+    match_iter = m_matches.begin();
+	while (match_iter != m_matches.end()) {
+
+        
 		if (match_iter->committed)
-		{
-#ifdef _DEBUG
-			CTPAgent_ptr ctpagent_ptr = (CTPAgent_ptr) (*(match_iter->goal_index));
-
-			if (!g_theArmyPool->IsValid(ctpagent_ptr->Get_Army()))
 			{
-				bool SHOW_RICHARD_THIS_ASSERT_082900 = false;
-				Assert(SHOW_RICHARD_THIS_ASSERT_082900);
-			}
+#ifdef _DEBUG
+				
+				CTPAgent_ptr ctpagent_ptr = (CTPAgent_ptr) (*((*match_iter).goal_index));
+				if (!g_theArmyPool->IsValid(ctpagent_ptr->Get_Army()))
+				{
+					bool SHOW_RICHARD_THIS_ASSERT_082900 = false;
+					Assert(SHOW_RICHARD_THIS_ASSERT_082900);
+				}
 #endif // _DEBUG
+				agent_ptr = ctpgoal_ptr->Rollback_Agent((*match_iter).goal_index);
 
-            Agent_ptr agent_ptr = ctpgoal_ptr->Rollback_Agent(match_iter->goal_index);
-		    new_squad->Add_Agent(agent_ptr);
-		    match_iter->committed = false;
-		    agent_ptr->Set_Is_Used(false);
-            Agent_List::const_iterator agent_iter = match_iter->squad_index;
-            m_the_squad->Remove_Agent(agent_iter, false);
-		} 
+                
+
+				
+				new_squad->Add_Agent(agent_ptr);
+
+				
+				match_iter->committed = false;
+
+				
+				agent_ptr->Set_Is_Used(false);
+
+                
+                agent_iter = match_iter->squad_index;
+
+                
+                
+                match_iter++; 
+
+                
+				m_the_squad->Remove_Agent(agent_iter, false);
+			} 
         else
 		{
+			
 			Assert(ctpgoal_ptr->Get_Agent_List().end() == match_iter->goal_index);
+
+            
+            match_iter++; 
 		}
 	} 
 
 #ifdef _DEBUG_SCHEDULER
+	
 	ctpgoal_ptr->Validate();
 #endif // _DEBUG_SCHEDULER
 }
@@ -636,7 +673,8 @@ void Plan::Move_All_Agents(Squad_ptr new_squad)
 
 bool Plan::Remove_Agent_Reference(const Agent_List::const_iterator & agent_iter)
 {
-	Assert(m_the_goal && m_the_squad);
+	Assert(m_the_goal);
+	Assert(m_the_squad);
 	
 	CTPGoal_ptr ctpgoal_ptr	= static_cast<CTPGoal_ptr>(m_the_goal);
 
@@ -647,6 +685,7 @@ bool Plan::Remove_Agent_Reference(const Agent_List::const_iterator & agent_iter)
         ++match_iter
     ) 
 	{
+        
         if (match_iter->squad_index == agent_iter) 
 		{
             if (match_iter->committed) 
@@ -656,21 +695,32 @@ bool Plan::Remove_Agent_Reference(const Agent_List::const_iterator & agent_iter)
 				    ctpgoal_ptr->Rollback_Agent(match_iter->goal_index);
                 }
 
+				
 				(*agent_iter)->Set_Is_Used(false);
+	
+				
+#ifdef _DEBUG_SCHEDULER
+				if (ctpgoal_ptr->ReferencesAgent((const CTPAgent_ptr) *agent_iter))
+				{
+					Assert(0);
+				}
+#endif // _DEBUG_SCHEDULER
             }
 			else 
 			{
 				Assert(ctpgoal_ptr->Get_Agent_List().end() == match_iter->goal_index);
-			}
 
+				
 #ifdef _DEBUG_SCHEDULER
-			if (ctpgoal_ptr->ReferencesAgent((const CTPAgent_ptr) *agent_iter))
-			{
-				Assert(0);
-			}
+				if (ctpgoal_ptr->ReferencesAgent((const CTPAgent_ptr) *agent_iter))
+				{
+					Assert(0);
+				}
 #endif // _DEBUG_SCHEDULER
+			}
 
             match_iter = m_matches.erase(match_iter);
+
             return true;
         } 
 	} 

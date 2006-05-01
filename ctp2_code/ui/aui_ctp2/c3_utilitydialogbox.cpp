@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : The civilization 3 utility dialog box
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -25,12 +25,10 @@
 // Modifications from the original Activision code:
 //
 // - Initialized local variables. (Sep 9th 2005 Martin Gühmann)
-// - Fixed memory leaks.
 //
 //----------------------------------------------------------------------------
 
 #include "c3.h"
-#include "c3_utilitydialogbox.h"
 
 
 #include "aui.h"
@@ -61,6 +59,7 @@
 #include "c3window.h"
 #include "c3windows.h"
 #include "c3_popupwindow.h"
+#include "c3_utilitydialogbox.h"
 #include "SelItem.h"
 
 
@@ -142,7 +141,7 @@ void C3UtilityCityListButtonActionCallback( aui_Control *control, uint32 action,
 	if ((c3_Button*)control == popup->m_window->Cancel())
 	{
 		if (popup->m_callback)
-			popup->m_callback(Unit(), FALSE);
+			popup->m_callback( Unit(0), FALSE );
 
 		
 		popup->RemoveWindow();
@@ -981,17 +980,7 @@ sint32 c3_UtilityTextFieldPopup::UpdateData( void )
 
 
 
-c3_UtilityTextMessagePopup::c3_UtilityTextMessagePopup
-( 
-    MBCHAR const *                  text, 
-    sint32                          type, 
-    c3_UtilityTextMessageCallback * callback,  
-    MBCHAR const *                  ldlBlock 
-)
-:
-    m_callback  (callback),
-    m_text      (NULL),
-    m_type      (type)
+c3_UtilityTextMessagePopup::c3_UtilityTextMessagePopup( MBCHAR *text, sint32 type, c3_UtilityTextMessageCallback* callback,  MBCHAR *ldlBlock )
 {
 	AUI_ERRCODE errcode = AUI_ERRCODE_OK;
 	MBCHAR		windowBlock[ k_AUI_LDL_MAXBLOCK + 1 ];
@@ -1019,8 +1008,12 @@ c3_UtilityTextMessagePopup::c3_UtilityTextMessagePopup
 	m_ok = NULL;
 	m_cancel = NULL;
 	m_title_label = NULL;
+	m_text = NULL;
+	m_type = type;
 	
+	m_callback = callback;
 
+	
 	Initialize( windowBlock );
 }
 
@@ -1105,7 +1098,7 @@ sint32 c3_UtilityTextMessagePopup::Cleanup( void )
 	return 0;
 }
 
-void c3_UtilityTextMessagePopup::DisplayWindow( MBCHAR const *text )
+void c3_UtilityTextMessagePopup::DisplayWindow( MBCHAR *text )
 {
 	AUI_ERRCODE auiErr;
 
@@ -1125,14 +1118,14 @@ void c3_UtilityTextMessagePopup::RemoveWindow( void )
 	auiErr = g_c3ui->RemoveWindow( m_window->Id() );
 	Assert( auiErr == AUI_ERRCODE_OK );
 
+	c3_UtilityTextMessageCleanupAction *tempAction = new c3_UtilityTextMessageCleanupAction;
+
+	g_c3ui->AddAction(tempAction);
+
 	keypress_RemoveHandler(m_window);
-
-	delete g_utilityTextMessage;
-	g_utilityTextMessage = NULL;
-
 }
 
-sint32 c3_UtilityTextMessagePopup::UpdateData( MBCHAR const *text )
+sint32 c3_UtilityTextMessagePopup::UpdateData( MBCHAR *text )
 {
 	
 	if (text)
@@ -1151,22 +1144,16 @@ void c3_UtilityTextMessageCleanupAction::Execute(aui_Control *control,
 	if (g_utilityTextMessage)
 		g_utilityTextMessage->Cleanup();
 
-	delete g_utilityTextMessage;
 	g_utilityTextMessage = NULL;
 }
 
-c3_UtilityTextMessageCreateAction::c3_UtilityTextMessageCreateAction
-( 
-    MBCHAR const *                  text, 
-    sint32                          type, 
-    c3_UtilityTextMessageCallback * callback, 
-    MBCHAR const *                  ldlBlock 
-)
-:   m_text      (text),
-    m_type      (type),
-    m_callback  (callback),
-    m_ldlBlock  (ldlBlock)
-{ ; }
+c3_UtilityTextMessageCreateAction::c3_UtilityTextMessageCreateAction( MBCHAR *text, sint32 type, c3_UtilityTextMessageCallback *callback, MBCHAR *ldlBlock )
+{
+	m_text = text;
+	m_type = type;
+	m_callback = callback;
+	m_ldlBlock = ldlBlock;
+}
 
 
 void c3_UtilityTextMessageCreateAction::Execute( aui_Control *control, uint32 action, uint32 data )
@@ -1180,11 +1167,10 @@ void c3_UtilityAbortCleanupAction::Execute(aui_Control *control,
 									uint32 action,
 									uint32 data )
 {
-	// That's a design: Deleting from a member function a global object from the same type.
+	
 	if (g_utilityAbort)
 		g_utilityAbort->Cleanup();
 
-	delete g_utilityAbort;
 	g_utilityAbort = NULL;
 }
 
@@ -1192,7 +1178,7 @@ void c3_UtilityAbortCleanupAction::Execute(aui_Control *control,
 
 
 
-void c3_TextMessage(MBCHAR const *text, sint32 type, c3_UtilityTextMessageCallback *callback, MBCHAR const *ldlBlock )
+void c3_TextMessage(MBCHAR *text, sint32 type, c3_UtilityTextMessageCallback *callback, MBCHAR *ldlBlock )
 {
 	
 	if (g_utilityTextMessage) return;
@@ -1207,7 +1193,6 @@ void c3_KillTextMessage( void )
 	if (g_utilityTextMessage)
 		g_utilityTextMessage->Cleanup();
 
-	delete g_utilityTextMessage;
 	g_utilityTextMessage = NULL;
 }
 
@@ -1248,7 +1233,11 @@ void c3_RemoveAbortMessage( void )
 
 
 
-c3_UtilityAbortPopup::c3_UtilityAbortPopup( MBCHAR const *text, sint32 type, c3_UtilityTextMessageCallback* callback,  MBCHAR const *ldlBlock )
+
+
+
+
+c3_UtilityAbortPopup::c3_UtilityAbortPopup( MBCHAR *text, sint32 type, c3_UtilityTextMessageCallback* callback,  MBCHAR *ldlBlock )
 {
 	AUI_ERRCODE errcode = AUI_ERRCODE_OK;
 	MBCHAR		windowBlock[ k_AUI_LDL_MAXBLOCK + 1 ];
@@ -1325,7 +1314,6 @@ sint32 c3_UtilityAbortPopup::Cleanup( void )
 
 	mycleanup( m_abort );
 	mycleanup( m_meter );
-	mycleanup( m_text  );
 
 	m_type = 0;
 	
@@ -1336,7 +1324,7 @@ sint32 c3_UtilityAbortPopup::Cleanup( void )
 	return 0;
 }
 
-void c3_UtilityAbortPopup::DisplayWindow( MBCHAR const *text, sint32 percentFilled )
+void c3_UtilityAbortPopup::DisplayWindow( MBCHAR *text, sint32 percentFilled )
 {
 	AUI_ERRCODE auiErr;
 
@@ -1363,12 +1351,11 @@ void c3_UtilityAbortPopup::RemoveWindow( void )
 
 	keypress_RemoveHandler(this);
 
-	delete g_utilityAbort;
-	g_utilityAbort = NULL;
+	g_c3ui->AddAction( new c3_UtilityAbortCleanupAction );
 
 }
 
-sint32 c3_UtilityAbortPopup::UpdateData( MBCHAR const *text )
+sint32 c3_UtilityAbortPopup::UpdateData( MBCHAR *text )
 {
 	
 	if (text)

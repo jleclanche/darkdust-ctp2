@@ -12,7 +12,6 @@
 
 
 #include "c3.h"
-#include "c3listbox.h"
 
 #include "aui.h"
 #include "aui_uniqueid.h"
@@ -21,11 +20,15 @@
 #include "aui_ldl.h"
 #include "c3_ranger.h"
 #include "pattern.h"
+
 #include "pixelutils.h"
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 #include "primitives.h"
 
+#include "c3listbox.h"
 
+
+extern ColorSet		*g_colorSet;
 
 
 C3ListBox::C3ListBox(

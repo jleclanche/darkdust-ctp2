@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ header
 // Description  : Good sprite handling
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -27,7 +27,6 @@
 // - Fixed memory leaks.
 //
 //----------------------------------------------------------------------------
-
 #ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
@@ -48,7 +47,6 @@ enum GOODACTION {
 };
 
 class aui_Surface;
-class aui_DirectSurface;
 
 class Sprite;
 
@@ -85,7 +83,7 @@ public:
 	POINT			GetHotPoint(GOODACTION action);
 
 
- 
+	
 	sint32			Parse(uint16 id,GROUPTYPE group);
 
 private:

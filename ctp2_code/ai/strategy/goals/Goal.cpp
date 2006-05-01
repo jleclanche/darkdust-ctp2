@@ -17,17 +17,21 @@
 //
 // Compiler flags
 //
+// _MSC_VER		
+// - Compiler version (for the Microsoft C++ compiler only)
+//
+// Note: For the blocks with _MSC_VER preprocessor directives, the following
+//       is implied: the (_MSC_VER) preprocessor directive lines and the blocks
+//       between #else and #endif are modified Apolyton code. The blocks that
+//       are active for _MSC_VER value 1200 are the original Activision code.
+//
 //----------------------------------------------------------------------------
 //
 // Modifications from the original Activision code:
 //
-// - Consider a goal with max armies engaged as satisfied - the limitation of 
-//   army size : we cannot form a group with more armies than the max (can 
-//   disturb the goals with RallyFirst() - Calvitix
-// - Changes the const attribute for Compute_Matching_Value (Raw_Priority will 
-//   be changed on wounded case) - Calvitix
-// - Linux support modifications + cleanup.
-//
+// - Consider a goal with max armies engaged as satisfied - the limitation of army size : 
+//     we cannot form a group with more armies than the max (can disturb the goals with RallyFirst() - Calvitix
+// - Changes the const attribute for Compute_Matching_Value (Raw_Priority will be changed on wounded case) - Calvitix
 //----------------------------------------------------------------------------
 
 
@@ -68,19 +72,9 @@ const Utility Goal::MAX_UTILITY = 99999999;
 
 
 Goal::Goal()
-:
-    m_goal_type                     (GOAL_TYPE_NULL),
-    m_raw_priority                  (BAD_UTILITY),
-    m_removal_time                  (DONT_REMOVE),
-    m_is_invalid                    (false),
-    m_execute_incrementally         (false),
-    m_current_needed_strength       (),
-    m_current_attacking_strength    (),
-    m_match_references              (),
-    m_agents                        (),
-    m_playerId                      (-1)
-    // m_pos    not filled?
 {
+    
+	Init();
 }
 
 
@@ -138,6 +132,44 @@ Goal& Goal::operator= (const Goal &goal)
 bool Goal::operator< (const Goal &goal) const
 {
     return (m_raw_priority < goal.m_raw_priority);
+}
+
+
+void Goal::Init()
+{
+	
+    m_goal_type = GOAL_TYPE_NULL; 
+
+    
+    m_playerId = -1; 
+
+    
+    m_raw_priority = BAD_UTILITY;	
+
+	
+	m_removal_time = DONT_REMOVE;	
+
+    
+	m_is_invalid = false;				
+
+	
+	m_execute_incrementally = false;
+
+	
+    
+	
+
+	
+    m_current_needed_strength.Init();
+
+	
+	m_current_attacking_strength.Init();
+
+    
+    m_match_references.clear();
+
+	
+	m_agents.clear();
 }
 
 
@@ -504,7 +536,7 @@ bool Goal::Validate() const
 					
 					Assert(0);
 				}
-#endif _DEBUG_SCHEDULER
+#endif // _DEBUG_SCHEDULER
 
 				
 				break;
@@ -662,7 +694,9 @@ bool Goal::Needs_Transport() const
 	Squad_Strength needed_strength = m_current_needed_strength;
 	needed_strength -= m_current_attacking_strength;
 	
-	return needed_strength.Get_Transport() > 0;
+	if (needed_strength.Get_Transport() > 0)
+		return true;
+	return false;
 }
 
 

@@ -9,6 +9,11 @@
 #include "ctp2_Static.h"
 #include "ctp2_button.h"
 #include "ctp2_textfield.h"
+#ifndef WIN32
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#endif
 
 static MBCHAR *s_block = "GenericFileDialog";
 extern C3UI *g_c3ui;
@@ -103,26 +108,43 @@ void FileDialog::AddFile(const MBCHAR *path, void *cookie)
 
 void FileDialog::Fill()
 {
+	MBCHAR path[_MAX_PATH];
+#ifdef WIN32
 	HANDLE				lpFileList;
 	WIN32_FIND_DATA		fileData;
-	MBCHAR pattern[_MAX_PATH];
 
-	sprintf(pattern, "%s\\*.*", m_dirPath);
+	sprintf(path, "%s%s*.*", FILE_SEP, m_dirPath);
 
-	lpFileList = FindFirstFile(pattern, &fileData);
+	lpFileList = FindFirstFile(path, &fileData);
 
 	Assert(lpFileList != INVALID_HANDLE_VALUE);
 	if(lpFileList == INVALID_HANDLE_VALUE) return;
-
+#else
+	DIR *dir = opendir(m_dirPath);
+	if (!dir) return;
+	struct dirent *dent = 0;
+#endif
 	m_list->Clear();
+#ifdef WIN32
 	do {
+
 		if(!(fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
 			AddFile(fileData.cFileName, NULL);
 		}
 	} while(FindNextFile(lpFileList, &fileData));
-
+	
 	FindClose(lpFileList);
-			
+#else
+	struct stat st;
+	while ((dent = readdir(dir))) {
+		snprintf(path, sizeof(path), "%s%s%s", m_dirPath, FILE_SEP, dent->d_name);
+		int rc = stat(path, &st);
+		if (!S_ISDIR(st.st_mode)) {
+			AddFile(dent->d_name, NULL);
+		}
+	}
+	closedir(dir);
+#endif
 }
 
 const MBCHAR *FileDialog::GetSelectedFile()
@@ -156,7 +178,7 @@ void FileDialog::LoadCallback(aui_Control *control, uint32 action, uint32 data, 
 	FileDialog *di = (FileDialog *)cookie;
 	if(di->m_callback) {
 		MBCHAR full[_MAX_PATH];
-		sprintf(full, "%s\\%s", di->m_dirPath, di->GetSelectedFile());
+		sprintf(full, "%s%s%s", di->m_dirPath, FILE_SEP, di->GetSelectedFile());
 		di->m_callback(di, k_FILE_DIALOG_LOAD, full, di->m_cookie);
 	}
 	di->Close();
@@ -168,7 +190,7 @@ void FileDialog::SaveCallback(aui_Control *control, uint32 action, uint32 data, 
 	FileDialog *di = (FileDialog *)cookie;
 	if(di->m_callback) {
 		MBCHAR full[_MAX_PATH];
-		sprintf(full, "%s\\%s", di->m_dirPath, di->GetSelectedFile());
+		sprintf(full, "%s%s%s", di->m_dirPath, FILE_SEP, di->GetSelectedFile());
 		di->m_callback(di, k_FILE_DIALOG_SAVE, full, di->m_cookie);
 	}
 	di->Close();

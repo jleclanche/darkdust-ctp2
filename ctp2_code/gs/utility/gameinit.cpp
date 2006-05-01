@@ -42,7 +42,6 @@
 // - Removed auto-tutorial on low difficulty - JJB 2005/06/28
 // - Removed refferences to the civilisation database. (Aug 20th 2005 Martin Gühmann)
 // - Removed unused SpriteStateDB refferences. (Aug 28th 2005 Martin Gühmann)
-// - Replaced old difficulty database by new one. (April 29th 2006 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
 
@@ -64,7 +63,7 @@
 #include "UVDB.h"
 
 #include "BuildingRecord.h"
-#include "DifficultyRecord.h"
+#include "DiffDB.h"
 
 #include "moviedb.h"
 
@@ -191,7 +190,7 @@ GlobalWarmingDatabase       *g_theGWDB=NULL;
 OzoneDatabase               *g_theUVDB=NULL;
 ConstDB                     *g_theConstDB=NULL;
 ThroneDB                    *g_theThroneDB = NULL;
-
+DifficultyDB                *g_theDifficultyDB = NULL;
 
 PlayListDB                  *g_thePlayListDB = NULL;
 
@@ -216,7 +215,6 @@ InstallationQuadTree        *g_theInstallationTree = NULL;
 TopTen                      *g_theTopTen = NULL;
 TurnCount                   *g_turn = NULL;
 ProfileDB                   *g_theProfileDB = NULL;
-MovieDB                     *g_theWonderMovieDB = NULL;
 MovieDB                     *g_theVictoryMovieDB = NULL;
 FilenameDB                  *g_theMessageIconFileDB = NULL;
 Pool<Order>                 *g_theOrderPond = NULL;
@@ -248,7 +246,7 @@ MBCHAR g_installation_filename[_MAX_PATH];
 MBCHAR g_government_filename[_MAX_PATH];
 MBCHAR g_governmenticondb_filename[_MAX_PATH];
 MBCHAR g_wonder_filename[_MAX_PATH];
-MBCHAR g_constdb_filename[_MAX_PATH];
+MBCHAR g_constdb_filename[_MAX_PATH]; 
 MBCHAR g_pop_filename[_MAX_PATH];
 MBCHAR g_civilisation_filename[_MAX_PATH];
 MBCHAR g_agedb_filename[_MAX_PATH];
@@ -322,7 +320,7 @@ CIV_INDEX gameinit_GetCivForSlot(sint32 slot);
 
 
 
-extern HWND               gHwnd;
+extern HWND               gHwnd; 
 extern void               verifyYwrap();
 extern Splash             *g_splash;
 
@@ -483,9 +481,9 @@ sint32 gameinit_PlaceInitalUnits(sint32 nPlayers, MapPoint player_start_list[k_M
 
 
 
-	Unit id;
-	const DifficultyRecord *drec = g_theDifficultyDB->Get(g_theProfileDB->GetDifficulty());
-	sint32 humanStart = drec->GetHumanStartLocation();
+	Unit id; 
+	DifficultyDBRecord *drec = g_theDifficultyDB->Get(g_theProfileDB->GetDifficulty());
+	sint32 humanStart = drec->m_human_start_location;
 	if(humanStart > nPlayers - 1)
 		humanStart = nPlayers - 1;
 	while(player_start_list[humanStart].x < 0 && humanStart >= 0)
@@ -534,10 +532,10 @@ sint32 gameinit_PlaceInitalUnits(sint32 nPlayers, MapPoint player_start_list[k_M
 			else 
 				if (g_player[i]->GetPlayerType() == PLAYER_TYPE_ROBOT) 
 				{
-					nUnits = drec->GetAIStartUnits();
+					nUnits = drec->m_ai_start_units;
 				}
 
-				if (g_player_start_score[which] < sint32(drec->GetExtraSettlerChance()))
+				if (g_player_start_score[which] < sint32(drec->m_extra_settler_chance)) 
 
 				{
 					nUnits++;
@@ -549,7 +547,7 @@ sint32 gameinit_PlaceInitalUnits(sint32 nPlayers, MapPoint player_start_list[k_M
 
 		for(j = 0; j < nUnits; j++) 
 		{
-			id =  g_player[i]->CreateUnit(settler, player_start_list[which], Unit(), 
+			id =  g_player[i]->CreateUnit(settler, player_start_list[which], Unit(0), 
 										  FALSE, CAUSE_NEW_ARMY_INITIAL); 
 		}
 
@@ -558,7 +556,7 @@ sint32 gameinit_PlaceInitalUnits(sint32 nPlayers, MapPoint player_start_list[k_M
 		g_theProfileDB->SetCheatAge(g_cheat_age);
 		if (g_theProfileDB->GetCheatAge(age)) {
 		for(; j <9; j++) {
-			id =  g_player[i]->CreateUnit(settler, player_start_list[which], Unit(), 
+			id =  g_player[i]->CreateUnit(settler, player_start_list[which], Unit(0), 
 			                              FALSE, CAUSE_NEW_ARMY_INITIAL);
 		}
 		}
@@ -570,7 +568,7 @@ sint32 gameinit_PlaceInitalUnits(sint32 nPlayers, MapPoint player_start_list[k_M
 
 void gameinit_SpewUnits(sint32 player, MapPoint &pos)
 {
-	FILE *uFile = fopen("logs\\unitlist.txt", "r");
+	FILE *uFile = fopen("logs" FILE_SEP "unitlist.txt", "r");
 	sint32 n = g_theUnitDB->NumRecords();
 	sint32 i;
 	if(!uFile) {
@@ -590,7 +588,7 @@ void gameinit_SpewUnits(sint32 player, MapPoint &pos)
 					}
 				}  while(!g_theWorld->CanEnter(pos, g_theUnitDB->Get(i)->GetMovementType()));
 				
-				Unit id1 = g_player[player]->CreateUnit(i, pos, Unit(), 
+				Unit id1 = g_player[player]->CreateUnit(i, pos, Unit(0), 
 				                                        FALSE, CAUSE_NEW_ARMY_INITIAL); 
 				id1.SetIsProfessional(TRUE); 
 			}
@@ -623,7 +621,7 @@ void gameinit_SpewUnits(sint32 player, MapPoint &pos)
 					}
 				}  while(!g_theWorld->CanEnter(pos, g_theUnitDB->Get(uid)->GetMovementType()));
 
-				Unit id1 = g_player[player]->CreateUnit(uid, pos, Unit(), 
+				Unit id1 = g_player[player]->CreateUnit(uid, pos, Unit(0), 
 				                                        FALSE, CAUSE_NEW_ARMY_INITIAL); 
 				id1.SetIsProfessional(TRUE); 
 				
@@ -637,15 +635,15 @@ void gameinit_SpewUnits(sint32 player, MapPoint &pos)
 
 void gameinit_PlaceInitalUnits()
 {
-	sint32 j; 
-	MapPoint pos; 
+	sint32 j;
+	MapPoint pos;
 		
-	for (j=0; j<k_MAX_PLAYERS; j++) { 
+	for (j=0; j<k_MAX_PLAYERS; j++) {
 		if(!g_player[j]) continue;
 		pos.x = static_cast<sint16>(j * 2);
 		pos.y = 2;
 		gameinit_SpewUnits(j, pos);
-	}	
+	}
 }
 
 sint32 gameinit_InitializeGameFiles(void)
@@ -654,15 +652,15 @@ sint32 gameinit_InitializeGameFiles(void)
 	
 	MBCHAR str1[_MAX_PATH];
 
-	MBCHAR dir[_MAX_PATH]; 
-	FILE *fin; 
+	MBCHAR dir[_MAX_PATH];
+	FILE *fin;
 	MBCHAR		*fn = "InitializeGameFiles";
 
 	g_abort_parse = FALSE; 
 
 	fin = c3files_fopen(C3DIR_GAMEDATA, "gamefile.txt", "r");
 
-	dir[0] = 0;
+	dir[0] = '\0';
 
 	r=fscanf (fin, "%s", str1); 
 	if (r == EOF) { 
@@ -679,7 +677,7 @@ sint32 gameinit_InitializeGameFiles(void)
 	}
 	sprintf(g_sounddb_filename, "%s%s", dir, str1);
 
-	r = fscanf (fin, "%s", str1);	  
+	r = fscanf (fin, "%s", str1);
 	if (r == EOF) { 
 		c3errors_ErrorDialog  (fn, "Missing constants file"); 
 		return FALSE; 
@@ -1258,7 +1256,7 @@ sint32 spriteEditor_Initialize(sint32 mWidth, sint32 mHeight)
 	g_theTradeOfferPool = new TradeOfferPool();
 	Assert(g_theTradeOfferPool);
 
-	g_thePollution = new Pollution() ;
+	g_thePollution = new Pollution();
 	Assert(g_thePollution);
 
 	g_theTopTen = new TopTen();
@@ -1297,16 +1295,16 @@ sint32 spriteEditor_Initialize(sint32 mWidth, sint32 mHeight)
 	SPLASH_STRING("Initializing Object Pools...");
 
 	g_theTerrainImprovementPool = new TerrainImprovementPool();
-	Assert(g_theTerrainImprovementPool) ;
+	Assert(g_theTerrainImprovementPool);
 
-	g_theDiplomaticRequestPool = new DiplomaticRequestPool() ;
-	Assert(g_theDiplomaticRequestPool) ;
+	g_theDiplomaticRequestPool = new DiplomaticRequestPool();
+	Assert(g_theDiplomaticRequestPool);
 
-	g_theCivilisationPool = new CivilisationPool() ;
-	Assert(g_theCivilisationPool) ;
+	g_theCivilisationPool = new CivilisationPool();
+	Assert(g_theCivilisationPool);
 
-	g_theAgreementPool = new AgreementPool() ;
-	Assert(g_theAgreementPool) ;
+	g_theAgreementPool = new AgreementPool();
+	Assert(g_theAgreementPool);
 
 	
 	
@@ -1316,8 +1314,8 @@ sint32 spriteEditor_Initialize(sint32 mWidth, sint32 mHeight)
 		g_theMessagePool = NULL;
 	}
 
-	g_theMessagePool = new MessagePool() ;
-	Assert(g_theMessagePool) ;
+	g_theMessagePool = new MessagePool();
+	Assert(g_theMessagePool);
 
 	
 	if (g_theCriticalMessagesPrefs) 
@@ -1326,11 +1324,11 @@ sint32 spriteEditor_Initialize(sint32 mWidth, sint32 mHeight)
 		g_theCriticalMessagesPrefs = NULL;
 	}
 
-	g_theCriticalMessagesPrefs = new CriticalMessagesPrefs() ;
-	Assert(g_theCriticalMessagesPrefs) ;
+	g_theCriticalMessagesPrefs = new CriticalMessagesPrefs();
+	Assert(g_theCriticalMessagesPrefs);
 
 	g_theInstallationPool = new InstallationPool();
-	Assert(g_theInstallationPool) ;
+	Assert(g_theInstallationPool);
 
 	g_theInstallationPool->RebuildQuadTree();
 
@@ -1639,7 +1637,7 @@ sint32 gameinit_Initialize(sint32 mWidth, sint32 mHeight, CivArchive &archive)
 
 		seed = g_oldRandSeed ? g_oldRandSeed : GetTickCount();
 
-		fin = fopen("logs\\oldseed.txt", "w"); 
+		fin = fopen("logs" FILE_SEP "oldseed.txt", "w"); 
 		fprintf (fin, "%d\n", seed); 
 	}
 
@@ -1684,7 +1682,7 @@ sint32 gameinit_Initialize(sint32 mWidth, sint32 mHeight, CivArchive &archive)
 	}
 
 	if (&archive) { 
-		g_theWorld = new World(archive) ;
+		g_theWorld = new World(archive);
 		if(
 		
 
@@ -1829,7 +1827,7 @@ sint32 gameinit_Initialize(sint32 mWidth, sint32 mHeight, CivArchive &archive)
 
 	if (&archive && loadEverything) {
 		if(g_saveFileVersion < 55) {
-			g_theTopTen = new TopTen(archive) ;
+			g_theTopTen = new TopTen(archive);
 		} else {
 			g_theTopTen = new TopTen();
 		}
@@ -1878,7 +1876,7 @@ sint32 gameinit_Initialize(sint32 mWidth, sint32 mHeight, CivArchive &archive)
 			g_theProfileDB->SetTutorialAdvice(FALSE);
 		}
 	}
-	Assert(g_slicEngine) ;
+	Assert(g_slicEngine);
 
 
 
@@ -1891,36 +1889,36 @@ sint32 gameinit_Initialize(sint32 mWidth, sint32 mHeight, CivArchive &archive)
 	else
 		g_theTerrainImprovementPool = new TerrainImprovementPool();
 
-	Assert(g_theTerrainImprovementPool) ;
+	Assert(g_theTerrainImprovementPool);
 
 	if (&archive && loadEverything) {
 		if(g_saveFileVersion < 55) {
-			g_theDiplomaticRequestPool = new DiplomaticRequestPool(archive) ;
+			g_theDiplomaticRequestPool = new DiplomaticRequestPool(archive);
 		} else {
-			g_theDiplomaticRequestPool = new DiplomaticRequestPool() ;
+			g_theDiplomaticRequestPool = new DiplomaticRequestPool();
 		}
 	} else
-		g_theDiplomaticRequestPool = new DiplomaticRequestPool() ;
+		g_theDiplomaticRequestPool = new DiplomaticRequestPool();
 
-	Assert(g_theDiplomaticRequestPool) ;
+	Assert(g_theDiplomaticRequestPool);
 
 	if (&archive && loadEverything)
-		g_theCivilisationPool = new CivilisationPool(archive) ;
+		g_theCivilisationPool = new CivilisationPool(archive);
 	else
-		g_theCivilisationPool = new CivilisationPool() ;
+		g_theCivilisationPool = new CivilisationPool();
 
-	Assert(g_theCivilisationPool) ;
+	Assert(g_theCivilisationPool);
 
 	if (&archive && loadEverything) {
 		if(g_saveFileVersion < 55) {
-			g_theAgreementPool = new AgreementPool(archive) ;
+			g_theAgreementPool = new AgreementPool(archive);
 		} else {
 			g_theAgreementPool = new AgreementPool;
 		}
 	} else
-		g_theAgreementPool = new AgreementPool() ;
+		g_theAgreementPool = new AgreementPool();
 
-	Assert(g_theAgreementPool) ;
+	Assert(g_theAgreementPool);
 
 	
 	
@@ -1930,11 +1928,11 @@ sint32 gameinit_Initialize(sint32 mWidth, sint32 mHeight, CivArchive &archive)
 	}
 
 	if (&archive && loadEverything)
-		g_theMessagePool = new MessagePool(archive) ;
+		g_theMessagePool = new MessagePool(archive);
 	else
-		g_theMessagePool = new MessagePool() ;
+		g_theMessagePool = new MessagePool();
 
-	Assert(g_theMessagePool) ;
+	Assert(g_theMessagePool);
 
 	
 	if (g_theCriticalMessagesPrefs) 
@@ -1942,15 +1940,15 @@ sint32 gameinit_Initialize(sint32 mWidth, sint32 mHeight, CivArchive &archive)
 		delete g_theCriticalMessagesPrefs;
 		g_theCriticalMessagesPrefs = NULL;
 	}
-	g_theCriticalMessagesPrefs = new CriticalMessagesPrefs() ;
-	Assert(g_theCriticalMessagesPrefs) ;
+	g_theCriticalMessagesPrefs = new CriticalMessagesPrefs();
+	Assert(g_theCriticalMessagesPrefs);
 
 	if(&archive && loadEverything)
 		g_theInstallationPool = new InstallationPool(archive);
 	else
 		g_theInstallationPool = new InstallationPool();
 
-	Assert(g_theInstallationPool) ;
+	Assert(g_theInstallationPool);
 
 	g_theInstallationPool->RebuildQuadTree();
 
@@ -2512,7 +2510,7 @@ sint32 gameinit_Initialize(sint32 mWidth, sint32 mHeight, CivArchive &archive)
 				} else {
 					settler = landSettler;
 				}
-				g_player[i]->CreateUnit(settler, point, Unit(),
+				g_player[i]->CreateUnit(settler, point, Unit(0),
 										FALSE, CAUSE_NEW_ARMY_INITIAL);
 			}
 		}

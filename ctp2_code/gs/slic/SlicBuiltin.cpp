@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Slic Built In 
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -236,8 +236,8 @@ class UnitSymbol_Type : public SlicStructMemberData {
 	BOOL GetIntValue(sint32 &value) const {
 		Unit unit;
 		BOOL res = m_parent->GetDataSymbol()->GetUnit(unit);
-		if(unit.IsValid()) 
-        {
+		Assert(res);
+		if(unit.IsValid()) {
 			value = unit.GetType();
 			return TRUE;
 		} else {
@@ -384,18 +384,14 @@ class CitySymbol_Happiness : public SlicStructMemberData {
 	DEF_MAKECOPY(CitySymbol_Happiness);
 
 	SLIC_SYM GetType() const { return SLIC_SYM_IVAR; }
-	BOOL GetIntValue(sint32 &value) const 
-	{
+	BOOL GetIntValue(sint32 &value) const {
 		Unit city;
 		BOOL res = m_parent->GetDataSymbol()->GetCity(city);
 		Assert(res);
-		if (city.IsValid()) 
-		{
-			value = static_cast<sint32>(city.GetHappiness());
+		if(city.IsValid()) {
+			value = (sint32) city.GetHappiness();
 			return TRUE;
-		} 
-		else 
-		{
+		} else {
 			return FALSE;
 		}
 	}
@@ -751,7 +747,7 @@ class PlayerSymbol_LargestCity : public SlicStructMemberData {
 			}
             else
             {
-                city = Unit(); // invalid
+                city = Unit(0); // invalid
             }
         }
 		return res;
@@ -1199,22 +1195,22 @@ class PlayerSymbol_SirCap : public SlicStructMemberData {
 class PlayerSymbol_PublicWorksTax : public SlicStructMemberData {
 	DEF_MAKECOPY(PlayerSymbol_PublicWorksTax);
 
-	BOOL GetIntValue(sint32 &value) const 
-	{
+	BOOL GetIntValue(sint32 &value) const {
 		sint32 pl;
 		BOOL res = m_parent->GetDataSymbol()->GetPlayer(pl);
 		Assert(res);
-		if (res)
-		{
-			value = static_cast<sint32>(g_player[pl]->m_materialsTax * 100.0);
+		if(res)
+			{
+			value = (sint32) (g_player[pl]->m_materialsTax*100);
 			return TRUE;
-		}
+			}
 		else
-		{
+			{
 			value = 0;
 			return FALSE;
+			}
 		}
-	}
+
 };
 
 class PlayerSymbol_PublicWorksLevel : public SlicStructMemberData {

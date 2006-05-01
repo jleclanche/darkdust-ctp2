@@ -40,6 +40,8 @@
 #include "GameEventManager.h"
 #include "CTP2Combat.h"
 
+#include "aui_Factory.h"
+
 extern C3UI					*g_c3ui;
 
 BattleView::BattleView()
@@ -146,7 +148,7 @@ void BattleView::Initialize(RECT *battleViewRect)
 
 	m_battleViewRect = *battleViewRect;
 
-	m_battleSurface = new aui_DirectSurface(&errcode, width, height, 16, g_c3ui->DD());
+	m_battleSurface = aui_Factory::new_Surface(errcode, width, height, 16);
 	Assert(m_battleSurface);
 }
 
@@ -280,13 +282,6 @@ void BattleView::DrawAttackers(void)
 	for (i=0; i<m_numAttackers; i++) {
 		sortedAttackers[i].actor->DrawDirect(m_battleSurface, sortedAttackers[i].x, sortedAttackers[i].y);
 	}
-
-
-
-
-
-
-
 }
 
 

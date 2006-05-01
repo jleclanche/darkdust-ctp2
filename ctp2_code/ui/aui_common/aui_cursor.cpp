@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Activision User Interface cursor
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -30,21 +30,14 @@
 
 #include "c3.h"
 
-#ifdef __AUI_USE_DIRECTX__
-#include "aui_directui.h"
-#include "aui_directsurface.h"
-#else
-#include "aui_ui.h"
-#include "aui_surface.h"
-#endif 
-
+#include "aui_Factory.h"
 #include "aui_cursor.h"
 
 
 
 aui_Cursor::aui_Cursor(
 	AUI_ERRCODE *retval,
-	MBCHAR const *filename )
+	const MBCHAR *filename )
 	:
 	aui_Image( retval, filename )
 {
@@ -92,24 +85,9 @@ AUI_ERRCODE aui_Cursor::LoadEmpty( sint32 width, sint32 height, sint32 bpp )
 {
 	AUI_ERRCODE retcode = AUI_ERRCODE_OK;
 
-#ifdef __AUI_USE_DIRECTX__
-	m_surface = new aui_DirectSurface(
-		&retcode,
-		width,
-		height,
-		bpp,
-		((aui_DirectUI *)g_ui)->DD(),
-		NULL,
-		FALSE,
-		FALSE );
-#else
-	m_surface = new aui_Surface(
-		&retcode,
-		width,
-		height,
-		bpp );
-#endif 
+	m_surface = aui_Factory::new_Surface(retcode, width, height, bpp);
 
 	Assert( AUI_NEWOK(m_surface,retcode) );
 	return retcode;
 }
+

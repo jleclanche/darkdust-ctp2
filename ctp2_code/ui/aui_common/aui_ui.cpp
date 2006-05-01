@@ -70,21 +70,19 @@ aui_UI::aui_UI(
 	:
 	aui_Region( retval, 0, 0, 0, width, height )
 {
-	if (AUI_SUCCESS(*retval))
-    {
-	    Assert( aui_Base::GetBaseRefCount() == 2 );
-        if (2 == aui_Base::GetBaseRefCount())
-        {
-	        g_ui = this;
-        }
+	Assert( AUI_SUCCESS(*retval) );
+	if ( !AUI_SUCCESS(*retval) ) return;
 
-	    *retval = InitCommon(hinst, hwnd, bpp, ldlFilename);
+	Assert( aui_Base::GetBaseRefCount() == 2 );
+	g_ui = aui_Base::GetBaseRefCount() == 2 ? this : NULL;
 
-	    if (AUI_SUCCESS(*retval))
-        {
-	        *retval = CreateScreen();
-        }
-    }
+	*retval = InitCommon( hinst, hwnd, bpp, ldlFilename );
+	Assert( AUI_SUCCESS(*retval) );
+	if ( !AUI_SUCCESS(*retval) ) return;
+
+	*retval = CreateScreen();
+	Assert( AUI_SUCCESS(*retval) );
+	if ( !AUI_SUCCESS(*retval) ) return;
 }
 
 
@@ -240,33 +238,101 @@ extern void free_crc();
 
 aui_UI::~aui_UI()
 {
-	if (m_editMode)
+	if ( m_editMode )
 	{
-		SetEditMode(FALSE);
+		SetEditMode( FALSE );
 	}
 
-	delete m_primary;
-	delete m_colorAreas;
-	delete m_imageAreas;
-	delete m_imageResource;
-	delete m_cursorResource;
-	delete m_bitmapFontResource;
-	delete m_dirtyList;
-	delete m_actionList;
-	delete m_destructiveActionList;
-	delete m_winList;
-	delete m_dirtyRectInfoList;
-	delete m_dirtyRectInfoMemory;
+	if ( m_primary )
+	{
+		delete m_primary;
+		m_primary = NULL;
+	}
+
+	if ( m_colorAreas )
+	{
+		delete m_colorAreas;
+		m_colorAreas = NULL;
+	}
+	
+	if ( m_imageAreas )
+	{
+		delete m_imageAreas;
+		m_imageAreas = NULL;
+	}
+	
+	if ( m_imageResource )
+	{
+		delete m_imageResource;
+		m_imageResource = NULL;
+	}
+
+	if ( m_cursorResource )
+	{
+		delete m_cursorResource;
+		m_cursorResource = NULL;
+	}
+
+	if ( m_bitmapFontResource )
+	{
+		delete m_bitmapFontResource;
+		m_bitmapFontResource = NULL;
+	}
+
+	if ( m_dirtyList )
+	{
+		delete m_dirtyList;
+		m_dirtyList = NULL;
+	}
+
+	if ( m_actionList )
+	{
+		delete m_actionList;
+		m_actionList = NULL;
+	}
+
+	if (m_destructiveActionList) 
+	{
+		delete m_destructiveActionList;
+		m_destructiveActionList = NULL;
+	}
+
+	if ( m_winList )
+	{
+		delete m_winList;
+		m_winList = NULL;
+	}
+
+	if ( m_dirtyRectInfoList )
+	{
+		delete m_dirtyRectInfoList;
+		m_dirtyRectInfoList = NULL;
+	}
+
+	if ( m_dirtyRectInfoMemory )
+	{
+		delete m_dirtyRectInfoMemory;
+		m_dirtyRectInfoMemory = NULL;
+	}
 
 	aui_Ldl::Remove(this);
-	delete m_ldl;
+
 	
-	if (this == g_ui)
-    {
-        g_ui = NULL;
-    }
+	if ( m_ldl )
+	{
+		delete m_ldl;
+		m_ldl = NULL;
+	}
+
+	
+	g_ui = NULL;
 
 	free_crc();
+
+	sint32 test = aui_Base::GetBaseRefCount();
+#ifndef __AUI_USE_SDL__
+	Assert( aui_Base::GetBaseRefCount() == 2 );
+#endif
 }
 
 
@@ -1170,6 +1236,11 @@ AUI_ERRCODE aui_UI::Draw( void )
 		ShowSelectedRegion( m_editRegion );
 	}
 
+#ifdef __AUI_USE_SDL__
+	if (SDL_Flip(SDL_GetVideoSurface()) < 0) {
+		fprintf(stderr, "Flip failed: %s\n", SDL_GetError());
+	}
+#endif
 	errcode = m_mouse->Resume();
 	Assert( errcode == AUI_ERRCODE_OK );
 

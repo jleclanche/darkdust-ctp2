@@ -36,6 +36,11 @@
 #include "aui_input.h"
 #include "tech_wllist.h"
 
+#ifdef USE_SDL
+#include <SDL.h>
+#include <SDL_thread.h>
+#endif
+
 class aui_Cursor;
 class aui_Surface;
 class aui_Window;
@@ -80,6 +85,9 @@ struct aui_MouseEvent
 
 #define k_MOUSE_DEFAULTANIMDELAY	100
 
+// HACK: Use this global variable to halt mouse event handling
+// thread on game exit
+extern BOOL g_mouseShouldTerminateThread;
 
 class aui_Mouse : public aui_Base, public virtual aui_Input
 {
@@ -104,34 +112,20 @@ public:
 	AUI_ERRCODE Suspend( BOOL eraseCursor );
 	AUI_ERRCODE Resume( void );
 
-	AUI_ERRCODE Show( void )
-	{
-		m_showCount++;
-		return AUI_ERRCODE_OK;
-	}
-	AUI_ERRCODE Hide( void )
-	{
-		if ( !m_showCount )
-		{
-			
-			Suspend( TRUE );
-			m_showCount--;
-			Resume();
-		}
-		return AUI_ERRCODE_OK;
-	}
+	AUI_ERRCODE Show( void );
+	AUI_ERRCODE Hide( void );
 
-	BOOL IsSuspended( void ) const { return m_suspendCount; }
-	BOOL IsHidden( void ) const { return m_showCount < 0; }
+	BOOL IsSuspended( void ) const;
+	BOOL IsHidden( void ) const;
 
 	
-	sint32	X( void ) { return m_data.position.x; }
-	sint32	Y( void ) { return m_data.position.y; }
+	sint32	X( void );
+	sint32	Y( void );
 
 	void SetClip( sint32 left, sint32 top, sint32 right, sint32 bottom );
 	void SetClip( RECT *clip );
 
-	aui_MouseEvent *GetLatestMouseEvent( void ) { return &m_data; }
+	aui_MouseEvent *GetLatestMouseEvent( void );
 
 	AUI_ERRCODE SetPosition( sint32 x, sint32 y );
 	AUI_ERRCODE SetPosition( POINT *point );
@@ -141,23 +135,19 @@ public:
 	AUI_ERRCODE	SetHotspot( sint32 x, sint32 y, sint32 index = 0 );
 
 	
-	double		&Sensitivity( void ) { return m_sensitivity; }
+	double		&Sensitivity( void );
 
-	aui_Cursor *GetCursor( sint32 index ) const { return m_cursors[ index ]; }
+	aui_Cursor *GetCursor( sint32 index ) const;
 	void SetCursor( sint32 index, MBCHAR *cursor );
 
-	aui_Cursor *GetCurrentCursor( void ) const { return *m_curCursor; }
+	aui_Cursor *GetCurrentCursor( void ) const;
 	sint32		GetCurrentCursorIndex(void) ;
 	void		SetCurrentCursor( sint32 index );
 
-	uint32 GetAnimDelay( void ) const { return m_animDelay; }
+	uint32 GetAnimDelay( void ) const;
 	void SetAnimDelay( uint32 animDelay );
 
-	void GetAnimIndexes( sint32 *firstIndex, sint32 *lastIndex )
-	{
-		if ( firstIndex ) *firstIndex = m_firstIndex;
-		if ( lastIndex ) *lastIndex = m_lastIndex;
-	}
+	void GetAnimIndexes( sint32 *firstIndex, sint32 *lastIndex );
 	void SetAnimIndexes( sint32 firstIndex, sint32 lastIndex );
 
 	void SetAnim( sint32 anim );
@@ -185,19 +175,27 @@ public:
 		RECT *imageRect,
 		aui_DirtyList *imageAreas );
 
-	LPCRITICAL_SECTION LPCS( void ) const { return m_lpcs; }
+#ifdef USE_SDL
+	SDL_mutex *LPCS(void) const;
+#else
+	LPCRITICAL_SECTION LPCS( void ) const;
+#endif
 
 	
 	
 	AUI_ERRCODE CreatePrivateBuffers( void );
 	void DestroyPrivateBuffers( void );
 
-	uint32 GetFlags(void) { return m_flags;}
-	void SetFlags(uint32 flags) { m_flags = flags; }
+	uint32 GetFlags(void);
+	void SetFlags(uint32 flags);
 
 protected:
 	static sint32 m_mouseRefCount;
+#ifdef USE_SDL
+	static SDL_mutex         *m_lpcs;
+#else
 	static LPCRITICAL_SECTION m_lpcs;
+#endif
 
 	
 	virtual AUI_ERRCODE Erase( void );
@@ -217,7 +215,7 @@ protected:
 	sint32		m_firstIndex;	
 	sint32		m_lastIndex;	
 	uint32		m_animDelay;	
-	uint32		m_time;			
+	uint32		m_time;
 
 	tech_WLList<POINT>	m_animIndexList;
 	tech_WLList<sint32> m_animDelayList;
@@ -226,21 +224,25 @@ protected:
 	sint32		m_showCount;	
 	BOOL		m_reset;		
 
-	HANDLE		m_thread;		
-	DWORD		m_threadId;		
+#ifdef USE_SDL
+	SDL_Thread     *m_thread;
+#else
+	HANDLE		m_thread;
+	DWORD		m_threadId;
 	HANDLE		m_threadEvent;	
 	HANDLE		m_terminateEvent; 
 	HANDLE		m_suspendEvent;	
 	HANDLE		m_resumeEvent;	
 	HANDLE		m_replyEvent;	
-
+#endif
 	uint32		m_flags;		
 };
 
-
-
-
+#ifdef USE_SDL
+int MouseThreadProc(void *param);
+#else
 DWORD WINAPI MouseThreadProc( LPVOID lpVoid );
+#endif
 
 
 #endif 

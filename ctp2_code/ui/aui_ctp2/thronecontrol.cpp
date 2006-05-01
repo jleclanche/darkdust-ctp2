@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Throne control (probably unused but worth to be reimplemented)
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -35,7 +35,7 @@
 #include "aui_uniqueid.h"
 #include "aui_surface.h"
 
-#include "aui_directsurface.h"
+#include "aui_Factory.h"
 #include "aui_blitter.h"
 #include "aui_window.h"
 #include "aui_ldl.h"
@@ -57,7 +57,7 @@ extern CivPaths	*g_civPaths;
 
 static MBCHAR *s_throneImage[ k_THRONE_IMAGES + 1 ];
 
-static POINT	s_upgradeLoc[k_THRONE_IMAGES] = { 0, 230, 204, 204, 210, 300, 284, 380, 410, 250 };
+static POINT	s_upgradeLoc[k_THRONE_IMAGES] = { { 0, 230 }, { 204, 204 }, { 210, 300 }, { 284, 380 }, { 410, 250 } };
 
 static	Pixel16 s_highlightColor[k_THRONE_IMAGES] = { 0xffff, 0xffff, 0xffff, 0xffff, 0xffff };
 
@@ -198,7 +198,7 @@ void ThroneControl::InitCommon(void)
 	MBCHAR s[_MAX_PATH];
 
 	if (!g_civPaths->GetSpecificPath(C3DIR_PICTURES, s, FALSE)) return;
-	strcat( s, "\\" );
+	strcat( s, FILE_SEP );
 	strcat( s, s_throneImage[0] );
 
 	
@@ -211,7 +211,7 @@ void ThroneControl::InitCommon(void)
 	
 	for ( sint32 i = 0;i < k_THRONE_IMAGES;i++ ) {
 		if (!g_civPaths->GetSpecificPath(C3DIR_PICTURES, s, FALSE)) return;
-		strcat( s, "\\" );
+		strcat( s, FILE_SEP );
 		strcat( s, s_throneImage[i+1] );
 
 		m_upgradeImage[i] = new c3_Image( &errcode, s );
@@ -231,7 +231,7 @@ void ThroneControl::InitCommon(void)
 	}
 
 	
-	m_throneSurface = new aui_DirectSurface( &errcode, m_width, m_height, 16, g_c3ui->DD() );
+	m_throneSurface = aui_Factory::new_Surface( errcode, m_width, m_height, 16);
 	Assert( AUI_NEWOK(m_throneSurface, errcode) );
 
 	m_zoomedImage = NULL;
@@ -327,7 +327,7 @@ aui_Surface *ThroneControl::InitializeNewBG( MBCHAR *filename )
 
 	
 	if ( !tempBG ) {
-		tempBG = new aui_DirectSurface( &errcode, m_width, m_height, 16, g_c3ui->DD() );
+		tempBG = aui_Factory::new_Surface( errcode, m_width, m_height, 16);
 		Assert( AUI_NEWOK(tempBG, errcode) );
 		if ( !AUI_NEWOK(tempBG, errcode) ) return NULL;
 	}
@@ -338,7 +338,7 @@ aui_Surface *ThroneControl::InitializeNewBG( MBCHAR *filename )
 		delete tempBG;
 		return NULL;
 	}
-	strcat( s, "\\" );
+	strcat( s, FILE_SEP );
 	strcat( s, filename );
 
 	
@@ -370,7 +370,7 @@ void ThroneControl::CrossFadeImage( MBCHAR *filename )
 
 	
 	if ( !m_oldCutout ) {
-		m_oldCutout = new aui_DirectSurface( &errcode, width, height, 16, g_c3ui->DD() );
+		m_oldCutout = aui_Factory::new_Surface( errcode, width, height, 16);
 		Assert( AUI_NEWOK(m_oldCutout, errcode) );
 
 		
@@ -385,7 +385,7 @@ void ThroneControl::CrossFadeImage( MBCHAR *filename )
 	
 	
 	if ( !m_newCutout ) {
-		m_newCutout = new aui_DirectSurface( &errcode, width, height, 16, g_c3ui->DD() );
+		m_newCutout = aui_Factory::new_Surface( errcode, width, height, 16);
 		Assert( AUI_NEWOK(m_newCutout, errcode) );
 
 		
@@ -443,7 +443,7 @@ void ThroneControl::HilightImage( sint32 index )
 
 	
 	if ( !m_oldCutout ) {
-		m_oldCutout = new aui_DirectSurface( &errcode, width, height, 16, g_c3ui->DD() );
+		m_oldCutout = aui_Factory::new_Surface( errcode, width, height, 16 );
 		Assert( AUI_NEWOK(m_oldCutout, errcode) );
 
 		

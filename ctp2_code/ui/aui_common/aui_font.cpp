@@ -21,6 +21,7 @@ aui_Font::aui_Font(
 	:
 	aui_Base()
 {
+	assert(0);
 	*retval = InitCommon( descriptor );
 	Assert( AUI_SUCCESS(*retval) );
 	if ( !AUI_SUCCESS(*retval) ) return;
@@ -104,7 +105,7 @@ AUI_ERRCODE aui_Font::Load( void )
 {
 	
 	Unload();
-
+#ifdef WIN32
 	m_hfont = CreateFont(
 		m_height,						
 		m_averageWidth,					
@@ -119,7 +120,8 @@ AUI_ERRCODE aui_Font::Load( void )
 		m_clipPrecision,				
 		m_quality,						
 		m_pitchAndFamily,				
-		m_fontname );					
+		m_fontname );
+#endif
 	Assert( m_hfont != NULL );
 	if ( !m_hfont ) return AUI_ERRCODE_LOADFAILED;
 
@@ -132,8 +134,10 @@ AUI_ERRCODE aui_Font::Unload( void )
 {
 	if ( m_hfont )
 	{
+#ifdef WIN32
 		DeleteObject( m_hfont );
 		m_hfont = NULL;
+#endif
 	}
 
 	return AUI_ERRCODE_OK;

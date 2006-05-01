@@ -15,11 +15,7 @@
 #ifndef __UNITACTOR_H__
 #define __UNITACTOR_H__
 
-class UnitActor;
-
-
-#include "Unit.h"       // SPECATTACK
-
+#include "ctp2_enums.h"
 #include "Actor.h"
 #include "pixelutils.h"
 #include "Queue.h"
@@ -48,7 +44,7 @@ public:
 
 	~UnitActor();
 
-	void			GetIDAndType(sint32 owner, SpriteState *ss, Unit id, sint32 unitType, MapPoint &pos, sint32 *spriteID, GROUPTYPE *groupType);
+	void			GetIDAndType(sint32 owner, SpriteState *ss, Unit id, sint32 unitType, const MapPoint &pos, sint32 *spriteID, GROUPTYPE *groupType);
 
 	void			AddVision(void);
 	void			RemoveVision(void);
@@ -75,7 +71,7 @@ public:
 	void			AddIdle(BOOL NoIdleJustDelay = FALSE);
 	void			ActionQueueUpIdle(BOOL NoIdleJustDelay = FALSE);
 
-	Anim *          CreateAnim(UNITACTION action);
+	Anim			*GetAnim(UNITACTION action);
 	Anim			*MakeFakeDeath(void);
 	Anim			*MakeFaceoff(void);
 

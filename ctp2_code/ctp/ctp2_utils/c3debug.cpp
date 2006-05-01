@@ -1,44 +1,17 @@
-//----------------------------------------------------------------------------
-//
-// Project      : Call To Power 2
-// File type    : C++ source
-// Description  : Debugging
-//
-//----------------------------------------------------------------------------
-//
-// Disclaimer
-//
-// THIS FILE IS NOT GENERATED OR SUPPORTED BY ACTIVISION.
-//
-// This material has been developed at apolyton.net by the Apolyton CtP2 
-// Source Code Project. Contact the authors at ctp2source@apolyton.net.
-//
-//----------------------------------------------------------------------------
-//
-// Compiler flags
-// 
-// _DEBUG			(automatically set when choosing the Debug configuration)
-// _NO_GAME_WATCH
-// USE_LOGGING		Enable logging for the release/final version.
-//                  The debug version has logging enabled always.
-//
-//----------------------------------------------------------------------------
-//
-// Modifications from the original Activision code:
-//
-// - 
-//
-//----------------------------------------------------------------------------
-
 #include "c3.h"
 
-#if defined(_DEBUG) || defined(USE_LOGGING)
+#ifdef _DEBUG
+
+#include <sys/types.h>
+#if !defined(WIN32)
+#include <dirent.h>
+#endif
 
 #include "aui.h"
 #include "debugwindow.h"
 #include "civ3_main.h"
 #include "netconsole.h"
-
+#include "c3files.h"
 
 #ifndef _NO_GAME_WATCH
 
@@ -57,7 +30,7 @@ char g_last_debug_text[4096];
 extern DebugWindow *g_debugWindow;
 #endif
 
-#define k_FILENAME				"logs\\civ3log%#.2d.txt"
+#define k_FILENAME				"logs" FILE_SEP "civ3log%.2d.txt"
 #define k_MAX_LOG_FILE_LINES	10000		
 
 MBCHAR	s_logFileName[20];
@@ -81,45 +54,42 @@ sint32 *c3debug_GetLogLinesThisFile(void)
 
 int c3debug_InitDebugLog()
 {
+	MBCHAR fileName[256];
 	
-	SECURITY_ATTRIBUTES		sa;
+	c3files_CreateDirectory("logs");
 
-	sa.nLength = sizeof(sa);
-	sa.lpSecurityDescriptor = NULL;
-	sa.bInheritHandle = TRUE;
-	
-	CreateDirectory((LPCTSTR)"logs", &sa);
-
-	
+#if defined(WIN32)
 	WIN32_FIND_DATA	fileData;
 	HANDLE lpFileList;
 	MBCHAR path[_MAX_PATH];
-
-	strcpy(path, "logs\\*.*");
-		
+	strcpy(path, "logs" FILE_SEP "*.*");
 	
 	lpFileList = FindFirstFile(path, &fileData);
 	
 	if (lpFileList != INVALID_HANDLE_VALUE) {
 		
-		MBCHAR fileName[256];
 		do {
-			sprintf(fileName, "logs\\%s", fileData.cFileName);
+			sprintf(fileName, "logs%s%s", FILE_SEP, fileData.cFileName);
 			DeleteFile(fileName);
 		} while(FindNextFile(lpFileList,&fileData));
 
 		FindClose(lpFileList);
 	}
-
-
-
-
-
-
-
-
-
-
+#else
+	DIR *dir = opendir("logs");
+	Assert(dir);
+	struct dirent *dent = NULL;
+	
+	while ((dent = readdir(dir)))
+	{
+		int unlinkRetVal;
+		sprintf(fileName, "logs%s%s", FILE_SEP, dent->d_name);
+		unlinkRetVal = unlink(fileName);
+		Assert(unlinkRetVal == 0);
+	}
+	
+	closedir(dir);
+#endif
 
 	s_logFileNumber = 0;
 	s_logLinesThisFile = 0;
@@ -155,7 +125,7 @@ c3debug_dprintfPrefix(int mask,
 			fprintf(f, "[Continued from Part %#.2d]\n\n", s_logFileNumber-1);
 		}
 
-		filename = strrchr(file, '\\');
+		filename = strrchr(file, FILE_SEPC);
 		if(!filename)
 			filename = file;
 		else
@@ -227,6 +197,7 @@ c3debug_SetDebugMask(int mask, int set)
 }
 
 
+#ifdef WIN32
 static LONG _cdecl c3debug_CivExceptionHandler (LPEXCEPTION_POINTERS exception_pointers)
 {
 	MBCHAR *s;
@@ -314,22 +285,22 @@ void c3debug_ExceptionExecute(CivExceptionFunction function)
 		DoFinalCleanup();
 	}
 }
+#endif // WIN32
 
 void c3debug_Assert(char *s, char *file, int line)
 {
-	DPRINTF(k_DBG_FIX, ("Assertion (%s) Failed in File:%s, Line:%ld\n", s, file, line)); 
- 
+	DPRINTF(k_DBG_FIX, ("Assertion (%s) Failed in File:%s, Line:%ld\n", s, file, line));
+
+#ifdef WIN32 
 	MBCHAR *traceStr = c3debug_StackTrace();
 	DPRINTF(k_DBG_FIX, ("Stack Trace: '%s'\n", traceStr));
 
-#if defined(_DEBUG)
-    do { 
-
-
-	
+	do { 
 		if (_CrtDbgReport(_CRT_ASSERT, file, line, NULL, s) == 1) _CrtDbgBreak(); 
-
 	} while (0);
+#else
+	fprintf(stderr, "Assertion (%s) Failed in File:%s, Line:%ld\n", s, file, line);
+	assert(0);
 #endif
 }	
 

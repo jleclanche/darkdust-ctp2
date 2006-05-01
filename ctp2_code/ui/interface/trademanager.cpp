@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Trade manager window
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -30,10 +30,9 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
-#include "trademanager.h"
-
 #include "aui.h"
 #include "aui_ldl.h"
+#include "trademanager.h"
 #include "c3ui.h"
 extern C3UI *g_c3ui;
 
@@ -56,7 +55,7 @@ extern C3UI *g_c3ui;
 #include "SelItem.h"
 
 #include "pixelutils.h"
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 #include "aui_blitter.h"
 
 #include "GameEventManager.h"
@@ -79,6 +78,8 @@ extern C3UI *g_c3ui;
 static TradeManager *s_tradeManager = NULL;
 static MBCHAR *s_tradeManagerBlock = "TradeManager";
 static MBCHAR *s_tradeAdviceBlock = "TradeAdvice";
+
+extern ColorSet *g_colorSet;
 
 #define k_MAX_CITIES_PER_GOOD 5
 
@@ -1105,7 +1106,12 @@ STDEHANDLER(TradeManagerSendGoodEvent)
 	return GEV_HD_Continue;
 }
 
-AUI_ACTION_BASIC(UpdateTradeAction);
+class UpdateTradeAction : public aui_Action
+{
+  public:
+	UpdateTradeAction() {}
+	virtual ActionCallback Execute;
+};
 
 void UpdateTradeAction::Execute(aui_Control *control, uint32 action, uint32 data)
 {

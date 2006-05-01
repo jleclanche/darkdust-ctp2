@@ -24,13 +24,12 @@
 // - Added separate counters in Sprite-derived classes to prevent crashes.
 //
 //----------------------------------------------------------------------------
-
 #ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
 #ifndef __FACEDSPRITE_H__
-#define __FACEDSPRITE_H__
+#define __FACEDSPRITE_H__ 1
 
 //----------------------------------------------------------------------------
 // Library dependencies
@@ -85,26 +84,30 @@ public:
 						Pixel16 outlineColor, uint16 flags);
 
 	Pixel16			*GetFrameData(uint16 facing, uint16 frame) { return m_frames[facing][frame]; }
+	size_t			GetFrameDataSize(uint16 facing, uint16 frame) { return m_framesSizes[facing][frame]; }
 	Pixel16			*GetMiniFrameData(uint16 facing, uint16 frame) { return m_miniframes[facing][frame]; }
-	void			SetFrameData(uint16 facing, uint16 frame, Pixel16 *data) { m_frames[facing][frame] = data; }
-	void			SetMiniFrameData(uint16 facing, uint16 frame, Pixel16 *data) { m_miniframes[facing][frame] = data; }
+	size_t			GetMiniFrameDataSize(uint16 facing, uint16 frame) { return m_miniframesSizes[facing][frame]; }
+	void			SetFrameData(uint16 facing, uint16 frame, Pixel16 *data, size_t size);
+	void			SetMiniFrameData(uint16 facing, uint16 frame, Pixel16 *data, size_t size);
 
 	POINT			GetHotPoint(uint16 facing) { return m_hotPoints[facing]; }
 	POINT			*GetHotPoints(void) { return m_hotPoints; }
 	void			SetHotPoint(uint16 facing, sint32 x, sint32 y) { m_hotPoints[facing].x = x; m_hotPoints[facing].y = y; }
 	void			SetHotPoints(POINT *points) { memcpy(m_hotPoints, points, sizeof(m_hotPoints)); }
 
-	virtual sint32	ParseFromTokens(Token *theToken);
-	virtual void	AllocateFrameArrays(size_t count);
+	sint32			ParseFromTokens(Token *theToken);
+	void			AllocateFrameArrays(size_t count);
 
 	virtual uint16	GetNumFrames(void) const    { return m_facedFrameCount; };
 	virtual void	SetNumFrames(uint16 num)    { m_facedFrameCount = num; }
 
 protected:
 	Pixel16			**m_frames[k_NUM_FACINGS];
+	size_t			*m_framesSizes[k_NUM_FACINGS];
 	Pixel16			**m_miniframes[k_NUM_FACINGS];
+	size_t			*m_miniframesSizes[k_NUM_FACINGS];
 	POINT			m_hotPoints[k_NUM_FACINGS];
-    size_t          m_facedFrameCount;          // number of valid entries per facing in the Pixel16 ** variables
+	size_t			m_facedFrameCount;          // number of valid entries per facing in the Pixel16 ** variables
 };
 
 #endif

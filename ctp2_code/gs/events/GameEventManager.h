@@ -26,10 +26,99 @@ public:
 	GameEventManager();
 	~GameEventManager();
 
-	
+private:
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				const GAME_EVENT_ARGUMENT* argTypes, const void** args);
+public:
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, const MapPoint&,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, const MapPoint&,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, const MapPoint&,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, const MapPoint&,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, const MapPoint&,
+				GAME_EVENT_ARGUMENT, const MapPoint&,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, const MapPoint&,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, const MapPoint&,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, Path*,
+				GAME_EVENT_ARGUMENT, const MapPoint&,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, const MapPoint&,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, const MapPoint&,
+				GAME_EVENT_ARGUMENT);
+	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, const MapPoint&,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT, int,
+				GAME_EVENT_ARGUMENT);
 
-
-	GAME_EVENT_ERR AddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type, ...);
 
 	
 	GAME_EVENT_ERR ArglistAddEvent(GAME_EVENT_INSERT insert, GAME_EVENT type,
@@ -55,13 +144,8 @@ public:
 	GAME_EVENT_ERR RemoveCallback(GAME_EVENT type, GameEventHookCallback *cb);
 
 	
-	GAME_EVENT_ERR ActivateHook
-    (
-        GAME_EVENT          type, 
-        GameEventArgList *  args, 
-        sint32              startIndex, 
-        sint32 &            resumeIndex
-    );
+	GAME_EVENT_ERR ActivateHook(GAME_EVENT type, GameEventArgList *args, sint32 &resumeIndex);
+	GAME_EVENT_ERR ResumeHook(GAME_EVENT type, GameEventArgList *args, sint32 startIndex, sint32 &resumeIndex);
 
 	
 	GAME_EVENT GetEventIndex(const MBCHAR *name);
@@ -108,7 +192,7 @@ public:
 
 private:
 	BOOL CheckArg(sint32 num, char got, char want);
-	BOOL VerifyArgs(GAME_EVENT type, va_list *vl);
+	BOOL VerifyArgs(GAME_EVENT type, const GAME_EVENT_ARGUMENT* argTypes, const void** args);
 
 	
 	PointerList<GameEvent> *m_eventList;

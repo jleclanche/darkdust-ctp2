@@ -19,11 +19,12 @@
 #include "aui_window.h"
 
 #include "primitives.h"
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 
 #include "textradio.h"
 
 
+extern ColorSet		*g_colorSet;
 
 
 

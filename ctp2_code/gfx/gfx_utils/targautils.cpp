@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Targa file format utilities
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -49,47 +49,54 @@ SHORT TgaDecodeScanLine(BYTE *DecodedBuffer, WORD LineLength,
 unsigned char *tmpbuf = NULL;
 unsigned char *tmpbuf1= NULL;
 
-bool Get_TGA_Dimension (char *fname,
+bool Get_TGA_Dimension (const char *fname, 
                         int &Width,
                         int &Height,
                         int &Bpp)
 {
-	FILE *  fp  = fopen(fname, "rb");
+	TGAHEADER head;
+	int bpp;
+
+	FILE *fp;
+	fp = fopen(fname, "rb");
 
 	if (fp == NULL) {
 		char	Str[128];
 
 		sprintf(Str,"%s not found.",fname);
 		MessageBox(NULL,Str,NULL,MB_OK);
-		return false;
+		return 0;
 	}
 	setvbuf(fp, NULL, _IONBF, 0);
 
-	TGAHEADER head;
 	if (fread(&head, sizeof(TGAHEADER), 1, fp) < 1)
 	{
 		DPRINTF(k_DBG_UI, ("Error reading file \"%s\"\n", fname));
 		fclose(fp);
-		return false;
+		return(0);
 	}
 
-	switch (head.PixelDepth)
-    {
-    case 16:
-    case 24:
-    case 32:
-        // Correct format
-	    Width   = head.ImageWidth;
-	    Height  = head.ImageHeight;
-	    Bpp     = head.PixelDepth / 8;
-        fclose(fp);
-        return true;
-    
-    default:
+	if (head.PixelDepth == 16) {
+		bpp = 2;
+	} else if (head.PixelDepth == 24) {
+		bpp = 3;
+	} else if (head.PixelDepth == 32) {
+		bpp = 4;
+	}
+	else
+	{
 		DPRINTF(k_DBG_UI, ("File \"%s\" is not a 16, 24 or 32 bit Targa\n", fname));
 		fclose(fp);
-		return false;
+		return(0);
 	}
+
+	Width = head.ImageWidth;
+	Height = head.ImageHeight;
+	Bpp=bpp;
+
+	fclose(fp);
+
+	return TRUE;
 }
 
 #if	0 // Unused
@@ -105,7 +112,7 @@ static void Get_Pixel_Mask_Scale (
 }
 #endif
 
-bool Load_TGA_File_Simple(char *fname,
+bool Load_TGA_File_Simple(const char *fname,
 						  unsigned char *data,
 						  int Buffer_Width,
 						  int width,
@@ -126,7 +133,7 @@ bool Load_TGA_File_Simple(char *fname,
 
 		sprintf(Str,"%s not found.",fname);
 		MessageBox(NULL,Str,NULL,MB_OK);
-		return false;
+		return 0;
 	}
 
 	setvbuf(fp, NULL, _IONBF, 0);
@@ -135,7 +142,7 @@ bool Load_TGA_File_Simple(char *fname,
 	{
 		DPRINTF(k_DBG_UI, ("Error reading file \"%s\"\n", fname));
 		fclose(fp);
-		return false;
+		return(0);
 	}
 
 	switch (head.PixelDepth)
@@ -146,7 +153,7 @@ bool Load_TGA_File_Simple(char *fname,
 	default:
 		DPRINTF(k_DBG_UI, ("File \"%s\" is not a 16, 24 or 32 bit Targa\n", fname));
 		fclose(fp);
-		return false;
+		return(0);
 	}
 
 	width  = head.ImageWidth;
@@ -174,7 +181,7 @@ bool Load_TGA_File_Simple(char *fname,
 		{
 			DPRINTF(k_DBG_UI, ("Error reading file \"%s\"\n", fname));
 			fclose(fp);
-			return false;
+			return(0);
 		}
 
 
@@ -204,7 +211,7 @@ bool Load_TGA_File_Simple(char *fname,
 				free(tmpbuf);
 				free(tmpbuf1);
 				tmpbuf=NULL;
-				return false;
+				return(0);
 			}
 			fclose(fp);
 
@@ -220,7 +227,7 @@ bool Load_TGA_File_Simple(char *fname,
 					free(tmpbuf);
 					free(tmpbuf1);
 					tmpbuf=NULL;
-					return false;
+					return(0);
 				}
 				dp += byteCount;
 			}
@@ -229,7 +236,7 @@ bool Load_TGA_File_Simple(char *fname,
 	free(tmpbuf);
 	free(tmpbuf1);
 	tmpbuf=NULL;
-	return true;
+	return(1);
 }
 
 
@@ -258,7 +265,7 @@ void TGA2RGB32(Pixel32 *data,int datasize)
 }
 
 
-bool Load_TGA_File(char *fname,
+bool Load_TGA_File(const char *fname,
 			 unsigned char *data,
 			 int Buffer_Width,
 			 int width,
@@ -280,7 +287,7 @@ bool Load_TGA_File(char *fname,
 
 		sprintf(Str,"%s not found.",fname);
 		MessageBox(NULL,Str,NULL,MB_OK);
-		return false;
+		return 0;
 	}
 
 	setvbuf(fp, NULL, _IONBF, 0);
@@ -289,7 +296,7 @@ bool Load_TGA_File(char *fname,
 	{
 		DPRINTF(k_DBG_UI, ("Error reading file \"%s\"\n", fname));
 		fclose(fp);
-		return false;
+		return(0);
 	}
 
 	switch (head.PixelDepth)
@@ -300,7 +307,7 @@ bool Load_TGA_File(char *fname,
 	default:
 		DPRINTF(k_DBG_UI, ("File \"%s\" is not a 16, 24 or 32 bit Targa\n", fname));
 		fclose(fp);
-		return false;
+		return(0);
 	}
 
 	width  = head.ImageWidth;
@@ -327,7 +334,7 @@ bool Load_TGA_File(char *fname,
 			{
 				DPRINTF(k_DBG_UI, ("Error reading file \"%s\"\n", fname));
 				fclose(fp);
-				return false;
+				return(0);
 			}
 
 			if (convertToNative)
@@ -369,7 +376,7 @@ bool Load_TGA_File(char *fname,
 				free(tmpbuf);
 				free(tmpbuf1);
 				tmpbuf=NULL;
-				return false;
+				return(0);
 			}
 			fclose(fp);
 
@@ -432,10 +439,10 @@ bool Load_TGA_File(char *fname,
 	free(tmpbuf);
 	free(tmpbuf1);
 	tmpbuf=NULL;
-	return true;
+	return(1);
 }
 
-int	write_tga(char *fname, int width, int height, unsigned char *data)
+int write_tga(const char *fname, int width, int height, unsigned char *data)
 {
 	TGAHEADER head;
 	long fsize;
@@ -560,3 +567,4 @@ SHORT TgaDecodeScanLine(unsigned char *DecodedBuffer, WORD LineLength,
 	}
 	return(byteCount);
 }
+

@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Line graph
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -32,59 +32,61 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
-#include "linegraph.h"
-
 #include "aui.h"
 #include "aui_ldl.h"
-#include "aui_directsurface.h"
+#include "aui_surface.h"
+#include "aui_Factory.h"
 #include "aui_window.h"
 
 #include "c3ui.h"
 #include "c3blitter.h"
 
 #include "pixelutils.h"
-#include "colorset.h"               // g_colorSet
+#include "colorset.h"
 #include "primitives.h"
 #include "textutils.h"
 
 #include "EventTracker.h"
 
+#include "linegraph.h"
 
+extern ColorSet		*g_colorSet;
 extern C3UI			*g_c3ui;
 
 
-LineGraph::LineGraph
-(
-    AUI_ERRCODE *           retval,
-	sint32                  id,
-	MBCHAR *                ldlBlock,
-	ControlActionCallback * ActionFunc,
-	void *                  cookie,
-	EventTracker *          events
-)
-:	aui_Control     (retval, id, ldlBlock, ActionFunc, cookie),
-    m_events        (events)
+LineGraph::LineGraph(AUI_ERRCODE *retval,
+							sint32 id,
+							MBCHAR *ldlBlock,
+							ControlActionCallback *ActionFunc,
+							void *cookie,
+							EventTracker *events)
+	:
+		aui_ImageBase(ldlBlock),
+		aui_TextBase(ldlBlock),
+		aui_Control(retval, id, ldlBlock, ActionFunc, cookie)
 {
+	m_events = events;
 	InitCommonLdl(ldlBlock);
 }
 
 
-LineGraph::LineGraph
-(
-    AUI_ERRCODE *           retval,
-	uint32                  id,
-	sint32                  x,
-	sint32                  y,
-	sint32                  width,
-	sint32                  height,
-	ControlActionCallback * ActionFunc,
-	void *                  cookie
-)
-:	aui_Control     (retval, id, x, y, width, height, ActionFunc, cookie),
-    m_events        (NULL)
+LineGraph::LineGraph(AUI_ERRCODE *retval,
+							uint32 id,
+							sint32 x,
+							sint32 y,
+							sint32 width,
+							sint32 height,
+							ControlActionCallback *ActionFunc,
+							void *cookie)
+	:
+		aui_ImageBase((sint32)0),
+		aui_TextBase((MBCHAR *)NULL),
+		aui_Control(retval, id, x, y, width, height, ActionFunc, cookie)
 {
+	m_events=NULL;
 	InitCommon();	
 }
+
 
 //----------------------------------------------------------------------------
 //
@@ -98,7 +100,7 @@ LineGraph::LineGraph
 //
 // Returns    : -
 //
-// Remark(s)  : -
+// Remark(s)  : Use delete [] for items that have been created with new [].
 //
 //----------------------------------------------------------------------------
 
@@ -163,8 +165,7 @@ void LineGraph::InitCommon(void)
 	m_enablePrecision = TRUE;
 
 	
-    m_surface = new aui_DirectSurface
-        (&errcode, m_width, m_height, 16, g_c3ui ? g_c3ui->DD() : NULL);
+	m_surface = aui_Factory::new_Surface(errcode, m_width, m_height, 16);
 	Assert( AUI_NEWOK(m_surface, errcode) );
 
 	SetRect(&m_surfaceRect, 0, 0, m_width, m_height);
@@ -194,7 +195,7 @@ AUI_ERRCODE LineGraph::DrawThis(aui_Surface *surface, sint32 x,	sint32 y )
 	OffsetRect( &rect, m_x + x, m_y + y );
 	ToWindow( &rect );
 
-	UpdateGraph((aui_DirectSurface *)surface, rect.left, rect.top);
+	UpdateGraph(surface, rect.left, rect.top);
 
 	if ( surface == m_window->TheSurface() )
 		m_window->AddDirtyRect( &rect );
@@ -203,7 +204,7 @@ AUI_ERRCODE LineGraph::DrawThis(aui_Surface *surface, sint32 x,	sint32 y )
 }
 
 
-void LineGraph::UpdateGraph(aui_DirectSurface *surface, sint32 x, sint32 y)
+void LineGraph::UpdateGraph(aui_Surface *surface, sint32 x, sint32 y)
 {
 	RECT		rect = {0, 0, m_width, m_height};
 
@@ -363,7 +364,7 @@ void LineGraph::DrawLines(int eventsOfset)
 			int currentEventNum=0;
 			first=TRUE;
 			EventData *curData;
-			while(curData=m_events->GetEvents(first))
+			while((curData=m_events->GetEvents(first)))
 			{
 				first=FALSE;
 				xpos=m_graphRect.left+(curData->m_turn-1)*width/m_numSamples;

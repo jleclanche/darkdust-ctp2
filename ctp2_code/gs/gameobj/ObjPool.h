@@ -25,15 +25,14 @@
 // - #pragma once commented out.
 //
 //----------------------------------------------------------------------------
-
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
-
 #ifndef __OBJ_POOL_H__
 #define __OBJ_POOL_H__ 1
 
-class ObjPool;
+#include "GameObj.h"
+#include "ID.h"
 
 
 #define k_OBJ_POOL_TABLE_SIZE 1024
@@ -59,9 +58,6 @@ class ObjPool;
 
 #define k_OBJPOOL_VERSION_MAJOR		0								
 #define k_OBJPOOL_VERSION_MINOR		0								
-
-#include "GameObj.h"
-#include "ID.h"
 
 class CivArchive ;
 

@@ -24,13 +24,12 @@
 //   the city to another player (bug #26)
 //
 //----------------------------------------------------------------------------
-
 #include "c3.h"
-#include "net_action.h"
 
 #include "Cell.h"
 
 #include "network.h"
+#include "net_action.h"
 #include "net_util.h"
 #include "net_info.h"
 #include "net_rand.h"
@@ -290,9 +289,8 @@ const uint32 NetAction::m_args[NET_ACTION_NULL] = {
 };
 
 
-NetAction::NetAction(NET_ACTION action, ...)
-:
-	m_action    (action)
+NetAction::NetAction(NET_ACTION action, ...) :
+	m_action(action)
 {
 	va_list vl;
 	uint32 i;
@@ -318,13 +316,12 @@ NetAction::NetAction(NET_ACTION action, ...)
 }
 
 NetAction::NetAction()
-:
-    m_action    (NET_ACTION_NULL)
 {
 }
 
 
-void NetAction::Packetize(uint8* buf, uint16& size)
+void
+NetAction::Packetize(uint8* buf, uint16& size)
 {
 	buf[0] = 'A';
 	buf[1] = 'A';
@@ -482,7 +479,7 @@ void NetAction::Unpacketize(uint16 id, uint8* buf, uint16 size)
 						m_data[5],
 						m_data[6]);
 				g_network.Unblock(index);
-				Assert(route.IsValid());
+				Assert(route != TradeRoute(0));
 			}
 
 			if((uint32)route != m_data[4]) {
@@ -492,8 +489,7 @@ void NetAction::Unpacketize(uint16 id, uint8* buf, uint16 size)
 				if(g_theTradePool->IsValid(otherRoute))
 					g_network.QueuePacket(id, new NetTradeRoute(otherRoute.AccessData(), true));
 
-				if (route.IsValid()) 
-                {
+				if(route != TradeRoute(0)) {
 					g_network.QueuePacket(id, new NetTradeRoute(route.AccessData(), true));
 				}
 			} else {
@@ -736,8 +732,10 @@ void NetAction::Unpacketize(uint16 id, uint8* buf, uint16 size)
 		{
 			DPRINTF(k_DBG_NET, ("Server: Player %d building wonder %d in city %lx\n",
 								index, m_data[1], m_data[0]));
-			if(g_theUnitPool->IsValid(Unit(m_data[0])))
-				Unit(m_data[0]).BuildWonder(m_data[1]);
+			Unit unit = Unit(m_data[0]);
+			if(g_theUnitPool->IsValid(unit)) {
+				unit.BuildWonder(m_data[1]);
+			}
 			break;
 		}
 		case NET_ACTION_INTERCEPT_TRADE:

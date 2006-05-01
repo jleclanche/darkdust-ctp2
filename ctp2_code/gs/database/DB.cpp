@@ -160,7 +160,7 @@ template <class T> void Database<T>::AddRec(const StringId sid, sint32 &i)
 		sint32 a;
 		for (a = 0; a < m_nRec; ++a )
 		{
-			if ( _stricoll( str, g_theStringDB->GetNameStr(
+			if (stricmp( str, g_theStringDB->GetNameStr(
 				m_rec[ m_alphaToIndex[ a ] ].GetName() ) ) < 0 )
 			{
 				

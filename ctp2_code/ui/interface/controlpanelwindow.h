@@ -59,6 +59,44 @@
 
 class ControlPanelWindow;
 
+#include "SelItem.h"
+
+class aui_TabGroup;
+class BattleOrderBox;
+class CellUnitList;
+class Army;
+class CityInventoryListBox;
+class ButtonBank;
+class TextTab;
+class c3_Static;
+class ctp2_Static;
+class c3_ColoredSwitch;
+class Thermometer;
+class StaticTextBox;
+class aui_Tab;
+class MapPoint;
+struct aui_MouseData;
+
+class ControlSheet;
+class aui_ProgressBar;
+class aui_Static;
+class ctp2_Window;
+class ctp2_ListBox;
+class ctp2_ListItem;
+class ctp2_DropDown;
+class ctp2_Button;
+class ctp2_Menu;
+class ctp2_MenuBar;
+class aui_Control;
+class OrderRecord;
+class ArmyData;
+class TerrainImprovementRecord;
+class TerrainRecord;
+class Message;
+class ctp2_TabGroup;
+class ctp2_Tab;
+class ctp2_Switch;
+
 enum CP_SELECT 
 {
 	CP_SELECT_GOOD,
@@ -229,8 +267,7 @@ public:
 
 	void    BuildList(sint32 index);
 	
-	
-	void    SetStack(Army &selectedArmy, CellUnitList *fullArmy, Unit singleUnit = Unit());
+	void	SetStack(const Army &selectedArmy, CellUnitList *fullArmy, Unit singleUnit = Unit(0));
 	void    BuildUnitList();
 	void    BuildUnitListBox();
 	void    BuildCityList(const MapPoint &pos);
@@ -281,7 +318,7 @@ public:
 	
 	void    InitMessageTab();
 	void    AddMessage(Message &message,bool initializing=false);
-	void    SetMessageRead(Message &message);
+	void    SetMessageRead(const Message &message);
 	void    RemoveMessage(Message &message);
 	void    PopulateMessageList(PLAYER_INDEX player);
 

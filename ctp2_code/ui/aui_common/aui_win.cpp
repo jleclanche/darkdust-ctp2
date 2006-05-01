@@ -22,8 +22,8 @@
 BOOL aui_Win::m_registered = FALSE;
 MBCHAR *aui_Win::m_windowClass = "aui_Win";
 sint32 aui_Win::m_winRefCount = 0;
-tech_WLList<aui_Win *> *aui_Win::m_winList = NULL;
-
+tech_WLList<aui_Win *> *aui_Win::m_winList = 0;
+aui_Win *g_winFocus = 0;
 
 
 aui_Win::aui_Win(
@@ -89,6 +89,7 @@ AUI_ERRCODE aui_Win::InitCommon( void )
 	
 	if ( !m_registered )
 	{
+#ifdef __AUI_USE_DIRECTX__
 		WNDCLASSEX wcex;
 		memset( &wcex, 0, sizeof( wcex ) );
 
@@ -100,8 +101,11 @@ AUI_ERRCODE aui_Win::InitCommon( void )
 
 		m_registered = RegisterClassEx( &wcex );
 		Assert( m_registered );
+#else
+		m_registered = TRUE;
+#endif // __AUI_USE_DIRECTX
 	}
-
+#ifdef __AUI_USE_DIRECTX
 	HDC hdc = GetDC( g_ui->TheHWND() );
 
 	
@@ -122,7 +126,7 @@ AUI_ERRCODE aui_Win::InitCommon( void )
 	
 	RECT rect = { 0, 0, m_width, m_height };
 	FillRect( m_memdc, &rect, GetSysColorBrush( COLOR_WINDOW ) );
-
+#endif // __AUI_USE_DIRECTX__
 	
 	m_offscreen.x = g_ui->Width() + 1;	
 	m_offscreen.y = 0;					
@@ -137,8 +141,10 @@ AUI_ERRCODE aui_Win::InitCommon( void )
 		Assert( m_winList != NULL );
 		if ( !m_winList ) return AUI_ERRCODE_MEMALLOCFAILED;
 	}
+#ifdef __AUI_USE_DIRECTX__
 	else
 		GetClipCursor( &playground );
+#endif // __AUI_USE_DIRECTX__
 
 	m_winList->AddTail( this );
 
@@ -152,6 +158,7 @@ AUI_ERRCODE aui_Win::InitCommon( void )
 
 	Rectangle_Consolidate( &playground, &playground, &morePlayground );
 
+#ifdef __AUI_USE_DIRECTX__
 	BOOL clipped = ClipCursor( &playground );
 	Assert( clipped );
 
@@ -160,7 +167,7 @@ AUI_ERRCODE aui_Win::InitCommon( void )
 		g_ui->TheHWND(),
 		playground.left, playground.top, playground.right, playground.bottom,
 		FALSE );
-
+#endif // __AUI_USE_DIRECTX__
 	return AUI_ERRCODE_OK;
 }
 
@@ -168,8 +175,7 @@ AUI_ERRCODE aui_Win::InitCommon( void )
 
 aui_Win::~aui_Win()
 {
-	
-
+#ifdef __AUI_USE_DIRECTX__
 	if ( m_memdc )
 	{
 		if ( m_hbitmap )
@@ -187,10 +193,7 @@ aui_Win::~aui_Win()
 		DestroyWindow( m_hwnd );
 		m_hwnd = NULL;
 	}
-
-	
-	
-	
+#endif // __AUI_USE_DIRECTX__	
 	
 	ListPos position = m_winList->Find( GetWinFromHWND(m_hwnd) );
 	if ( position ) 
@@ -198,10 +201,12 @@ aui_Win::~aui_Win()
 
 	if ( !--m_winRefCount )
 	{
+#ifdef __AUI_USE_DIRECTX__
 		ClipCursor( NULL );
 
 		if ( m_registered )
 			UnregisterClass( m_windowClass, g_ui->TheHINSTANCE() );
+#endif
 
 		if ( m_winList )
 		{
@@ -216,7 +221,11 @@ aui_Win::~aui_Win()
 aui_Control *aui_Win::SetKeyboardFocus( void )
 {
 	if ( !IsDisabled() )
+#ifdef __AUI_USE_DIRECTX__
 		SetFocus( m_hwnd );
+#else // __AUI_USE_DIRECTX__
+		g_winFocus = this;
+#endif // __AUI_USE_DIRECTX__
 
 	return aui_Control::SetKeyboardFocus();
 }
@@ -253,7 +262,7 @@ AUI_ERRCODE aui_Win::DrawThis( aui_Surface *surface, sint32 x, sint32 y )
 
 	if ( m_hwnd && m_memdc )
 	{
-		
+#ifdef __AUI_USE_DIRECTX__
 		InvalidateRect( m_hwnd, NULL, FALSE );
 		SendMessage( m_hwnd, WM_PAINT, (WPARAM)m_memdc, 0 );
 
@@ -278,6 +287,7 @@ AUI_ERRCODE aui_Win::DrawThis( aui_Surface *surface, sint32 x, sint32 y )
 			errcode = surface->ReleaseDC( destDC );
 			Assert( errcode == AUI_ERRCODE_OK );
 		}
+#endif // __AUI_USE_DIRECTX__
 	}
 
 	if ( surface == m_window->TheSurface() )
@@ -340,27 +350,18 @@ void aui_Win::WinMouseMove( aui_MouseEvent *mouseData )
 	POINT screen =
 		{ local.x + m_offscreen.x, local.x + m_offscreen.y };
 
-	
-	
-
+#ifdef __AUI_USE_DIRECTX__	
 	SendMessage(
 		m_hwnd,
 		WM_NCHITTEST,
 		0,
 		screen.x + ( screen.y << 16 ) );
-
-	
-	
-	
-	
-	
-
-	
 	SendMessage(
 		m_hwnd,
 		WM_MOUSEMOVE,
 		0,
 		local.x + ( local.y << 16 ) );
+#endif // __AUI_USE_DIRECTX__
 
 	if ( m_mouseCode == AUI_ERRCODE_UNHANDLED )
 		m_mouseCode = AUI_ERRCODE_HANDLED;
@@ -409,12 +410,7 @@ void aui_Win::WinMouseLDrag( aui_MouseEvent *mouseData )
 		POINT screen =
 		{ local.x + m_offscreen.x, local.x + m_offscreen.y };
 
-		
-		
-
-		
-		
-
+#ifdef __AUI_USE_DIRECTX__
 		WPARAM wParam = MK_LBUTTON;
 		if ( mouseData->rbutton ) wParam |= MK_RBUTTON;
 
@@ -424,6 +420,7 @@ void aui_Win::WinMouseLDrag( aui_MouseEvent *mouseData )
 			WM_MOUSEMOVE,
 			wParam,
 			local.x + ( local.y << 16 ) );
+#endif //__AUI_USE_DIRECTX__
 
 		m_draw |= m_drawMask & k_AUI_REGION_DRAWFLAG_MOUSELDRAGOVER;
 		if ( m_mouseCode == AUI_ERRCODE_UNHANDLED )
@@ -474,9 +471,7 @@ void aui_Win::WinMouseRDrag( aui_MouseEvent *mouseData )
 		POINT screen =
 		{ local.x + m_offscreen.x, local.x + m_offscreen.y };
 
-		
-		
-
+#ifdef __AUI_USE_DIRECTX__
 		WPARAM wParam = MK_RBUTTON;
 		if ( mouseData->lbutton ) wParam |= MK_LBUTTON;
 
@@ -486,7 +481,7 @@ void aui_Win::WinMouseRDrag( aui_MouseEvent *mouseData )
 			WM_MOUSEMOVE,
 			wParam,
 			local.x + ( local.y << 16 ) );
-
+#endif //__AUI_USE_DIRECTX__
 		m_draw |= m_drawMask & k_AUI_REGION_DRAWFLAG_MOUSERDRAGOVER;
 		if ( m_mouseCode == AUI_ERRCODE_UNHANDLED )
 			m_mouseCode = AUI_ERRCODE_HANDLED;
@@ -515,6 +510,7 @@ void aui_Win::MouseLGrabInside( aui_MouseEvent *mouseData )
 		POINT screen =
 		{ local.x + m_offscreen.x, local.x + m_offscreen.y };
 
+#ifdef __AUI_USE_DIRECTX__
 		BOOL set = SetCursorPos( screen.x, screen.y );
 		Assert( set );
 
@@ -532,13 +528,6 @@ void aui_Win::MouseLGrabInside( aui_MouseEvent *mouseData )
 			WM_MOUSEACTIVATE,
 			(WPARAM)g_ui->TheHWND(),
 			HTCLIENT + ( WM_LBUTTONDOWN << 16 ) );
-
-		
-		
-		
-		
-		
-
 		
 		SendMessage(
 			m_hwnd,
@@ -558,18 +547,12 @@ void aui_Win::MouseLGrabInside( aui_MouseEvent *mouseData )
 			0,
 			0 );
 
-		
-		
-		
-		
-		
-
-		
 		SendMessage(
 			m_hwnd,
 			WM_MOUSEMOVE,
 			wParam,
 			local.x + ( local.y << 16 ) );
+#endif // __AUI_USE_DIRECTX__
 
 		m_draw |= m_drawMask & k_AUI_REGION_DRAWFLAG_MOUSELGRABINSIDE;
 		m_mouseCode = AUI_ERRCODE_HANDLEDEXCLUSIVE;
@@ -603,12 +586,12 @@ void aui_Win::MouseLDropInside( aui_MouseEvent *mouseData )
 		POINT screen =
 		{ local.x + m_offscreen.x, local.x + m_offscreen.y };
 
+#ifdef __AUI_USE_DIRECTX__
 		BOOL set = SetCursorPos( screen.x, screen.y );
 		Assert( set );
 
 		WPARAM wParam = 0;
 		if ( mouseData->rbutton ) wParam |= MK_RBUTTON;
-
 		
 		SendMessage(
 			m_hwnd,
@@ -616,30 +599,18 @@ void aui_Win::MouseLDropInside( aui_MouseEvent *mouseData )
 			wParam,
 			local.x + ( local.y << 16 ) );
 
-		
-		
-		
-		
-		
-
 		SendMessage(
 			m_hwnd,
 			WM_NCHITTEST,
 			0,
 			screen.x + ( screen.y << 16 ) );
+#endif
 
 		WinMouseMove( mouseData );
 
 		m_draw |= m_drawMask & k_AUI_REGION_DRAWFLAG_MOUSELDROPINSIDE;
 		if ( m_mouseCode == AUI_ERRCODE_UNHANDLED )
 			m_mouseCode = AUI_ERRCODE_HANDLED;
-
-		
-		
-		
-		
-		
-		
 		
 		HandleGameSpecificLeftClick( this );
 	}
@@ -708,6 +679,7 @@ void aui_Win::MouseLDoubleClickInside( aui_MouseEvent *mouseData )
 		POINT screen =
 		{ local.x + m_offscreen.x, local.x + m_offscreen.y };
 
+#ifdef __AUI_USE_DIRECTX__
 		BOOL set = SetCursorPos( screen.x, screen.y );
 		Assert( set );
 
@@ -725,19 +697,13 @@ void aui_Win::MouseLDoubleClickInside( aui_MouseEvent *mouseData )
 			WM_MOUSEACTIVATE,
 			(WPARAM)g_ui->TheHWND(),
 			HTCLIENT + ( WM_LBUTTONDOWN << 16 ) );
-
-		
-		
-		
-		
-		
-
 		
 		SendMessage(
 			m_hwnd,
 			WM_LBUTTONDBLCLK,
 			wParam,
 			local.x + ( local.y << 16 ) );
+#endif // __AUI_USE_DIRECTX__
 
 		WinMouseMove( mouseData );
 
@@ -765,6 +731,7 @@ void aui_Win::MouseRDoubleClickInside( aui_MouseEvent *mouseData )
 		POINT screen =
 		{ local.x + m_offscreen.x, local.x + m_offscreen.y };
 
+#ifdef __AUI_USE_DIRECTX__
 		BOOL set = SetCursorPos( screen.x, screen.y );
 		Assert( set );
 
@@ -782,19 +749,13 @@ void aui_Win::MouseRDoubleClickInside( aui_MouseEvent *mouseData )
 			WM_MOUSEACTIVATE,
 			(WPARAM)g_ui->TheHWND(),
 			HTCLIENT + ( WM_LBUTTONDOWN << 16 ) );
-
-		
-		
-		
-		
-		
-
 		
 		SendMessage(
 			m_hwnd,
 			WM_RBUTTONDBLCLK,
 			wParam,
 			local.x + ( local.y << 16 ) );
+#endif // __AUI_USE_DIRECTX__
 
 		WinMouseMove( mouseData );
 

@@ -3,7 +3,7 @@
 #include "c3.h"
 #include "aui.h"
 #include "aui_ldl.h"
-#include "aui_ui.h"             // g_ui
+#include "aui_ui.h"
 #include "aui_window.h"
 #include "aui_gamespecific.h"
 
@@ -12,7 +12,10 @@
 #include "patternbase.h"
 #include "pattern.h"
 #include "primitives.h"
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
+
+extern aui_UI		*g_ui;
+extern ColorSet		*g_colorSet;
 
 
 ctp2_Static::ctp2_Static(
@@ -328,7 +331,7 @@ AUI_ERRCODE ctp2_Static::DrawThis(
 		if (m_window)
 			if ( surface == m_window->TheSurface() )
 				m_window->AddDirtyRect( &rect );
-		return m_drawFunc(this, surface, rect, m_drawCookie);		
+		return m_drawFunc(this, surface, rect, m_drawCookie);
 	}
 	
 	

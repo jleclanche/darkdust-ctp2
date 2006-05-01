@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ header
 // Description  : User interface radar map
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -51,34 +51,41 @@
 
 
 #include "aui.h"
-#include "aui_directsurface.h"
+#include "aui_Factory.h"
 #include "aui_blitter.h"
 #include "aui_window.h"
 #include "aui_ldl.h"
 #include "aui_action.h"
 #include "c3ui.h"
-#include "player.h"                 // g_player
-#include "World.h"                  // g_theWorld
+#include "player.h"
+#include "XY_Coordinates.h"
+#include "World.h"
 #include "Cell.h"
 #include "UnseenCell.h"
 #include "citydata.h"
 #include "Unit.h"
 #include "UnitData.h"
 #include "pixelutils.h"
-#include "colorset.h"               // g_colorSet
-#include "SelItem.h"                // g_selected_item
-#include "tiledmap.h"               // g_tiledMap
+#include "colorset.h"
+#include "SelItem.h"
+#include "tiledmap.h"
 #include "director.h"
 #include "maputils.h"
 #include "primitives.h"
-#include "profileDB.h"              // g_theProfileDB
+#include "profileDB.h"
 #include "pointerlist.h"
 #include "terrainutil.h"
 #include "Scheduler.h"
 
 
 extern C3UI				*g_c3ui;
+extern TiledMap			*g_tiledMap;
+extern Player			**g_player;
 extern PointerList<Player> *g_deadPlayer;
+extern ProfileDB		*g_theProfileDB;
+extern SelectedItem		*g_selected_item;
+extern ColorSet			*g_colorSet;
+extern World			*g_theWorld;
 
 extern sint32 g_fog_toggle;
 extern sint32 g_god;
@@ -215,7 +222,7 @@ void RadarMap::InitCommon(void)
 	m_selectedCity.m_id = 0;
 
 	
-	m_mapSurface = new aui_DirectSurface(&errcode, m_width, m_height, 16, g_c3ui->DD());
+	m_mapSurface = aui_Factory::new_Surface(errcode, m_width, m_height, 16);
 	Assert( AUI_NEWOK(m_mapSurface, errcode) );
 
 	RECT rect = { 0, 0, m_width, m_height };
@@ -255,7 +262,7 @@ void RadarMap::ClearMapOverlay(void)
 //    lay it does not exists yet  
 //	
 //---------------------------------------------------------------------------
-void RadarMap::SetMapOverlayCell(MapPoint &pos, COLOR color)
+void RadarMap::SetMapOverlayCell(const MapPoint &pos, COLOR color)
 {
 	if (m_mapOverlay == NULL) {
 		sint32 len = m_mapSize->x * m_mapSize->y;
@@ -289,7 +296,7 @@ AUI_ERRCODE	RadarMap::Resize( sint32 width, sint32 height )
 		delete m_mapSurface;
 
 	
-	m_mapSurface = new aui_DirectSurface(&errcode, width, height, 16, g_c3ui->DD());
+	m_mapSurface = aui_Factory::new_Surface(errcode, width, height, 16);
 	Assert( AUI_NEWOK(m_mapSurface, errcode) );
 
 	CalculateMetrics();
@@ -693,8 +700,8 @@ void RadarMap::RenderSpecialTileBorder(aui_Surface *surface,
 		static_cast<sint32>(ceil(yPosition + m_tilePixelHeight))
 	};
 
-	tileRectangle.right		= std::max(tileRectangle.left, (tileRectangle.right - 1L));
-	tileRectangle.bottom	= std::max(tileRectangle.top, (tileRectangle.bottom - 1L));
+	tileRectangle.right		= std::max(tileRectangle.left, (tileRectangle.right - 1));
+	tileRectangle.bottom	= std::max(tileRectangle.top, (tileRectangle.bottom - 1));
 	
 	if(borderFlags & k_WEST_BORDER_FLAG)
 		primitives_DrawLine16(surface, tileRectangle.left, tileRectangle.top,
@@ -711,7 +718,7 @@ void RadarMap::RenderSpecialTileBorder(aui_Surface *surface,
 	tileRectangle.left = 0;
 	tileRectangle.right = static_cast<sint32>(ceil(m_tilePixelWidth / 2.0));
 
-	tileRectangle.right	= std::max(tileRectangle.left, (tileRectangle.right - 1L));
+	tileRectangle.right	= std::max(tileRectangle.left, (tileRectangle.right - 1));
 	
 	if(borderFlags & k_EAST_BORDER_FLAG)
 		primitives_DrawLine16(surface, tileRectangle.right, tileRectangle.top,
@@ -780,8 +787,8 @@ void RadarMap::RenderNormalTileBorder(aui_Surface *surface,
 	
 	sint32 middle = sint32(ceil(xPosition + m_tilePixelWidth/2));
 
-	tileRectangle.right		= std::max(tileRectangle.left, (tileRectangle.right - 1L));
-	tileRectangle.bottom	= std::max(tileRectangle.top, (tileRectangle.bottom - 1L));
+	tileRectangle.right		= std::max(tileRectangle.left, (tileRectangle.right - 1));
+	tileRectangle.bottom	= std::max(tileRectangle.top, (tileRectangle.bottom - 1));
 	middle					= std::min(middle, tileRectangle.right);
 	
 	
@@ -1232,7 +1239,7 @@ void RadarMap::UpdateMap(aui_Surface *surf, sint32 x, sint32 y)
 //	RadarMap::ComputeCenteredMap
 //		
 //---------------------------------------------------------------------------
-MapPoint RadarMap::ComputeCenteredMap(MapPoint const & pos, RECT *viewRect)
+MapPoint RadarMap::ComputeCenteredMap(const MapPoint &pos, RECT *viewRect)
 {
 	RECT *mapViewRect = viewRect;
 
@@ -1261,7 +1268,7 @@ MapPoint RadarMap::ComputeCenteredMap(MapPoint const & pos, RECT *viewRect)
 //  - Used to focus the RadarMap to a specific point 
 //
 //---------------------------------------------------------------------------
-MapPoint RadarMap::CenterMap(MapPoint const & pos)
+MapPoint RadarMap::CenterMap(const MapPoint &pos)
 {
 	MapPoint LastPT = m_lastCenteredPoint;
 	if(LastPT.x == 0 && LastPT.y == 0)

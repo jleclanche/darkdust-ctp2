@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Trade actor handling
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -116,7 +116,7 @@ void TradeActor::AddIdle(void)
 {
 	delete m_curAction;
 	m_curAction = new Action(GOODACTION_IDLE, ACTIONEND_INTERRUPT);
-	m_curAction->SetAnim(CreateAnim(GOODACTION_IDLE));
+	m_curAction->SetAnim(GetAnim(GOODACTION_IDLE));
 	m_curGoodAction = GOODACTION_IDLE;
 }
 
@@ -259,7 +259,7 @@ void TradeActor::AddAction(Action *actionObj)
 	}
 }
 
-Anim *TradeActor::CreateAnim(GOODACTION action)
+Anim *TradeActor::GetAnim(GOODACTION action)
 {
 	Assert(m_goodSpriteGroup != NULL);
 	if (m_goodSpriteGroup == NULL) return NULL;
@@ -274,7 +274,12 @@ Anim *TradeActor::CreateAnim(GOODACTION action)
 		return NULL;
 	}
 
-	return new Anim(*origAnim);
+	Anim	*anim = new Anim();
+	*anim = *origAnim;
+	anim->SetSpecialCopyDelete(ANIMXEROX_COPY);
+
+	return anim;
+
 }
 
 void TradeActor::Draw(Vision *tileLocalVision)

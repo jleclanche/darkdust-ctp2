@@ -46,18 +46,14 @@
 #include "aui_ldl.h"
 #include "aui_region.h"
 #include "buildingutil.h"
-#include "c3math.h"                     // AsPercentage
 #include "c3slider.h"
-#include "colorset.h"                   // g_colorSet
+#include "colorset.h"
 #include "ctp2_button.h"
 #include "ctp2_spinner.h"
 #include "ctp2_Static.h"
 #include "ctp2_Tab.h"
-#include "DomesticManagementDialog.h"
-#include "governor.h"                   // To allow automatic slider optimization
 #include "GovernmentRecord.h"
 #include "Happy.h"	
-#include "network.h"
 #include "pixelutils.h"
 #include "player.h"
 #include "primitives.h"
@@ -66,6 +62,13 @@
 #include "UnitData.h"
 #include "UnitDynArr.h"
 #include "wonderutil.h"
+#include "DomesticManagementDialog.h"
+#include "network.h"
+#include "c3math.h"                     // AsPercentage
+
+#include "governor.h"                   // To allow automatic slider optimization
+
+extern ColorSet *g_colorSet;
 
 
 static sint32 k_ONE_FIVE__NEG_TWO_TWO_CONVERSION = 3;

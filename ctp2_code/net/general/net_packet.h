@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ header
 // Description  : Multiplayer packet handling
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -18,25 +18,29 @@
 //
 // Compiler flags
 // 
-// LOG_NETWORK_OUTPUT
+// _MSC_VER
+// - Compiler version (for the Microsoft C++ compiler only)
+//
+// Note: For the blocks with _MSC_VER preprocessor directives, the following
+//       is implied: the (_MSC_VER) preprocessor directive lines, and the blocks
+//       that are inactive for _MSC_VER value 1200 are modified Apolyton code. 
+//       The blocks that are active for _MSC_VER value 1200 are the original 
+//       Activision code.
 //
 //----------------------------------------------------------------------------
 //
 // Modifications from the original Activision code:
 //
 // - Patch 1.1 reimplementation.
-// - Removed MSVC specifics.
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
 #ifndef _NET_PACKET_H_
 #define _NET_PACKET_H_
-
-class Packetizer;
 
 #define MAKE_CIV3_ID(x, y) (((x) << 8) | (y))
 #define k_PACKET_CELL_ID       MAKE_CIV3_ID('G', 'C')
@@ -130,7 +134,8 @@ public:
 
 	virtual ~Packetizer() 
 	{
-		delete [] m_packetbuf;
+		if(m_packetbuf)
+			delete [] m_packetbuf;
 	}
 
 	sint32 AddRef() { return ++m_refCount; }
@@ -146,6 +151,13 @@ public:
 
 	virtual void Packetize(uint8* buf, uint16& size)
 	{
+#ifdef _MSC_VER
+#pragma warning( disable : 4127)							
+#endif
+		Assert(FALSE);
+#ifdef _MSC_VER
+#pragma warning( default : 4127)
+#endif		
 		buf[0] = 'G';
 		buf[1] = 'N';
 		size = 2;
@@ -155,6 +167,13 @@ public:
 	virtual void Unpacketize(uint16 id, uint8* buf, uint16 size)
 	{
 		Assert(buf[0] == 'G' && buf[1] == 'N');
+#ifdef _MSC_VER
+#pragma warning( disable : 4127)
+#endif		
+		Assert(FALSE);
+#ifdef _MSC_VER
+#pragma warning( default : 4127)
+#endif		
 		Assert(id) ;												
 		Assert(size) ;												
 	}
@@ -199,4 +218,6 @@ private:
 	sint32 m_refCount;
 };
 
+#else
+class Packetizer;
 #endif

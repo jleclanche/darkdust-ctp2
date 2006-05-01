@@ -21,7 +21,6 @@ sint32 terrainutil_GetTimeToBuild(const MapPoint &pos, sint32 fromType, sint32 t
 
 sint32 terrainutil_GetProductionTime(sint32 impType, const MapPoint &pos, sint32 extraData);
 sint32 terrainutil_GetProductionCost(sint32 impType, const MapPoint &pos, sint32 extraData);
-sint32 terrainutil_GetBonusProductionExport(sint32 impType, const MapPoint &pos, sint32 extraData); //EMOD 4-5-2006
 const TerrainImprovementRecord::Effect *terrainutil_GetTerrainEffect(const TerrainImprovementRecord *rec,
 																	 const MapPoint &pos);
 const TerrainImprovementRecord::Effect *terrainutil_GetTerrainEffect(const TerrainImprovementRecord *rec,
@@ -31,7 +30,6 @@ bool terrainutil_PlayerHasAdvancesForTerrain(const TerrainImprovementRecord *rec
 bool terrainutil_PlayerHasAdvancesFor(const TerrainImprovementRecord *rec, sint32 pl);
 bool terrainutil_CanPlayerBuild(const TerrainImprovementRecord *rec, sint32 pl, bool checkMaterials);
 bool terrainutil_CanPlayerBuildAt(const TerrainImprovementRecord *rec, sint32 pl, const MapPoint &pos);
-bool terrainutil_CanPlayerSpecialBuildAt(const TerrainImprovementRecord *rec, sint32 pl, const MapPoint &pos); //EMOD
 void terrainutil_GetDefenseBonus(const MapPoint & pos, double & terrain_bonus, double & fort_bonus);
 bool terrainutil_HasAirfield(const MapPoint & pos);
 bool terrainutil_HasListeningPost(const MapPoint & pos);
@@ -43,8 +41,8 @@ bool terrainutil_IsInstallation(const sint32 type);
 double terrainutil_GetMaxVisionRange();
 double terrainutil_GetVisionRange(const sint32 terrainType, const MapPoint & pos);
 
-bool terrainutil_GetSomethingOwnsCell(MapPoint &pos, sint32 owner, Unit &ignoreCity);
-void terrainutil_RemoveBorders(const MapPoint &center, sint32 owner, sint32 intRad, sint32 sqRad, Unit &ignoreCity);
+bool terrainutil_GetSomethingOwnsCell(MapPoint &pos, sint32 owner, const Unit &ignoreCity);
+void terrainutil_RemoveBorders(const MapPoint &center, sint32 owner, sint32 intRad, sint32 sqRad, const Unit &ignoreCity);
 
 bool terrainutil_AdvanceEnablesImprovementForPlayer(sint32 player, sint32 advance, sint32 imp);
 bool terrainutil_AdvanceEnablesImprovement(sint32 advance, sint32 imp);

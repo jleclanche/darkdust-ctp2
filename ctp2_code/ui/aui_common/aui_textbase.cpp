@@ -43,26 +43,25 @@ extern StringDB	*g_theStringDB;
 
 
 
-aui_TextBase::aui_TextBase
-(
-	MBCHAR *        ldlBlock,
-	const MBCHAR *  text 
-)
+aui_TextBase::aui_TextBase(
+	MBCHAR *ldlBlock,
+	const MBCHAR *text )
 {
-	InitCommonLdl(ldlBlock,	text);
+	AUI_ERRCODE errcode = InitCommonLdl(
+		ldlBlock,
+		text );
+	Assert( AUI_SUCCESS(errcode) );
+	if ( !AUI_SUCCESS(errcode) ) return;
 }
 
 
 
-aui_TextBase::aui_TextBase
-(
-	const MBCHAR *  text,
-	uint32          maxLength 
-)
+aui_TextBase::aui_TextBase(
+	const MBCHAR *text,
+	uint32 maxLength )
 {
-	InitCommon
-    (
-        text,
+	AUI_ERRCODE errcode = InitCommon(
+		text,
 		maxLength,
 		k_AUI_TEXTBASE_DEFAULT_FONTNAME,
 		k_AUI_TEXTBASE_DEFAULT_FONTSIZE,
@@ -72,8 +71,10 @@ aui_TextBase::aui_TextBase
 		k_AUI_TEXTBASE_DEFAULT_ITALIC,
 		k_AUI_TEXTBASE_DEFAULT_UNDERLINE,
 		k_AUI_TEXTBASE_DEFAULT_SHADOW,
-		k_AUI_BITMAPFONT_DRAWFLAG_JUSTCENTER | k_AUI_BITMAPFONT_DRAWFLAG_VERTCENTER
-    );
+		k_AUI_BITMAPFONT_DRAWFLAG_JUSTCENTER |
+			k_AUI_BITMAPFONT_DRAWFLAG_VERTCENTER );
+	Assert( AUI_SUCCESS(errcode) );
+	if ( !AUI_SUCCESS(errcode) ) return;
 }
 
 
@@ -293,7 +294,7 @@ aui_TextBase::~aui_TextBase()
 {
 	delete [] m_text;
 
-	if (m_textfont && g_ui)
+	if (m_textfont)
 	{
 		g_ui->UnloadBitmapFont(m_textfont);
 	}
@@ -334,11 +335,15 @@ AUI_ERRCODE	aui_TextBase::SetText2(MBCHAR *fmt,...)
 	MBCHAR			 buff[256];
 
 	
-	buff[255]='\0';
+	buff[sizeof(buff) - 1]='\0';
 
 	
-    va_start(v_args, fmt);    
-    _vsnprintf(buff,255,fmt,v_args);
+    va_start(v_args, fmt);
+#ifdef WIN32
+    _vsnprintf(buff, sizeof(buff) - 1,fmt,v_args);
+#else
+	vsnprintf(buff, sizeof(buff) - 1, fmt, v_args);
+#endif
     va_end( v_args );         
 
 	
@@ -406,7 +411,7 @@ void aui_TextBase::TextReloadFont( void )
 
 	aui_BitmapFont *oldFont = m_textfont;
 
-	static MBCHAR descriptor[ k_AUI_BITMAPFONT_MAXDESCLEN + 1 ];
+	static MBCHAR descriptor[ k_AUI_BITMAPFONT_MAXDESCLEN + 1 ] = { 0 };
 	aui_BitmapFont::AttributesToDescriptor(
 		descriptor,
 		m_textttffile,
@@ -414,8 +419,16 @@ void aui_TextBase::TextReloadFont( void )
 		m_textbold,
 		m_textitalic );
 
+#if 1
 	m_textfont = g_ui->LoadBitmapFont( descriptor );
+#else
+	m_textfont = g_ui->LoadBitmapFont( m_textttffile );
+#endif
+	if (!m_textfont) {
+		fprintf(stderr, "Failed loading %s\n", m_textttffile);
+	}
 	Assert( m_textfont != NULL );
+	assert( m_textfont != NULL );
 	if (m_textfont)
 	{
 		if (oldFont)
@@ -442,6 +455,7 @@ AUI_ERRCODE aui_TextBase::DrawThisText(
 
 	
 	if ( m_textreload ) TextReloadFont();
+	assert(m_textfont!=NULL);
 
 	if ( m_textshadow )
 	{
@@ -470,8 +484,6 @@ AUI_ERRCODE aui_TextBase::DrawThisText(
 }
 
 
-
-
 uint32 aui_TextBase::FindNextWordBreak(
 	MBCHAR *text, HDC hdc, sint32 width )
 {
@@ -480,7 +492,7 @@ uint32 aui_TextBase::FindNextWordBreak(
 
 	uint32 totalLength = 0;	
 	sint32 totalSize = 0;	
-
+#ifdef __AUI_USE_DIRECTX__
 	MBCHAR *token;
 	MBCHAR *word = text;
 	while ( token = FindNextToken( word, " \t\n", 1 ) )
@@ -515,7 +527,7 @@ uint32 aui_TextBase::FindNextWordBreak(
 
 	if ( (totalSize += wordSize.cx) < width )
 		totalLength += wordLength;
-
+#endif
 	return totalLength;
 }
 

@@ -79,6 +79,8 @@ extern class aui_UI *	g_ui;
 // Class declarations
 //----------------------------------------------------------------------------
 
+
+
 class aui_UI : public aui_Region
 {
 public:

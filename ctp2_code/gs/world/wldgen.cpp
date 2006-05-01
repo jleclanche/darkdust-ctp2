@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : World generator
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -423,7 +423,7 @@ void World::GenerateRandMap(MapPoint player_start_list[k_MAX_PLAYERS])
 	FreeMapPlugin();
 
 #ifdef DUMP_TERRAIN_HEIGHT_MAPS
-	MapDump ("logs\\HeightMap.bmp", map, m_size.x, m_size.y);
+	MapDump ("logs" FILE_SEP "HeightMap.bmp", map, m_size.x, m_size.y);
 #endif
 
 	IMapGenerator *filterPass = LoadMapPlugin(1);
@@ -437,7 +437,7 @@ void World::GenerateRandMap(MapPoint player_start_list[k_MAX_PLAYERS])
 		FreeMapPlugin();
 
 #ifdef DUMP_TERRAIN_HEIGHT_MAPS
-		MapDump ("logs\\FilterMap.bmp", map, m_size.x, m_size.y);
+		MapDump ("logs" FILE_SEP "FilterMap.bmp", map, m_size.x, m_size.y);
 #endif
 	}
 	GetHistogram(map, histogram);
@@ -476,7 +476,7 @@ void World::GenerateRandMap(MapPoint player_start_list[k_MAX_PLAYERS])
 	}
 
 #ifdef DUMP_TERRAIN_HEIGHT_MAPS
-	TerrainDump ("logs\\TerrainMap.bmp", map, m_size.x, m_size.y, waterLevel, mountainLevel, hillLevel);
+	TerrainDump ("logs" FILE_SEP "TerrainMap.bmp", map, m_size.x, m_size.y, waterLevel, mountainLevel, hillLevel);
 #endif
 
 	for(y = 0; y < m_size.y; y++) {
@@ -528,7 +528,7 @@ void World::GenerateRandMap(MapPoint player_start_list[k_MAX_PLAYERS])
 					   &homogeneity, 1);
 
 #ifdef DUMP_TERRAIN_HEIGHT_MAPS
-	MapDump ("logs\\WetMap.bmp", wetmap, m_size.x, m_size.y);
+	MapDump ("logs" FILE_SEP "WetMap.bmp", wetmap, m_size.x, m_size.y);
 #endif
 
 	sint32 totalLandCells = 0;
@@ -649,7 +649,7 @@ void World::GenerateRandMap(MapPoint player_start_list[k_MAX_PLAYERS])
 	TemperatureFilter(temperatureMap, temperatureHist);
 			
 #ifdef DUMP_TERRAIN_HEIGHT_MAPS
-	MapDump ("logs\\TempMap.bmp", temperatureMap, m_size.x, m_size.y);
+	MapDump ("logs" FILE_SEP "TempMap.bmp", temperatureMap, m_size.x, m_size.y);
 #endif
 
 	sint32 whitePercent = g_theProfileDB->PercentWhite();
@@ -1005,28 +1005,117 @@ void World::ComputeGoodsValues()
 
 
 sint32 World::IsNextToLand(const sint32 i, const sint32 j) 
-{  
-    MapPoint pos(i, j);
-    MapPoint n; 
 
-    return GetAdjacentLand(pos, n);    
-}
-
-BOOL World::GetAdjacentLand(MapPoint const & pos, MapPoint & land) const
 {  
-    for (sint16 dir = 0; dir < NOWHERE; ++dir) 
-    {
-        if (pos.GetNeighborPosition(static_cast<WORLD_DIRECTION>(dir), land)) 
-        {
-            if (IsLand(land) || IsMountain(land)) 
-            { 
-		    return TRUE; 
-	      }
-        }
-    }
+    
+    MapPoint pos, n; 
+    
+    pos.Set(i, j); 
+   
+    if(pos.GetNeighborPosition(NORTH, n)) {
+	   if (IsLand(n) || IsMountain(n)) { 
+		   return TRUE; 
+	   }
+	}
+	
+    if(pos.GetNeighborPosition(NORTHWEST, n)) {
+		if (IsLand(n) || IsMountain(n)) { 
+			return TRUE; 
+		}
+	}
+
+	if(pos.GetNeighborPosition(NORTHEAST, n)) {
+		if (IsLand(n) || IsMountain(n)) { 
+			return TRUE; 
+		}
+	}
+
+    if(pos.GetNeighborPosition(SOUTH, n)) {
+		if (IsLand(n) || IsMountain(n)) { 
+			return TRUE; 
+		}
+	}
+
+    if(pos.GetNeighborPosition(SOUTHWEST, n)) {
+		if (IsLand(n) || IsMountain(n)) { 
+			return TRUE; 
+		}
+	}
+
+    if(pos.GetNeighborPosition(SOUTHEAST, n)) {
+		if (IsLand(n) || IsMountain(n)) { 
+			return TRUE; 
+		}
+	}
+
+    if(pos.GetNeighborPosition(WEST, n)) {
+		if (IsLand(n) || IsMountain(n)) { 
+			return TRUE; 
+		}
+	}
+
+    if(pos.GetNeighborPosition(EAST, n)) {
+		if (IsLand(n) || IsMountain(n)) {
+			return TRUE; 
+		}
+	}
 
     return FALSE; 
 }
+
+BOOL World::GetAdjacentLand(MapPoint &pos, MapPoint &land) 
+{  
+    if(pos.GetNeighborPosition(NORTH, land)) {
+	   if (IsLand(land) || IsMountain(land)) { 
+		   return TRUE; 
+	   }
+	}
+	
+    if(pos.GetNeighborPosition(NORTHWEST, land)) {
+		if (IsLand(land) || IsMountain(land)) { 
+			return TRUE; 
+		}
+	}
+
+	if(pos.GetNeighborPosition(NORTHEAST, land)) {
+		if (IsLand(land) || IsMountain(land)) { 
+			return TRUE; 
+		}
+	}
+
+    if(pos.GetNeighborPosition(SOUTH, land)) {
+		if (IsLand(land) || IsMountain(land)) { 
+			return TRUE; 
+		}
+	}
+
+    if(pos.GetNeighborPosition(SOUTHWEST, land)) {
+		if (IsLand(land) || IsMountain(land)) { 
+			return TRUE; 
+		}
+	}
+
+    if(pos.GetNeighborPosition(SOUTHEAST, land)) {
+		if (IsLand(land) || IsMountain(land)) { 
+			return TRUE; 
+		}
+	}
+
+    if(pos.GetNeighborPosition(WEST, land)) {
+		if (IsLand(land) || IsMountain(land)) { 
+			return TRUE; 
+		}
+	}
+
+    if(pos.GetNeighborPosition(EAST, land)) {
+		if (IsLand(land) || IsMountain(land)) {
+			return TRUE; 
+		}
+	}
+
+    return FALSE; 
+}
+
 
 BOOL World::GetAdjacentOcean(const MapPoint &pos, sint32 & water_cont) const
 {
@@ -1059,10 +1148,11 @@ BOOL World::GetAdjacentOcean(const MapPoint &pos, sint32 & water_cont) const
 
 
 sint32 World::IsSurroundedByWater(const sint32 x, const sint32 y) 
-{  
-    MapPoint	pos (x,y);
-    MapPoint	n ;
+	{  
+    MapPoint	pos,
+				n ;
     
+	pos.Set(x, y) ;
     if(pos.GetNeighborPosition(NORTH, n)) {
 		if (!IsWater(n))
 			return (FALSE) ;
@@ -1117,8 +1207,9 @@ sint32 World::IsSurroundedByWater(const sint32 x, const sint32 y)
 sint32 World::IsNextTo (const sint32 t, const sint32 i, const sint32 j) 
 
 { 
-    MapPoint pos (i, j);
-    MapPoint n; 
+    MapPoint pos, n; 
+    
+    pos.Set(i, j); 
    
     if(pos.GetNeighborPosition(NORTH, n))
 		if (GetCell(n)->m_terrain_type == t) return TRUE; 
@@ -1162,8 +1253,10 @@ sint32 World::IsNextTo (const sint32 t, const sint32 i, const sint32 j)
 
 sint32 World::IsNextToWater(const sint32 i, const sint32 j) 
 {  
-    MapPoint pos (i, j);
-    MapPoint n; 
+    
+    MapPoint pos, n; 
+    
+    pos.Set(i, j); 
    
     if(pos.GetNeighborPosition(NORTH, n))
 		if (IsWater(n)) return TRUE; 
@@ -1195,9 +1288,10 @@ sint32 World::IsNextToWater(const sint32 i, const sint32 j)
 sint32 World::IsNextToWaterNotDiagonals(const sint32 i, const sint32 j) 
 {  
     
-    MapPoint pos (i, j);
-    MapPoint n; 
-
+    MapPoint pos, n; 
+    
+    pos.Set(i, j); 
+   
     if(pos.GetNeighborPosition(NORTHWEST, n))
 		if (IsWater(n)) return TRUE; 
 
@@ -2704,20 +2798,63 @@ IMapGenerator *World::LoadMapPlugin(sint32 pass)
 	lt_dlhandle plugin;
 #endif
 	const char *name = g_theProfileDB->MapPluginName(pass);
+	if (!name)
+		return NULL;
+	if (stricmp(name,"") == 0)
+		return NULL;
 	if(stricmp(name, "none") == 0)
 		return NULL;
+	
+	char szTemp[MAX_PATH] = { 0 };
+#ifdef _DEBUG
+	getcwd(szTemp, MAX_PATH);
+	fprintf(stderr, "name: %s\n", name);
+	fprintf(stderr, "CWD: %s\n", szTemp);
+#endif
+	const char *n = name;
+	char *p = szTemp;
+	char clast = '\0';
+	while (*n) {
+		if ((*n == '\\') || (*n == FILE_SEPC)) {
+			if (clast != FILE_SEPC) {
+				clast = FILE_SEPC;
+				*p = FILE_SEPC;
+				p++;
+			}
+		} else {
+			clast = *n;
+			*p = clast;
+			p++;
+		}
+		n++;
+	}
+	*p = '\0';
+
 #ifndef USE_COM_REPLACEMENT
 	plugin = LoadLibrary(name);
 #else
+
+	p = strrchr(szTemp, FILE_SEPC);
+	while (p && *++p) {
+		*p = tolower(*p);
+	}
+	p = strrchr(szTemp, '.');
+	if (p) {
+		*p = '\0';
+		strcat(szTemp, ".la");
+	}
 	int rc = lt_dlinit();
 	if (0 != rc) {
+		c3errors_ErrorDialog("Map Generator", "Could not initialize plugin loader, using builtin map generator");
 		return NULL;
 	}
-	plugin = lt_dlopen(name);
+	plugin = lt_dlopen(szTemp);
 #endif
 	if(plugin == NULL) {
-		c3errors_ErrorDialog("Map Generator", "Could not load library %s, using builtin map generator", name);
-#ifdef USE_COM_REPLACEMENT
+#ifndef USE_COM_REPLACEMENT
+		c3errors_ErrorDialog("Map Generator", "Could not load library %s, using builtin map generator", szTemp);
+#else
+		c3errors_ErrorDialog("Map Generator", "Error while trying to load library '%s': '%s'.  Using builtin map generator", szTemp, lt_dlerror());
 		lt_dlexit();
 #endif
 		return NULL;
@@ -2734,7 +2871,7 @@ IMapGenerator *World::LoadMapPlugin(sint32 pass)
 		lt_dlclose(plugin);
 		lt_dlexit();
 #endif
-		c3errors_ErrorDialog("Map Generator", "Plugin %s is not a valid map generator", name);
+		c3errors_ErrorDialog("Map Generator", "Plugin %s is not a valid map generator", szTemp);
 		return NULL;
 	}
 #ifndef USE_COM_REPLACEMENT

@@ -72,7 +72,7 @@
 #include "SelItem.h"
 #include "newturncount.h"
 #include "TurnCnt.h"
-#include "aicause.h"
+#include "AICause.h"
 #include "radarmap.h"
 #include "DataCheck.h"
 
@@ -82,7 +82,7 @@
 #include "resourcemap.h"
 
 #include "civapp.h"
-#include "order.h"
+#include "Order.h"
 
 #include "controlpanelwindow.h"
 #include "c3_listbox.h"
@@ -209,7 +209,11 @@ PointerList<KeyboardHandler> g_keyboardHandlers;
 void keypress_QuitCallback( sint32 val )
 {
 	if ( val ) {
+#ifndef USE_SDL
         PostMessage(gHwnd, WM_CLOSE, 0, 0);
+#else
+	//assert(0);
+#endif
 	}
 }
 
@@ -242,9 +246,12 @@ void init_defaultKeymap() {
 }
 
 void cleanup_keymap()
+
 { 
-	delete theKeyMap; 
-	theKeyMap = NULL;
+	if (theKeyMap) {
+		delete theKeyMap; 
+		theKeyMap = NULL;
+	}
 } 
 
 
@@ -282,7 +289,7 @@ sint32 g_keypress_stop_player;
 
 BOOL	commandMode = FALSE;
 
-sint32 ui_HandleKeypress(WPARAM wParam, LPARAM lParam)
+sint32 ui_HandleKeypress(WPARAM wParam)
 
 {
 
@@ -298,18 +305,26 @@ sint32 ui_HandleKeypress(WPARAM wParam, LPARAM lParam)
 	
 	if ( g_isKMScreen) {
 		switch(wParam) {
+#ifndef USE_SDL
 			case VK_ESCAPE:
 			case VK_LEFT + 256:
 			case VK_RIGHT + 256:
 			case VK_UP + 256:
 			case VK_DOWN + 256:
 			case 29: 
-			case 28: 
+			case 28:
+#else
+			case SDLK_ESCAPE + 256:
+			case SDLK_LEFT + 256:
+			case SDLK_RIGHT + 256:
+			case SDLK_UP + 256:
+			case SDLK_DOWN + 256:
+#endif
 				
 				return TRUE;
 			default:
 				
-				km_screen_remapKey( wParam, lParam );
+				km_screen_remapKey( wParam );
 				return TRUE;
 		}
 	}
@@ -319,21 +334,18 @@ sint32 ui_HandleKeypress(WPARAM wParam, LPARAM lParam)
 		switch(wParam) {
 			case '\r' + 128: wParam = '\r'; break;
 			case '\t' + 128: wParam = '\t'; break;
-			case 8 + 128: wParam = 8; break;
+			case '\b' + 128: wParam = '\b'; break;
 		}
 		commandMode = g_commandLine.AddKey(wParam);
 		return TRUE;
 	}
 #endif
 
-
-
-
-
-
-	
+#ifndef USE_SDL	
 	if (wParam == VK_ESCAPE) {
-		
+#else
+	if (wParam == SDLK_ESCAPE + 256) {
+#endif
 		extern OptionsWindow *g_optionsWindow;
 		
 		if(g_c3ui->TopWindow() && g_c3ui->TopWindow() == DipWizard::GetWindow()) {
@@ -393,6 +405,11 @@ sint32 ui_HandleKeypress(WPARAM wParam, LPARAM lParam)
 	
 	
 	if (!g_civApp->IsGameLoaded()) {
+		switch (kf) {
+		case KEY_FUNCTION_HELP_MODE_TOGGLE:
+
+		break;
+		}
 		return TRUE;
 	}
 
@@ -412,7 +429,9 @@ sint32 ui_HandleKeypress(WPARAM wParam, LPARAM lParam)
     switch (kf) {
 #ifdef _PLAYTEST
 	case KEY_FUNCTION_ENTER_COMMAND: 
+#ifdef WIN32
 		segmentlist_Display();
+#endif
 		break;
 	case KEY_FUNCTION_ENTER_COMMAND_ALTERNATE:
 		commandMode = TRUE; 
@@ -708,14 +727,37 @@ sint32 ui_HandleKeypress(WPARAM wParam, LPARAM lParam)
         if (g_tiledMap) {
 			g_tiledMap->ZoomIn();
 		}
-		break;
 
+		break;
+    case KEY_FUNCTION_ZOOM_IN2: 
+		break;
     case KEY_FUNCTION_ZOOM_OUT1:
         if (g_tiledMap) {
 			g_tiledMap->ZoomOut();
         }
 
 		break;
+    case KEY_FUNCTION_ZOOM_OUT2: 
+		break;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	case KEY_FUNCTION_CENTER_MAP:
 	{
@@ -962,7 +1004,7 @@ sint32 ui_HandleKeypress(WPARAM wParam, LPARAM lParam)
 			sint32 i;
 			g_gevManager->Pause();
 			for(i = 0; i < g_player[g_selected_item->GetVisiblePlayer()]->m_all_armies->Num(); i++) {
-//				g_director->IncrementPendingGameActions();
+				g_director->IncrementPendingGameActions();
 				g_gevManager->AddEvent(GEV_INSERT_Tail, GEV_BeginTurnExecute,
 									   GEA_Army, g_player[g_selected_item->GetVisiblePlayer()]->m_all_armies->Access(i),
 									   GEA_End);
@@ -986,8 +1028,6 @@ sint32 ui_HandleKeypress(WPARAM wParam, LPARAM lParam)
 			}
 		}
 		break;
-
-#if defined(CTP1_HAS_RISEN_FROM_THE_GRAVE)
 	case KEY_FUNCTION_TOGGLE_SPACE:
 	{
 		if(!g_network.IsActive()) {
@@ -996,10 +1036,10 @@ sint32 ui_HandleKeypress(WPARAM wParam, LPARAM lParam)
 			void WhackScreen();
 			WhackScreen();
 		}
+		
+		
 		break;
 	}
-#endif
-
 	case KEY_FUNCTION_TOGGLE_CITY_NAMES:
 		g_theProfileDB->SetShowCityNames(!g_theProfileDB->GetShowCityNames());
 		break;
@@ -1089,6 +1129,19 @@ sint32 ui_HandleKeypress(WPARAM wParam, LPARAM lParam)
 		}
 		break;
 		
+		
+		
+		
+		
+
+	case KEY_FUNCTION_CONTROL_BUILD:
+		if(g_controlPanel) {
+
+
+
+
+		}
+		break;
 	case KEY_FUNCTION_CONTROL_NEXT:
 		if(g_controlPanel) {
 

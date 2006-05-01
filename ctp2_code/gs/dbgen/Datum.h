@@ -49,9 +49,7 @@ public:
 	bool m_hasValue;
 	union dbvalue val;
 
-	virtual ~Datum(void)
-    {
-    };
+	~Datum();
 	Datum() {
 		m_type = DATUM_NONE;
 		m_name = NULL;
@@ -91,9 +89,6 @@ public:
 
 	void ExportResolver(FILE *outfile);
 	void ExportMerge(FILE *outfile, char *recordName);
-
-private:
-    char const *    TypeString(void);
 };
 
 #endif

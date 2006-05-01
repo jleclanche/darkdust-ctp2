@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : The civilization 3 button
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -29,7 +29,6 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
-#include "c3_button.h"
 
 #include "aui.h"
 #include "aui_ui.h"
@@ -40,16 +39,18 @@
 #include "aui_gamespecific.h"
 
 #include "c3ui.h"
+#include "c3_button.h"
 #include "c3textfield.h"
 #include "patternbase.h"
 #include "pattern.h"
 #include "primitives.h"
-#include "colorset.h"               // g_colorSet
+#include "colorset.h"
 
 #include "SlicEngine.h"
 
 extern C3UI			*g_c3ui;
 extern SlicEngine	*g_slicEngine;
+extern ColorSet		*g_colorSet;
 
 
 c3_Button::c3_Button(
@@ -433,7 +434,7 @@ AUI_ERRCODE c3_EditButton::SetValue( sint32 val )
 	m_val = val;
 
 	MBCHAR text[ 50 ];
-	itoa( m_val, text, 10 );
+	sprintf(text, "%d", m_val);
 	SetText( text );
 
 	if ( changed ) DoCallback();
@@ -500,7 +501,7 @@ void c3_EditButtonCallback( aui_Control *control, uint32 action, uint32 data, vo
 	button->GetParent()->RemoveChild( button->Id() );
 
 	MBCHAR text[ 50 ];
-	itoa( button->GetValue(), text, 10 );
+	sprintf(text, "%d", button->GetValue());
 	field->SetFieldText( text );
 
 	field->SetKeyboardFocus();

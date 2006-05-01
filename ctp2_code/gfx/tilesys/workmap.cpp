@@ -12,8 +12,6 @@
 
 
 #include "c3.h"
-#include "workmap.h"
-
 #include "aui.h"
 #include "aui_blitter.h"
 #include "aui_directsurface.h"
@@ -23,38 +21,52 @@
 
 #include "primitives.h"
 #include "Globals.h"
-#include "player.h"             // g_player
+#include "player.h"
+
 #include "dynarr.h"
-#include "SelItem.h"            // g_selected_item
-#include "director.h"           // g_director
-#include "tiledmap.h"           // g_tiledMap
+#include "SelItem.h"
+
+#include "director.h"
+
+#include "tiledmap.h"
 #include "BaseTile.h"
 #include "TileInfo.h"
 #include "tileset.h"
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
+
+#include "workmap.h"
 #include "Unit.h"
-#include "UnitPool.h"           // g_theUnitPool
+#include "UnitPool.h"
+
 #include "c3_updateaction.h"
+
 #include "Actor.h"
 #include "UnitActor.h"
 #include "workeractor.h"
 #include "XY_Coordinates.h"
-#include "World.h"              // g_theWorld
+#include "World.h"
 #include "Cell.h"
 #include "MapPoint.h"
 #include "WonderRecord.h"
 #include "c3ui.h"
 #include "GoodActor.h"
+
 #include "citydata.h"
 #include "textutils.h"
+
 #include "maputils.h"
 #include "SlicEngine.h"
-#include "profileDB.h"          // g_theProfileDB
+#include "profileDB.h"
+
+
 #include "CityRadius.h"
-#include "StrDB.h"              // g_theStringDB
+#include "StrDB.h"
 #include "UnitData.h"
+
 #include "GameEventManager.h"
+
 #include "CityInfluenceIterator.h"
+#include "aui_Factory.h"
 
 #define k_NUDGE		48					
 
@@ -73,7 +85,16 @@
 
 #define k_OFFSET_WIDTH			62
 
+extern TiledMap			*g_tiledMap;
+extern Player			**g_player;
+extern SelectedItem		*g_selected_item;
+extern Director			*g_director;
+extern ColorSet			*g_colorSet;
+extern World			*g_theWorld;
 extern C3UI				*g_c3ui;
+extern UnitPool			*g_theUnitPool;
+extern ProfileDB		*g_theProfileDB;
+extern StringDB			*g_theStringDB;
 
 
 
@@ -167,7 +188,7 @@ void WorkMap::InitCommon( sint32 scale)
 	m_drawHilite = FALSE;
 
 	
-	m_unit = Unit();
+	m_unit = 0;
 
 	
 	m_updateAction = NULL;
@@ -177,7 +198,7 @@ void WorkMap::InitCommon( sint32 scale)
 	}
 	m_numWorkers = 0;
 
-	m_surface = new aui_DirectSurface( &errcode, m_width, m_height, 16, (g_c3ui)->DD() );
+	m_surface = aui_Factory::new_Surface(errcode, m_width, m_height, 16);
 	Assert( m_surface != NULL );
 	if ( !m_surface ) return;
 
@@ -479,8 +500,10 @@ return 0;
 			}
 			
 			
-			delete m_worker[index];
-			m_worker[index] = NULL;
+			if (m_worker[index]) {
+				delete m_worker[index];
+				m_worker[index] = NULL;
+			}
 			index++;
 
 
@@ -533,8 +556,11 @@ return 0;
 			}
 
 			
-			delete m_worker[index];
-			m_worker[index] = NULL;
+			if (m_worker[index]) {
+				delete m_worker[index];
+				m_worker[index] = NULL;
+			}
+			
 			index++;
 
 
@@ -674,7 +700,7 @@ sint32 WorkMap::DrawSpaceImprovements( aui_Surface *pSurface, sint32 xOff, sint3
 	return TRUE;
 }
 
-BOOL WorkMap::DrawACity(aui_Surface *pSurface, MapPoint &pos, void *context)
+BOOL WorkMap::DrawACity(aui_Surface *pSurface, const MapPoint &pos, void *context)
 {
 	WorkMap		*workMap = (WorkMap *)context;
 	UnitActor	*actor;
@@ -720,7 +746,7 @@ BOOL WorkMap::DrawACity(aui_Surface *pSurface, MapPoint &pos, void *context)
 	return TRUE;
 }
 
-BOOL WorkMap::DrawALandCity(aui_Surface *pSurface, MapPoint &pos, void *context)
+BOOL WorkMap::DrawALandCity(aui_Surface *pSurface, const MapPoint &pos, void *context)
 {
 	WorkMap		*workMap = (WorkMap *)context;
 	UnitActor	*actor;
@@ -767,7 +793,7 @@ BOOL WorkMap::DrawALandCity(aui_Surface *pSurface, MapPoint &pos, void *context)
 }
 
 
-BOOL WorkMap::DrawAGood(aui_Surface *pSurface, MapPoint &pos, void *context)
+BOOL WorkMap::DrawAGood(aui_Surface *pSurface, const MapPoint &pos, void *context)
 {
 	WorkMap		*workMap = (WorkMap *)context;
 	GoodActor	*goodActor;
@@ -812,7 +838,7 @@ BOOL WorkMap::DrawAGood(aui_Surface *pSurface, MapPoint &pos, void *context)
 	return TRUE;
 }
 
-BOOL WorkMap::DrawATile(aui_Surface *pSurface, MapPoint &pos, void *context)
+BOOL WorkMap::DrawATile(aui_Surface *pSurface, const MapPoint &pos, void *context)
 {
 	WorkMap		*workMap = (WorkMap *)context;
 	sint32		x, y;
@@ -1436,39 +1462,57 @@ void WorkMap::Click(aui_MouseEvent *data)
 
 BOOL WorkMap::PointInMask(POINT hitPt)
 {
-	TILEHITMASK *	thm			= g_tiledMap->GetTileHitMask();
-	double const	scale		= (m_scale) ? 0.5 : 1.0;
-	sint32 const	x			= (sint32)((double)hitPt.x / scale);
-	sint32 const 	y			= (sint32)(((double)hitPt.y / scale) + k_TILE_PIXEL_HEADROOM);
+	sint32		x, y;
 
-	return (x >= thm[y].start) && (x <= thm[y].end);
+	TILEHITMASK *thm = g_tiledMap->GetTileHitMask();
+
+	double scale = 1.0;
+	if ( m_scale ) {
+		scale = 0.5;
+	}
+
+	x = (sint32)((double)hitPt.x / scale);
+	y = (sint32)(((double)hitPt.y / scale) + k_TILE_PIXEL_HEADROOM);
+
+	if (x >= thm[y].start &&
+		x <= thm[y].end) 
+		return TRUE;
+
+	return FALSE;
 }
 
 BOOL WorkMap::MousePointToTilePos(POINT point, MapPoint &tilePos)
 {
+	sint32			width, height;
+	MapPoint		pos;
+	POINT			hitPt;
+	sint32			x, y;
+	sint32			maxX;
 
-	double const	scale		= (m_scale) ? 0.5 : 1.0;
-	sint32			headroom	= static_cast<sint32>(k_TILE_PIXEL_HEADROOM * scale);
+	double scale = 1.0;
+	if ( m_scale ) {
+		scale = 0.5;
+	}
 
-	sint32			width		= static_cast<sint32>(k_TILE_GRID_WIDTH * scale);
-	sint32			height		= static_cast<sint32>
-		((k_TILE_GRID_HEIGHT-k_TILE_PIXEL_HEADROOM) * scale);
+	sint32			headroom = (sint32)((double)k_TILE_PIXEL_HEADROOM * scale);
 
-	sint32			x			= point.x;
-	sint32			y			= point.y;
+	width = (sint32)((double)k_TILE_GRID_WIDTH * scale);
+	height = (sint32)((double)(k_TILE_GRID_HEIGHT-k_TILE_PIXEL_HEADROOM) * scale);
 
+	x = point.x;
+	y = point.y;
+
+	
 	if (!(m_mapViewRect.top & 1)) 
 		y -= headroom;
 
-	MapPoint		pos	((x / width) + m_mapViewRect.left, 
-						 (y / height) + m_mapViewRect.top / 2
-						);
+	pos.x = (sint16) (x / width + m_mapViewRect.left);
+	pos.y = (sint16) ((y / height) + m_mapViewRect.top/2);
  
-	POINT			hitPt;
 	hitPt.x = x % width;
 	hitPt.y = y % height;
 
-	sint32			maxX		= m_mapBounds.right;
+	maxX = m_mapBounds.right;
 
 	if (!PointInMask(hitPt)) {
 		
@@ -1485,7 +1529,7 @@ BOOL WorkMap::MousePointToTilePos(POINT point, MapPoint &tilePos)
 				tilePos.x = pos.x - pos.y;
 				tilePos.y = pos.y * 2 + 1;
 			} else {
-				tilePos.x = static_cast<sint16>(maxX + pos.x - pos.y);
+				tilePos.x = maxX + pos.x - pos.y;
 				tilePos.y = pos.y * 2 + 1;
 			}
 		}
@@ -1494,20 +1538,14 @@ BOOL WorkMap::MousePointToTilePos(POINT point, MapPoint &tilePos)
 			tilePos.x = pos.x - pos.y;
 			tilePos.y = pos.y * 2;
 		} else {
-			tilePos.x = static_cast<sint16>(maxX + pos.x - pos.y);
+			tilePos.x = maxX + pos.x - pos.y;
 			tilePos.y = pos.y * 2;
 		}
 	}
 
 	if (g_theWorld->IsYwrap()) {
-		if (tilePos.x <0) 
-		{
-			tilePos.x += static_cast<sint16>(g_theWorld->GetWidth()); 
-		}
-		else if (g_theWorld->GetWidth() <= tilePos.x) 
-		{
-			tilePos.x -= static_cast<sint16>(g_theWorld->GetWidth()); 
-		}
+		if (tilePos.x <0) tilePos.x = g_theWorld->GetWidth() + tilePos.x; 
+		else if (g_theWorld->GetWidth() <= tilePos.x) tilePos.x = tilePos.x - (sint16)g_theWorld->GetWidth(); 
 		
 		sint16 sx, sy;
 		if (tilePos.y < 0) {
@@ -1528,23 +1566,18 @@ BOOL WorkMap::MousePointToTilePos(POINT point, MapPoint &tilePos)
 			tilePos.y = 0; 
 			return FALSE; 
 		} else if (g_theWorld->GetHeight() <= tilePos.y) { 
-			tilePos.y = static_cast<sint16>(g_theWorld->GetHeight() - 1);
+			tilePos.y = g_theWorld->GetHeight() -1;
 			return FALSE; 
 		} 
 	}
 
-	if (tilePos.x <0) 
-	{
-		tilePos.x += static_cast<sint16>(g_theWorld->GetWidth());
-	}
-	else if (g_theWorld->GetWidth() <= tilePos.x) 
-	{
-		tilePos.x -= static_cast<sint16>(g_theWorld->GetWidth()); 
-	}
+	if (tilePos.x <0) tilePos.x = g_theWorld->GetWidth() + tilePos.x; 
+	else if (g_theWorld->GetWidth() <= tilePos.x) tilePos.x = tilePos.x - (sint16)g_theWorld->GetWidth(); 
 		
-	if (m_unit.m_id) 
-	{
-		MapPoint tempPos;
+	MapPoint tempPos;
+
+	
+	if (m_unit.m_id) {
 		m_unit.GetData()->GetPos(tempPos);
 	}
 
@@ -1618,7 +1651,8 @@ void WorkMap::HandlePop( MapPoint point )
 	if(player != g_selected_item->GetVisiblePlayer())
 		return;
 	
-	Assert(m_unit != Unit());
+	Assert( m_unit != Unit(0) );
+
 }
 
 

@@ -27,7 +27,7 @@
 #include "UnitData.h"
 #include "citydata.h"
 #include "Advances.h"
-#include "globals.h"
+#include "Globals.h"
 
 #include "BldQue.h"
 #include "ObjPool.h"
@@ -311,7 +311,7 @@ sint32 CityInventoryListBox::UpdateImage( const Unit &unit )
 			}
 
 		}
-		FillInventoryBox(Unit());   // clear
+		FillInventoryBox(0);
 		FillInventoryBox(unit);
 		bq = unit.GetData()->GetCityData()->GetBuildQueue();
 		bn = bq->GetHead();

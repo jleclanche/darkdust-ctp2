@@ -34,7 +34,11 @@
 
 
 #include <string>
+#ifndef WIN32
+#include <sstream>
+#else
 #include <strstream>
+#endif
 
 
 #include "aui_ui.h"
@@ -84,14 +88,12 @@ uint32 aui_Control::m_controlClassId = aui_UniqueId();
 static const MBCHAR *const k_AUI_CONTROL_LDL_STATUS_TEXT	=	"statustext";
 
 
-aui_Control::aui_Control
-(
-	AUI_ERRCODE *           retval,
-	uint32                  id,
-	MBCHAR *                ldlBlock,
-	ControlActionCallback * ActionFunc,
-	void *                  cookie 
-)
+aui_Control::aui_Control(
+	AUI_ERRCODE *retval,
+	uint32 id,
+	MBCHAR *ldlBlock,
+	ControlActionCallback *ActionFunc,
+	void *cookie )
 :
 	aui_ImageBase           (ldlBlock),
 	aui_TextBase            (ldlBlock, (const MBCHAR *) NULL),
@@ -105,25 +107,24 @@ aui_Control::aui_Control
 	m_imageLayerList        (NULL),
 	m_layerRenderFlags      (NULL)
 {
-	if (AUI_SUCCESS(*retval))
-    {
-	    *retval = InitCommonLdl(ldlBlock, ActionFunc, cookie);
-    }
+	Assert( AUI_SUCCESS(*retval) );
+	if ( !AUI_SUCCESS(*retval) ) return;
+
+	*retval = InitCommonLdl( ldlBlock, ActionFunc, cookie );
+	Assert( AUI_SUCCESS(*retval) );
 }
 
 
 
-aui_Control::aui_Control
-(
-	AUI_ERRCODE *           retval,
-	uint32                  id,
-	sint32                  x,
-	sint32                  y,
-	sint32                  width,
-	sint32                  height,
-	ControlActionCallback * ActionFunc,
-	void *                  cookie 
-)
+aui_Control::aui_Control(
+	AUI_ERRCODE *retval,
+	uint32 id,
+	sint32 x,
+	sint32 y,
+	sint32 width,
+	sint32 height,
+	ControlActionCallback *ActionFunc,
+	void *cookie )
 :
 	aui_ImageBase           ((sint32) 0),
 	aui_TextBase            (NULL),
@@ -138,10 +139,11 @@ aui_Control::aui_Control
 	m_layerRenderFlags      (NULL),
 	m_renderFlags           (k_AUI_CONTROL_LAYER_FLAG_ALWAYS)
 {
-	if (AUI_SUCCESS(*retval))
-    {
-    	*retval = InitCommon(ActionFunc, cookie);
-	}
+	Assert( AUI_SUCCESS(*retval) );
+	if ( !AUI_SUCCESS(*retval) ) return;
+
+	*retval = InitCommon( ActionFunc, cookie );
+	Assert( AUI_SUCCESS(*retval) );
 }
 
 
@@ -199,7 +201,11 @@ AUI_ERRCODE aui_Control::InitCommonLdl(
 			else
 				m_actionKey = '^';
 		} else if(stricmp(shortcut, "ESC") == 0) {
+#ifdef WIN32
 			m_actionKey = VK_ESCAPE;
+#else
+			m_actionKey = AUI_KEYBOARD_KEY_ESCAPE;
+#endif
 		} else {
 			m_actionKey = shortcut[0];
 		}
@@ -620,7 +626,12 @@ AUI_ERRCODE aui_Control::ReleaseKeyboardFocus( void )
 {
 	if ( GetKeyboardFocus() == this )
 	{
-		SetFocus( g_ui->TheHWND() );
+#ifdef WIN32
+		SetFocus(g_ui->TheHWND());
+#else
+		extern class aui_Win* g_winFocus;
+		g_winFocus = 0;
+#endif
 		m_whichHasFocus = NULL;
 	}
 	else
@@ -1376,8 +1387,7 @@ aui_Control::FillSize aui_Control::WidthToFill(ldl_datablock *theBlock,
 			theBlock->GetBool(stretchXAttributeString)) {
 			result.first++;
 		} else {
-			
-				result.second = std::max(0L,
+				result.second = std::max(0,
 				result.second -
 				m_imageLayerList->GetSize(layerIndex, imageIndex)->right);
 		}
@@ -1539,7 +1549,7 @@ aui_Control::FillSize aui_Control::HeightToFill(ldl_datablock *theBlock,
 			result.first++;
 		} else {
 			
-			result.second = std::max(0L,
+			result.second = std::max(0,
 				result.second -
 				m_imageLayerList->GetSize(layerIndex, imageIndex)->bottom);
 		}
@@ -1705,7 +1715,7 @@ sint32 aui_Control::NumberOfColumns(sint32 numberOfRows,
 
 		
 		numberOfColumns = std::max(numberOfColumns,
-			(imageEnd - imageStart + 1L));
+			(imageEnd - imageStart + 1));
 	}
 
 	

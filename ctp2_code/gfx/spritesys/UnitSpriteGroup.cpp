@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Unit & city sprite handling
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -53,11 +53,12 @@
 #include "SpriteFile.h"
 #include "Anim.h"
 
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 
 #include "Token.h"
 
 extern ScreenManager	*g_screenManager;
+extern ColorSet			*g_colorSet;
 
 UnitSpriteGroup::UnitSpriteGroup(GROUPTYPE type)
 :	SpriteGroup(type),
@@ -255,6 +256,103 @@ void UnitSpriteGroup::DrawDirect(aui_Surface *surf, UNITACTION action, sint32 fr
 
 void UnitSpriteGroup::RunBenchmark(aui_Surface *surf)
 {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	exit(0);
 }
 
@@ -334,8 +432,8 @@ void UnitSpriteGroup::Save(MBCHAR *filename,unsigned version_id,unsigned compres
 void UnitSpriteGroup::DrawText(sint32 x, sint32 y, char *s)
 {
 #ifndef __MAKESPR__
-	primitives_DrawText((aui_DirectSurface *)g_screenManager->GetSurface(), x+1, y+1, (MBCHAR *)s, g_colorSet->GetColorRef(COLOR_BLACK), 1);
-	primitives_DrawText((aui_DirectSurface *)g_screenManager->GetSurface(), x, y, (MBCHAR *)s, g_colorSet->GetColorRef(COLOR_WHITE), 1);
+	primitives_DrawText(g_screenManager->GetSurface(), x+1, y+1, (MBCHAR *)s, g_colorSet->GetColorRef(COLOR_BLACK), 1);
+	primitives_DrawText(g_screenManager->GetSurface(), x, y, (MBCHAR *)s, g_colorSet->GetColorRef(COLOR_WHITE), 1);
 #endif
 }
 
@@ -814,10 +912,11 @@ UnitSpriteGroup::SetHotPoint(UNITACTION action, sint32 facing,POINT pt)
 
 void UnitSpriteGroup::ExportScript(MBCHAR *name)
 {
+	FILE				*file;
 	sint32				i;
 	extern TokenData	g_allTokens[];
 	
-	FILE * file = fopen(name, "w");
+	file = fopen(name, "w");
 	if (!file) {
 		c3errors_ErrorDialog("Sprite Export", "Could not open '%s' for writing.", name);
 		return;

@@ -9,8 +9,9 @@
 
 
 
-
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
+#endif
 #ifndef __BATTLEVIEWACTOR_H__
 #define __BATTLEVIEWACTOR_H__
 
@@ -40,7 +41,7 @@ public:
 
 	~BattleViewActor();
 
-	void			GetIDAndType(sint32 owner, SpriteState *ss, Unit id, sint32 unitType, MapPoint &pos, uint32 *spriteID, GROUPTYPE *groupType);
+	void			GetIDAndType(sint32 owner, SpriteState *ss, Unit id, sint32 unitType, const MapPoint &pos, uint32 *spriteID, GROUPTYPE *groupType);
 	
 	void			Initialize(void);
 
@@ -51,7 +52,7 @@ public:
 	void			GetNextAction(BOOL isVisible = TRUE);
 	void			AddIdle(BOOL NoIdleJustDelay = FALSE);
 
-	Anim *          CreateAnim(UNITACTION action);
+	Anim			*GetAnim(UNITACTION action);
 	
 	BOOL			HasThisAnim(UNITACTION action) { if (!m_unitSpriteGroup) return FALSE; return (m_unitSpriteGroup->GetAnim((GAME_ACTION)action) != NULL); }
 	Anim			*MakeFakeDeath(void);

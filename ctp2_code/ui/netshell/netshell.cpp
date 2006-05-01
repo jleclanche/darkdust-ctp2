@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Network (multiplayer) user interface
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -155,19 +155,16 @@ AUI_ERRCODE NetShell::Enter( uint32 flags )
 	return AUI_ERRCODE_OK;
 }
 
-class EnterMainMenuAction : public aui_Action
+class EnterMainMenuAction:public aui_Action
 {
-public: 
-	virtual void	Execute
-	(                             
-		aui_Control	*	control,
-		uint32			action, 
-		uint32			data   
-	)
-    {
-        EnterMainMenu();
-    };
+  public:
+	virtual ActionCallback Execute;
 };
+
+void EnterMainMenuAction::Execute(aui_Control *control, uint32 action, uint32 data)
+{
+	EnterMainMenu();
+}
 
 
 void NetShell::Leave( uint32 flags, BOOL safe )

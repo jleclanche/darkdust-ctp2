@@ -35,10 +35,8 @@
 // - Import structure improved, merged with linux version.
 // - Made player.h to compile again.
 // - Removed unused void BeginTurnAllCities all cities method. - Aug. 7th 2005 Martin Gühmann
-// - Added civilisation specific happiness bonus method. (Oct 7th 2005 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
-
 #ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
@@ -100,6 +98,7 @@ enum PLAYER_TYPE
 	PLAYER_TYPE_NETWORK
 };
 
+typedef sint32      AdvanceType;
 typedef sint32      PLAYER_INDEX;
 typedef sint32      TERRAIN_IMPROVEMENT;
 
@@ -113,7 +112,7 @@ PLAYER_INDEX const  PLAYER_UNASSIGNED   = -1;
 // Project dependencies
 //----------------------------------------------------------------------------
 
-#include "Advances.h"           // Advances, AdvanceType
+#include "Advances.h"           // Advances
 #include "AgreementTypes.h"     // AGREEMENT_TYPE
 #include "AICause.h"            // CAUSE_..., ERR_BUILD_INST
 #include "directions.h"         // WORLD_DIRECTION
@@ -121,10 +120,10 @@ PLAYER_INDEX const  PLAYER_UNASSIGNED   = -1;
 #include "GameOver.h"           // GAME_OVER
 #include "MapPoint.h"           // MapPoint
 #include "PollutionConst.h"     // k_MAX_EVENT_POLLUTION_TURNS, etc.
-#include "TradeRoute.h"         // TradeRoute, ROUTE_TYPE
+#include "TradeRoute.h"         // TradeRoute
 #include "Readiness.h"          // READINESS_LEVEL
 #include "Strengths.h"          // STRENGTH_CAT
-#include "Unit.h"               // UNIT_COMMAND
+#include "UnitData.h"           // UNIT_COMMAND
 
 template <class T> class DynamicArray;
 template <class T> class Database;
@@ -177,6 +176,10 @@ BOOL    player_isEnemy(PLAYER_INDEX me, PLAYER_INDEX him);
 uint32  Player_Player_GetVersion(void);
 
 extern Player **    g_player;
+
+#ifndef k_NUM_CITY_TILES
+#define k_NUM_CITY_TILES 20
+#endif
 
 //----------------------------------------------------------------------------
 // Class declarations
@@ -326,7 +329,7 @@ public:
 
 	MilitaryReadiness *m_readiness;
 	PlayerHappiness   *m_global_happiness;
-	Civilisation      *m_civilisation;
+	Civilisation      *m_civilisation ;
 
 	Throne            *m_throne;
 
@@ -499,7 +502,7 @@ public:
 
 	Unit GetTopSelectedArmy(const sint32 selected_army);
 
-	sint32  GetNumUnits() const;   //EMOD
+
 	sint32  GetNumCities() const;
 	sint32  GetMaxCityCount() const;
 	sint32  GetNearestCity(const MapPoint &pos, Unit &nearest, double &distance,
@@ -704,8 +707,6 @@ public:
                               ERR_BUILD_INST &err);
 	TerrainImprovement CreateImprovement(sint32 dbIndex, MapPoint &point,
 										 sint32 extraData);
-	TerrainImprovement CreateSpecialImprovement(sint32 dbIndex, MapPoint &point,
-										 sint32 extraData);  //EMOD
 
 	void AddImprovement(TerrainImprovement imp);
 	void RemoveImprovementReferences(TerrainImprovement imp);
@@ -728,7 +729,6 @@ public:
 
 	sint32 GetTotalProduction() const { return m_total_production; }
 	sint32 GetTotalUnitCost();
-	sint32 GetTotalGoldHunger();//EMOD
 
 	double GetHPModifier();
 	double GetSupportModifier();
@@ -740,7 +740,7 @@ public:
 
 	void SetPlayerType(PLAYER_TYPE pt);
 
-	PLAYER_TYPE GetPlayerType() { return m_playerType; };
+	double GetPlayerType() { return m_playerType; };
 
 
 	static bool IsThisPlayerARobot(const sint32 &p)
@@ -899,7 +899,6 @@ public:
 
 	double GetRationLevel() const { return 1.0; }
 
-	void BuildWonder(Unit city, sint32 wonder);
 	void AddWonder(sint32 wonder, Unit &city);
 	void RemoveWonder(sint32 wonder, BOOL destroyed);
 	uint64 GetBuiltWonders();
@@ -1046,6 +1045,8 @@ public:
 	sint32 GetTileFood(uint32 city_id, MapPoint &pos, BOOL &is_unknown_id) ;
 	sint32 GetTileProduction(uint32 city_id, MapPoint &pos, BOOL &is_unknown_id) ;
 	sint32 GetTileResource(uint32 city_id, MapPoint &pos, BOOL &is_unknown_id) ;
+	sint32 Player::GetAllTileValue(uint32 city_id, BOOL &is_unknown_id, 
+	                               sint32 num_tile, TileUtility *open_tile[k_NUM_CITY_TILES]);
 	BOOL IsPopAllowed(uint32 city_id, uint32 popType, BOOL &is_unknown_id) ;
 	void GetCityScience(uint32 city_id, sint32 &science, BOOL &is_unknown_id) ;
 	double GetPercentProductionToMilitary() const;
@@ -1143,7 +1144,6 @@ public:
 	sint32 GetGovernorPwReserve() const;
 
 	sint32 CountCityHappiness(sint32 &rioting, sint32 &content, sint32 &happy);
-	sint32 CityHappinessIncrease() const;
 
 
 	sint16 GetCargoCapacity() const;

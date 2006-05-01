@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Effect actor
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -49,6 +49,7 @@
 
 #define k_doInvisible FALSE
 
+extern ColorSet			*g_colorSet;
 extern SpriteGroupList	*g_effectSpriteGroupList;
 extern TiledMap			*g_tiledMap;
 extern Director			*g_director;
@@ -336,7 +337,7 @@ void EffectActor::AddAction(Action *actionObj)
 
 }
 
-Anim *EffectActor::CreateAnim(EFFECTACTION action)
+Anim *EffectActor::GetAnim(EFFECTACTION action)
 {
 	Assert(m_effectSpriteGroup != NULL);
 	if (m_effectSpriteGroup == NULL) return NULL;
@@ -346,12 +347,16 @@ Anim *EffectActor::CreateAnim(EFFECTACTION action)
 	if (origAnim == NULL) 
 	{
 		
-//		origAnim = m_effectSpriteGroup->GetAnim((GAME_ACTION)EFFECTACTION_PLAY);
+		origAnim = m_effectSpriteGroup->GetAnim((GAME_ACTION)EFFECTACTION_PLAY);
 
 		return NULL;
 	}
 
-	return new Anim(*origAnim);
+	Anim	*anim = new Anim();
+	*anim = *origAnim;
+	anim->SetSpecialCopyDelete(ANIMXEROX_COPY);
+
+	return anim;
 }
 
 void EffectActor::Draw(void)

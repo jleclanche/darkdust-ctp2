@@ -7,7 +7,8 @@
 #include "aui_action.h"
 
 class Sequence;
-enum GAME_OVER;
+
+#include "GameOver.h"
 
 void victorymoviewin_Initialize(Sequence *seq);
 void victorymoviewin_DisplayVictoryMovie(GAME_OVER reason);
@@ -16,6 +17,9 @@ void victorymoviewin_Cleanup();
 
 void victorymoviewin_MovieButtonCallback(aui_Control *control, uint32 action, uint32 data, void * cookie);
 
-AUI_ACTION_BASIC(CloseVictoryMovieAction);
+class CloseVictoryMovieAction : public aui_Action
+{
+	virtual ActionCallback Execute;
+};
 
 #endif

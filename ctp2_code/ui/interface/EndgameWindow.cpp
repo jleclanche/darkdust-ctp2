@@ -20,6 +20,7 @@
 #include "aui_uniqueid.h"
 #include "aui_ldl.h"
 #include "aui_surface.h"
+#include "aui_Factory.h"
 #include "aui_blitter.h"
 #include "aui_stringtable.h"
 #include "aui_static.h"
@@ -145,8 +146,9 @@ AUI_ERRCODE c3_DarkenArea::DrawThis(aui_Surface *surface, sint32 x, sint32 y)
 	OffsetRect( &rect, m_x + x, m_y + y );
 	ToWindow( &rect );
 
-	
+#if 0	
 	DarkenSurface(surface, &rect, k_ENDGAME_DARKEN_VALUE);
+#endif
 	
 	return(aui_Static::DrawThis(surface, x, y));
 }
@@ -407,8 +409,8 @@ AUI_ERRCODE c3_Blend::DrawBlendImage(aui_Surface *destSurf, RECT *destRect)
 	RECT srcRect = { 0, 0, srcSurf->Width(), srcSurf->Height() };
 
 	
-	aui_DirectSurface *backSurface = new aui_DirectSurface(&errcode, srcRect.right, srcRect.bottom,
-		k_C3_BLEND_BITS_PER_PIXEL, g_c3ui->DD());
+	aui_Surface *backSurface = aui_Factory::new_Surface(errcode, srcRect.right, srcRect.bottom,
+		k_C3_BLEND_BITS_PER_PIXEL);
 	Assert(AUI_NEWOK(backSurface, errcode));
 
 	
@@ -418,8 +420,8 @@ AUI_ERRCODE c3_Blend::DrawBlendImage(aui_Surface *destSurf, RECT *destRect)
 	
 	if(m_imagebltflag == AUI_IMAGEBASE_BLTFLAG_CHROMAKEY) {
 		
-		aui_DirectSurface *frontSurface = new aui_DirectSurface(&errcode, srcRect.right, srcRect.bottom,
-			k_C3_BLEND_BITS_PER_PIXEL, g_c3ui->DD());
+		aui_Surface *frontSurface = aui_Factory::new_Surface(errcode, srcRect.right, srcRect.bottom,
+			k_C3_BLEND_BITS_PER_PIXEL);
 		Assert(AUI_NEWOK(frontSurface, errcode));
 		
 		
@@ -470,8 +472,8 @@ AUI_ERRCODE c3_Blend::DrawBlendImage(aui_Surface *destSurf, RECT *destRect)
 	
 	if(m_imagebltflag == AUI_IMAGEBASE_BLTFLAG_CHROMAKEY) {
 		
-		aui_DirectSurface *frontSurface = new aui_DirectSurface(&errcode, highlightRect.right,
-			highlightRect.bottom, k_C3_BLEND_BITS_PER_PIXEL, g_c3ui->DD());
+		aui_Surface *frontSurface = aui_Factory::new_Surface(errcode, highlightRect.right,
+			highlightRect.bottom, k_C3_BLEND_BITS_PER_PIXEL);
 		Assert(AUI_NEWOK(frontSurface, errcode));
 		
 		

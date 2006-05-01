@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Battle order box.
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -45,7 +45,7 @@
 #include "SpriteState.h"
 
 #include "pixelutils.h"
-#include "colorset.h"               // g_colorSet
+#include "colorset.h"
 #include "c3_coloredstatic.h"
 #include "controlsheet.h"
 #include "textbutton.h"
@@ -63,6 +63,8 @@
 #include "primitives.h"
 #include "UnitRecord.h"
 #include "IconRecord.h"
+
+extern ColorSet		*g_colorSet;
 
 #define k_UNIT_FRAME_THICKNESS	2
 
@@ -620,8 +622,8 @@ void BattleOrderBox::SetStack(Army &selectedArmy, CellUnitList *fullArmy, Unit s
 			Assert(action);
 			if (!action) continue;
 
-			action->SetUnit(Unit());
-			action->SetArmy(Army());
+			action->SetUnit(Unit(0));
+			action->SetArmy(Army(0));
 		}
 	} else {
 		sint32		count = fullArmy->Num();
@@ -643,8 +645,8 @@ void BattleOrderBox::SetStack(Army &selectedArmy, CellUnitList *fullArmy, Unit s
 			Assert(action);
 			if (!action) continue;
 
-			action->SetUnit(Unit());
-			action->SetArmy(Army());
+			action->SetUnit(Unit(0));
+			action->SetArmy(Army(0));
 
 		}
 

@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Token handling for the old style database files.
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -34,8 +34,6 @@
 // - fix for japanese by t.s. 2003.12
 //   fix Token::Next() for japanese sjis code
 // - Prevented crash on missing input file. 
-// - Load default strings if they are missing in the database so that mods
-//   also have a full set of strings. (Jan 30th 2006 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
 
@@ -59,7 +57,6 @@
 
 sint32 g_parse_line; 
 sint32 g_saved_parse_line;
-bool g_load_defaults;
 
 extern sint32 g_abort_parse; 
 
@@ -681,9 +678,8 @@ TokenData g_allTokens [] = {
 	{TOKEN_POLLUTION_PRODUCTION_RATIO,			"POLLUTION_PRODUCTION_RATIO"},
 	{TOKEN_POLLUTION_POPULATION_RATIO,			"POLLUTION_POPULATION_RATIO"},
 
-	{TOKEN_CONST_LAST,						"CONST_DO_NOT_USE_LAST"},
-	{TOKEN_DO_NOT_IMPORT_DEFAULTS,			"DoNotImportDefaults"},
-	{TOKEN_MAX,								"TOKEN_MAX_DO_NOT_USE"},
+	{TOKEN_CONST_LAST,				"CONST_DO_NOT_USE_LAST"},
+	{TOKEN_MAX,						"TOKEN_MAX_DO_NOT_USE"},
 	
 };
 
@@ -1093,37 +1089,32 @@ sint32 Token::Next()
 	
 	if (GetType() == TOKEN_IMPORT) {
 		if (m_importFile != NULL) {
-			c3errors_FatalDialog("Token", "Nested import is not supported, nested import ignored.\n");
-			return Next();
+			c3errors_FatalDialog("Token", "Nested import is not supported.\n");
+			return 0;
 		} else {
 			HandleImport();
 			m_cur = getc(m_fin);
 			return Next();
 		}
 	}
-
-	if (GetType() == TOKEN_DO_NOT_IMPORT_DEFAULTS){
-			g_load_defaults = false;
-			return Next();
-	}
 	
 	return GetType(); 
 }
 
 void Token::GetString (char *str) 
-{   
-	sint32 i; 
 
-	if ((m_current_type != TOKEN_STRING) && (m_current_type != TOKEN_QUOTED_STRING)) { 
-		c3errors_ErrorDialog (ErrStr(), "current type is not string");
-		g_abort_parse = TRUE; 
-		str[0] = 0; 
-		return;
-	} 
-	for (i=0; i<m_val_string_len; i++) { 
-		str[i] = m_val_string[i]; 
-	} 
-	str[i] = 0; 
+{   sint32 i; 
+
+if ((m_current_type != TOKEN_STRING) && (m_current_type != TOKEN_QUOTED_STRING)) { 
+	c3errors_ErrorDialog (ErrStr(), "current type is not string");
+	g_abort_parse = TRUE; 
+	str[0] = 0; 
+	return;
+} 
+for (i=0; i<m_val_string_len; i++) { 
+	str[i] = m_val_string[i]; 
+} 
+str[i] = 0; 
 } 
 
 void Token::GetFloat(double &n)

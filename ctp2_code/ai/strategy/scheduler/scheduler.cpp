@@ -40,6 +40,7 @@
 //
 //----------------------------------------------------------------------------
 
+
 #include "c3.h"
 
 
@@ -50,8 +51,8 @@
 
 #include "Scheduler.h"
 
-#include "goal.h"
-#include "squad.h"
+#include "Goal.h"
+#include "Squad.h"
 #include "Plan.h"
 
 
@@ -90,6 +91,7 @@ namespace
 // Remark(s)  : -
 //
 //----------------------------------------------------------------------------
+
 bool IsValid
 (
 	GOAL_TYPE const &								a_Goal,
@@ -135,7 +137,7 @@ void Scheduler::ResizeAll(const PLAYER_INDEX & newMaxPlayerId)
 {
     s_theSchedulers.resize(newMaxPlayerId + 1); // 1 extra for the Barbarians
 
-    for (size_t i = 0; i <= newMaxPlayerId; ++i)
+    for (size_t i = 0; i <= (unsigned) newMaxPlayerId; ++i)
     {
 		s_theSchedulers[i].SetPlayerId(i);
 	}
@@ -146,7 +148,7 @@ void Scheduler::ResizeAll(const PLAYER_INDEX & newMaxPlayerId)
 void Scheduler::LoadAll(CivArchive & archive)
 {
     DPRINTF(k_DBG_AI, ("\n\ncalling Scheduler::LoadAll\n\n"));
-	for (sint32 i = 0; i < s_theSchedulers.size(); i++)
+	for (sint32 i = 0; (unsigned) i < s_theSchedulers.size(); i++)
 	{
 		s_theSchedulers[i].Load(archive);
 	}
@@ -156,7 +158,7 @@ void Scheduler::LoadAll(CivArchive & archive)
 // no longer used "Reason: should be able to regenerate state from game objects."
 void Scheduler::SaveAll(CivArchive & archive)
 {
-	for (sint32 i = 0; i < s_theSchedulers.size(); i++)
+	for (sint32 i = 0; (unsigned) i < s_theSchedulers.size(); i++)
 	{
 		s_theSchedulers[i].Save(archive);
 	}
@@ -172,10 +174,11 @@ void Scheduler::SaveAll(CivArchive & archive)
 //         ThreatenedCity_MotivationEvent
 //
 //////////////////////////////
+
 Scheduler & Scheduler::GetScheduler(const sint32 & playerId)
 {
 	Assert(playerId >= 0);
-	Assert(playerId < s_theSchedulers.size());
+	Assert((unsigned) playerId < s_theSchedulers.size());
 	
 	return s_theSchedulers[playerId]; 
 }
@@ -184,7 +187,7 @@ Scheduler & Scheduler::GetScheduler(const sint32 & playerId)
 /// not used
 void Scheduler::ValidateAll()
 {
-	for (sint32 i = 0; i < s_theSchedulers.size(); i++)
+	for (sint32 i = 0; (unsigned) i < s_theSchedulers.size(); i++)
 	{
 		s_theSchedulers[i].Validate();
 	}
@@ -273,7 +276,7 @@ void Scheduler::Cleanup()
 
 	
 	Sorted_Goal_Iter sorted_goal_iter;
-	for (GOAL_TYPE goal_type = 0; goal_type < m_goals_of_type.size(); goal_type++)	{
+	for (GOAL_TYPE goal_type = 0; (unsigned) goal_type < m_goals_of_type.size(); goal_type++)	{
 
 		
 		sorted_goal_iter = m_goals_of_type[goal_type].begin();
@@ -377,7 +380,9 @@ void Scheduler::Planning_Status_Reset()
 //
 //  5. Count up total number of agents available to match
 //
+
 //////////////////////////////////////////////////////////////////////////
+
 Scheduler::TIME_SLICE_STATE Scheduler::Process_Squad_Changes()
 {
 	SQUAD_CLASS old_class;
@@ -470,7 +475,9 @@ Scheduler::TIME_SLICE_STATE Scheduler::Process_Squad_Changes()
 //
 //  make squads available for goals
 //
+
 //////////////////////////////////////////////////////////////////////////
+
 void Scheduler::Reset_Squad_Execution()
 {
 	Squad_List::iterator squad_ptr_iter = m_squads.begin();
@@ -496,7 +503,9 @@ void Scheduler::Reset_Squad_Execution()
 //
 //  2. Prune_Goals
 //
+
 //////////////////////////////////////////////////////////////////////////
+
 Scheduler::TIME_SLICE_STATE Scheduler::Process_Goal_Changes()
 {
 
@@ -534,7 +543,7 @@ Scheduler::TIME_SLICE_STATE Scheduler::Process_Goal_Changes()
 	Prune_Goals();
 
 	
-	m_neededSquadStrength       = Squad_Strength(0);
+	m_neededSquadStrength.Init();
 	m_maxUndercommittedPriority = Goal::BAD_UTILITY;
 
 	return TIME_SLICE_DONE;
@@ -557,7 +566,9 @@ Scheduler::TIME_SLICE_STATE Scheduler::Process_Goal_Changes()
 //
 //  3. Sort matches list.
 //
+
 //////////////////////////////////////////////////////////////////////////
+
 bool Scheduler::Sort_Matches()
 {
 	Plan_List::iterator plan_iter = m_matches.begin();
@@ -597,15 +608,11 @@ bool Scheduler::Sort_Matches()
 	
 #ifdef _DEBUG
 	sint32 size = m_matches.size();
-#endif _DEBUG
+#endif // _DEBUG
 
 	m_matches.sort(std::greater<Plan>());
 
-#ifdef _DEBUG
-	
-	
-	Assert(m_matches.size() == size);
-#endif _DEBUG
+	Assert(m_matches.size() == (unsigned) size);
 
 	t2 = GetTickCount();
 	AI_DPRINTF(k_DBG_AI, m_playerId, -1, -1, 
@@ -630,7 +637,7 @@ bool Scheduler::Sort_Matches()
 			}
 		}
 	}
-#endif _DEBUG_SCHEDULER
+#endif // _DEBUG_SCHEDULER
 
 #ifdef _DEBUG
 
@@ -701,7 +708,9 @@ bool Scheduler::Sort_Matches()
 //     all agents to donor squads. If over committed, rollback
 //     excess agents to donor squads.
 //
+
 //////////////////////////////////////////////////////////////////////////
+
 void Scheduler::Match_Resources(const bool move_armies)
 {
 	Goal_ptr goal_ptr;
@@ -929,6 +938,7 @@ void Scheduler::Match_Resources(const bool move_armies)
 // 4) Also called by CtpAi_KillCityEvent, CtpAi_NukeCityUnit, CtpAi_ImprovementComplete.
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Scheduler::Add_New_Goal(const Goal_ptr & new_goal)
 {
 	
@@ -947,6 +957,7 @@ void Scheduler::Add_New_Goal(const Goal_ptr & new_goal)
 // or an army is created.
 //
 /////////////////////////////////////////////////////////////////////////////////////////////////
+
 void Scheduler::Add_New_Squad(const Squad_ptr & new_squad)
 {
 
@@ -968,7 +979,7 @@ void Scheduler::Add_New_Squad(const Squad_ptr & new_squad)
 	
 	
 	Assert(squad_iter == m_squads.end());
-#endif _DEBUG_SCHEDULER
+#endif // _DEBUG_SCHEDULER
 
 	
 	m_new_squads.push_back(new_squad);
@@ -980,7 +991,8 @@ void Scheduler::Add_New_Squad(const Squad_ptr & new_squad)
 //  Remove_Goal
 //
 //  called by Scheduler::Prioritize_Goals() when
-////////////////////////////////////////////////////////////
+
+
 Scheduler::Sorted_Goal_Iter Scheduler::Remove_Goal(const Scheduler::Sorted_Goal_Iter & sorted_goal_iter)
 {
 	GOAL_TYPE goal_type = sorted_goal_iter->second->Get_Goal_Type();
@@ -1048,7 +1060,7 @@ bool Scheduler::Validate() const
 			sorted_goal_iter++;
 		}
 	}
-#endif _DEBUG_SCHEDULER
+#endif // _DEBUG_SCHEDULER
 
 	return true;
 }
@@ -1078,6 +1090,7 @@ Scheduler::Sorted_Goal_List Scheduler::Get_Top_Goals(const int &number) const
 // Remark(s)  : Used in ThreatenedCity_MotivationEvent to trigger MOTIVATION_FEAR_CITY_DEFENSE
 //
 //----------------------------------------------------------------------------
+
 sint32 Scheduler::GetValueUnsatisfiedGoals(const GOAL_TYPE & type) const 
 {
 	sint32	total_value	= 0;
@@ -1133,6 +1146,7 @@ sint32 Scheduler::GetValueUnsatisfiedGoals(const GOAL_TYPE & type) const
 //              and in ThreatenedCity_MotivationEvent to trigger MOTIVATION_FEAR_CITY_DEFENSE
 //
 //----------------------------------------------------------------------------
+
 Goal_ptr Scheduler::GetHighestPriorityGoal(const GOAL_TYPE & type, const bool satisfied) const 
 {
 	if (IsValid(type, m_goals_of_type)) 
@@ -1173,6 +1187,7 @@ Goal_ptr Scheduler::GetHighestPriorityGoal(const GOAL_TYPE & type, const bool sa
 // Used in ctpai when adding Explore, Settle, and MiscMap targets for goals
 //
 ///////////////////////////////////////////////////////////////////////////
+
 sint16 Scheduler::CountGoalsOfType(const GOAL_TYPE & type) const
 {
 	return IsValid(type, m_goals_of_type) 
@@ -1197,7 +1212,9 @@ sint16 Scheduler::CountGoalsOfType(const GOAL_TYPE & type) const
 //
 //  4. Sort goals_of_class lists.
 //
+
 //////////////////////////////////////////////////////////////////////////
+
 bool Scheduler::Prioritize_Goals()
 {
 	Goal_List::iterator goal_ptr_iter;
@@ -1411,7 +1428,9 @@ bool Scheduler::Prioritize_Goals()
 //
 //  4. Otherwise, if not matches exist for this goal, add them.
 //
+
 //////////////////////////////////////////////////////////////////////////
+
 bool Scheduler::Prune_Goals()
 {
 	
@@ -1579,7 +1598,8 @@ bool Scheduler::Prune_Goals()
 //              Add_Transport_Matches_For_Goal
 //
 //
-/////////////////////////////////////////////////////////////////////////////
+
+
 bool Scheduler::Add_New_Match_For_Goal_And_Squad
 ( 
  const Sorted_Goal_Iter & goal_iter,		   
@@ -1660,6 +1680,7 @@ bool Scheduler::Add_New_Match_For_Goal_And_Squad
 //   for each squad that qualifies, to the plan
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
+
 sint32 Scheduler::Add_New_Matches_For_Goal
 (
  const Sorted_Goal_Iter & goal_iter			
@@ -1710,7 +1731,8 @@ sint32 Scheduler::Add_New_Matches_For_Goal
 //
 //   called by Process_Squad_Changes
 //
-//////////////////////////////////////////////////////////////////////////////////////////////
+
+
 sint32 Scheduler::Add_New_Matches_For_Squad
 (
  const Squad_List::iterator & squad_iter		
@@ -1775,6 +1797,8 @@ sint32 Scheduler::Add_New_Matches_For_Squad
 //  target for the freed agents in this phase.
 //
 //////////////////////////////////////////////////////////////////////////
+
+
 bool Scheduler::Free_Undercommitted_Goal()
 {
 	bool undercommittment_found = false;

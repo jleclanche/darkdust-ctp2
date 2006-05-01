@@ -61,7 +61,7 @@ unsigned char *g_compression_buff=NULL;
 
 SpriteFile::SpriteFile(MBCHAR const * name)
 :
-    m_version           (k_SPRITEFILE_VERSION0),
+	m_version           (k_SPRITEFILE_VERSION0),
 	m_spr_compression   (SPRDATA_REGULAR),
 	m_file              (NULL)
 {
@@ -92,28 +92,28 @@ void SpriteFile::WriteSpriteData(Sprite *s)
 	uint32		normal_msizes[800];
 	uint32		compressed_ssizes[800];
 
-	size_t      frame_offset_pos = GetFilePos();
+	size_t    frame_offset_pos=GetFilePos();
 	
 	for (i=0; i<s->GetNumFrames(); i++) 
 	{
-	    normal_ssizes[i] = _msize(s->GetFrameData(i)); 
-	    normal_msizes[i] = _msize(s->GetMiniFrameData(i)); 
+	    normal_ssizes[i] = s->GetFrameDataSize(i); 
+	    normal_msizes[i] = s->GetMiniFrameDataSize(i); 
 	}
 	
-    WriteData((uint8 *)normal_ssizes,s->GetNumFrames()*sizeof(uint32));
-    WriteData((uint8 *)normal_msizes,s->GetNumFrames()*sizeof(uint32));
+	WriteData((uint8 *)normal_ssizes,s->GetNumFrames()*sizeof(uint32));
+	WriteData((uint8 *)normal_msizes,s->GetNumFrames()*sizeof(uint32));
 
 	for (i=0; i<s->GetNumFrames(); i++) 
 	{
 		spriteutils_ConvertPixelFormatForFile(s->GetFrameData(i), s->GetWidth(), s->GetHeight());
 
-		size = _msize(s->GetFrameData(i));
+		size = s->GetFrameDataSize(i);
 	   
 		uint8 * CompressedData = CompressData((void *)s->GetFrameData(i),size);
 
-        size_t const    compressed_size = size;
+		size_t const    compressed_size = size;
 
-	    if(m_version>k_SPRITEFILE_VERSION1)
+		if(m_version>k_SPRITEFILE_VERSION1)
 		{
 			size += sizeof(uint32);
 			WriteData((uint32)normal_ssizes[i]);
@@ -139,7 +139,7 @@ void SpriteFile::WriteSpriteData(Sprite *s)
 	for (i=0; i<s->GetNumFrames(); i++) 
 	{
 		spriteutils_ConvertPixelFormatForFile(s->GetMiniFrameData(i), s->GetWidth()/2, s->GetHeight()/2);
-		size = _msize(s->GetMiniFrameData(i));
+		size = s->GetMiniFrameDataSize(i);
 		WriteData((uint8 *)s->GetMiniFrameData(i), size);
 	}
 }
@@ -168,8 +168,8 @@ void SpriteFile::WriteFacedSpriteData(FacedSprite *s)
 
 		for (i=0; i<num_frames; i++)
 		{
-			normal_ssizes[j][i] = _msize(s->GetFrameData(j, i));
-		    normal_msizes[j][i] = _msize(s->GetMiniFrameData(j, i));
+			normal_ssizes[j][i] = s->GetFrameDataSize(j, i);
+			normal_msizes[j][i] = s->GetMiniFrameDataSize(j, i);
 		}   
 
 		
@@ -188,19 +188,19 @@ void SpriteFile::WriteFacedSpriteData(FacedSprite *s)
 			size_t size,compressed_size;
 			size = normal_ssizes[j][i];
 
-		    uint8 * CompressedData = CompressData((void *)s->GetFrameData(j,i),size);
+			uint8 * CompressedData = CompressData((void *)s->GetFrameData(j,i),size);
   
 			compressed_size = size;
 			
 			if(m_version>k_SPRITEFILE_VERSION1)
-			   WriteData((uint32)normal_ssizes[j][i]);
+				WriteData((uint32)normal_ssizes[j][i]);
 
 			WriteData(CompressedData, compressed_size);
 		
-		    compressed_ssizes[j][i] = size;
+			compressed_ssizes[j][i] = size;
 
 			
-			delete [] CompressedData;
+			delete[] (uint8 *) CompressedData;
 		}
 
 		
@@ -250,7 +250,7 @@ void SpriteFile::WriteFacedSpriteWshadowData(FacedSpriteWshadow *s)
 			}
 			else
 			{
-				size = _msize(s->GetFrameData(j, i));
+				size = s->GetFrameDataSize(j, i);
 			}
 			WriteData((uint32)size);
 		}
@@ -266,7 +266,7 @@ void SpriteFile::WriteFacedSpriteWshadowData(FacedSpriteWshadow *s)
 			}
 			else
 			{
-				size = _msize(s->GetMiniFrameData(j, i));
+				size = s->GetMiniFrameDataSize(j, i);
 			}
 			WriteData((uint32)size);
 		}
@@ -283,7 +283,7 @@ void SpriteFile::WriteFacedSpriteWshadowData(FacedSpriteWshadow *s)
 				}
 				else
 				{
-					size = _msize(s->GetShadowFrameData(j, i));
+					size = s->GetShadowFrameDataSize(j, i);
 				}
 				WriteData((uint32)size);
 			}
@@ -298,7 +298,7 @@ void SpriteFile::WriteFacedSpriteWshadowData(FacedSpriteWshadow *s)
 					}
 					else
 					{
-						size = _msize(s->GetMiniShadowFrameData(j, i));	
+						size = s->GetMiniShadowFrameDataSize(j, i);	
 					}
 				WriteData((uint32)size);
 			}
@@ -314,7 +314,7 @@ void SpriteFile::WriteFacedSpriteWshadowData(FacedSpriteWshadow *s)
 			size_t size;
 			if(s->GetFrameData(j, i) != NULL)
 			{
-				size = _msize(s->GetFrameData(j, i));
+				size = s->GetFrameDataSize(j, i);
 				WriteData((uint8 *)s->GetFrameData(j,i), size);
 			}
 		}
@@ -325,7 +325,7 @@ void SpriteFile::WriteFacedSpriteWshadowData(FacedSpriteWshadow *s)
 			size_t size;
 			if(s->GetMiniFrameData(j, i) != NULL)
 			{
-				size = _msize(s->GetMiniFrameData(j, i));
+				size = s->GetMiniFrameDataSize(j, i);
 				WriteData((uint8 *)s->GetMiniFrameData(j,i), size);
 			}
 		}
@@ -337,7 +337,7 @@ void SpriteFile::WriteFacedSpriteWshadowData(FacedSpriteWshadow *s)
 				size_t size;
 				if(s->GetShadowFrameData(j, i) != NULL)
 				{
-					size = _msize(s->GetShadowFrameData(j, i));
+					size = s->GetShadowFrameDataSize(j, i);
 
 					WriteData((uint8 *)s->GetShadowFrameData(j,i), size);
 				}
@@ -349,7 +349,7 @@ void SpriteFile::WriteFacedSpriteWshadowData(FacedSpriteWshadow *s)
 				size_t size;
 				if(s->GetMiniShadowFrameData(j, i) != NULL)
 				{
-					size = _msize(s->GetMiniShadowFrameData(j, i));
+					size = s->GetMiniShadowFrameDataSize(j, i);
 
 					WriteData((uint8 *)s->GetMiniShadowFrameData(j,i), size);
 				}
@@ -640,8 +640,9 @@ void SpriteFile::ReadFacedSpriteDataBasic(FacedSprite *s)
 		
 		delete CompressedData;
 
-		spriteutils_ConvertPixelFormat(ActualData, s->GetWidth(), s->GetHeight());
-		s->SetFrameData(j, 0, ActualData);
+		
+		spriteutils_ConvertPixelFormat((Pixel16 *)ActualData, s->GetWidth(), s->GetHeight());
+		s->SetFrameData(j, 0, ActualData, actual_size);
 
 		for (i=1; i<s->GetNumFrames(); i++) 
 		{
@@ -651,7 +652,7 @@ void SpriteFile::ReadFacedSpriteDataBasic(FacedSprite *s)
 			   size += sizeof(size);
 
 			SetFilePos(GetFilePos() + size);
-			s->SetFrameData(j, i, NULL);
+			s->SetFrameData(j, i, NULL, 0);
 		}
 
 	      // Read small size sprites (zoomed out)
@@ -659,13 +660,13 @@ void SpriteFile::ReadFacedSpriteDataBasic(FacedSprite *s)
 		ActualData = (Pixel16 *)new uint8[size];
 		ReadData((void *)ActualData, size);
 		spriteutils_ConvertPixelFormat((Pixel16 *)ActualData, s->GetWidth()/2, s->GetHeight()/2);
-		s->SetMiniFrameData(j, 0, ActualData);
+		s->SetMiniFrameData(j, 0, ActualData, size);
 
 		for (i=1; i<s->GetNumFrames(); i++) 
 		{
 			size = msizes[j][i];
 			SetFilePos(GetFilePos() + size);
-			s->SetMiniFrameData(j, i, NULL);
+			s->SetMiniFrameData(j, i, NULL, 0);
 		}
 	}
 
@@ -726,7 +727,7 @@ void SpriteFile::ReadFacedSpriteDataFull(FacedSprite *s)
 			delete CompressedData;
 			
 			spriteutils_ConvertPixelFormat((Pixel16 *)ActualData, s->GetWidth(), s->GetHeight());
-			s->SetFrameData(j, i, ActualData);
+			s->SetFrameData(j, i, ActualData, actual_size);
 		}
 
 		for (i=0; i<s->GetNumFrames(); i++) 
@@ -735,7 +736,7 @@ void SpriteFile::ReadFacedSpriteDataFull(FacedSprite *s)
 			ActualData= (Pixel16 *) new uint8[size];
 			ReadData((void *)ActualData, size);
 			spriteutils_ConvertPixelFormat((Pixel16 *)ActualData, s->GetWidth()/2, s->GetHeight()/2);
-			s->SetMiniFrameData(j, i, ActualData);
+			s->SetMiniFrameData(j, i, ActualData, size);
 		}
 	}
 }
@@ -842,7 +843,7 @@ void SpriteFile::ReadFacedSpriteWshadowData(FacedSpriteWshadow *s)
 			{
 				data = NULL;
 			}
-			s->SetFrameData(j, i, data);
+			s->SetFrameData(j, i, data, size);
 		}
 
 		
@@ -859,7 +860,7 @@ void SpriteFile::ReadFacedSpriteWshadowData(FacedSpriteWshadow *s)
 			{
 				data = NULL;
 			}
-			s->SetMiniFrameData(j, i, data);
+			s->SetMiniFrameData(j, i, data, size);
 		}
 		if(s->GetHasShadow())
 		{
@@ -877,7 +878,7 @@ void SpriteFile::ReadFacedSpriteWshadowData(FacedSpriteWshadow *s)
 				{
 					data = NULL;
 				}
-				s->SetShadowFrameData(j, i, data);
+				s->SetShadowFrameData(j, i, data, size);
 			}
 			
 			
@@ -894,7 +895,7 @@ void SpriteFile::ReadFacedSpriteWshadowData(FacedSpriteWshadow *s)
 				{
 					data = NULL;
 				}
-				s->SetMiniShadowFrameData(j, i, data);
+				s->SetMiniShadowFrameData(j, i, data, size);
 			}
 		}
 	}
@@ -991,11 +992,16 @@ void SpriteFile::ReadSpriteDataGeneral(FacedSpriteWshadow **sprite)
 
 void SpriteFile::ReadAnimDataBasic(Anim *a)
 {
+	
+	
+	uint16		*u;
+
 	ReadAnimDataFull(a);
 
+	
 	a->SetPlaybackTime(a->GetPlaybackTime() / a->GetNumFrames());
 	a->SetNumFrames(1);
-	uint16 *    u = a->GetFrames();
+	u = a->GetFrames();
 	u[0] = 0;
 }
 
@@ -1062,21 +1068,21 @@ void SpriteFile::SkipAnimData(void)
 SPRITEFILEERR SpriteFile::Create(SPRITEFILETYPE type,unsigned version,unsigned compression_mode)
 {
 	SPRITEFILEERR	err;
-	uint32			data;
-	MBCHAR			path[_MAX_PATH];
+	uint32		data;
+	MBCHAR		path[_MAX_PATH];
 
 #if defined(__MAKESPR__) || defined(__SPRITETEST__)
 	strcpy(path, m_filename);
 #else
 	MBCHAR fullPath[_MAX_PATH];
 	g_civPaths->GetSpecificPath(C3DIR_SPRITES, fullPath, FALSE);
-	sprintf(path, "%s%s%s", fullPath, FILE_SEP, m_filename);
+	sprintf(path, "%s" FILE_SEP "%s", fullPath, m_filename);
 #endif
 
-    if (m_file)
-    {
-        c3files_fclose(m_file);
-    }
+	if (m_file)
+	{
+		c3files_fclose(m_file);
+	}
 	m_file = c3files_fopen(C3DIR_DIRECT, path, "wb");
 
 	Assert(m_file != NULL);
@@ -1465,17 +1471,20 @@ SPRITEFILEERR SpriteFile::CloseWrite()
 
 SPRITEFILEERR SpriteFile::Open(SPRITEFILETYPE *type)
 {
+	SPRITEFILEERR	err;
+	uint32			data;
+
 	if (m_file)
-    {
-        c3files_fclose(m_file);
-    }
-    m_file = c3files_fopen(C3DIR_SPRITES, m_filename, "rb");
+	{
+		c3files_fclose(m_file);
+	}
+	m_file = c3files_fopen(C3DIR_SPRITES, m_filename, "rb");
 
 	Assert(m_file != NULL);
 	if (m_file == NULL) return SPRITEFILEERR_NOOPEN;
 
-	uint32			data;
-	SPRITEFILEERR	err = ReadData((void *)&data, sizeof(data));
+	
+	err = ReadData((void *)&data, sizeof(data));
 
 	if (data != k_SPRITEFILE_TAG) 
 	{
@@ -1486,7 +1495,10 @@ SPRITEFILEERR SpriteFile::Open(SPRITEFILETYPE *type)
 	
 	err = ReadData((void *)&data, sizeof(data));
 
+
 	m_version = data;
+
+	
 	switch(m_version)
 	{
 	   case k_SPRITEFILE_VERSION2: 
@@ -2420,7 +2432,7 @@ void SpriteFile::SetFilePos(size_t pos)
 {
 	fpos_t		filePos;
 	sint32		err;
-
+	
 #ifdef WIN32
 	filePos = pos;
 #elif defined(LINUX)
@@ -2498,7 +2510,7 @@ SpriteFile::CompressData_Default  (void *Data, size_t &DataLen)
 			
 	memcpy((void *)ReturnVal,Data,DataLen);
 
-  return ReturnVal;
+	return ReturnVal;
 }
 
 
@@ -2618,7 +2630,7 @@ literal:
 
  goto end_of_compression;
 
- 
+  
 overrun: memcpy(p_dst_first+LZW1_FLAG_BYTES,p_src_first,src_len);
           
    *p_dst_first=LZW1_FLAG_COPY; 

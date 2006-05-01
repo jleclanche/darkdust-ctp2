@@ -1,24 +1,30 @@
 
 
 #include "c3.h"
-#include "unittabbutton.h"
 
 #include "aui.h"
 #include "aui_window.h"
 #include "aui_uniqueid.h"
 #include "aui_ldl.h"
-#include "colorset.h"                   // g_colorSet
+
 #include "pattern.h"
+
 #include "primitives.h"
 #include "c3_coloriconbutton.h"
 #include "thermometer.h"
+
 #include "Unit.h"
 #include "UnitRec.h"
 #include "battleorderboxactions.h"
 #include "c3_coloredstatic.h"
+
+
+
 #include "UIUtils.h"
 
+#include "unittabbutton.h"
 
+extern	ColorSet	*g_colorSet;
 
 
 UnitTabButton::UnitTabButton(AUI_ERRCODE *retval, 

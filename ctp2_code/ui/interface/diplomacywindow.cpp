@@ -57,7 +57,7 @@
 #include "Events.h"
 
 #include "pixelutils.h"
-#include "colorset.h"                   // g_colorSet
+#include "colorset.h"
 
 #include "DiplomacyProposalRecord.h"
 #include "DiplomacyThreatRecord.h"
@@ -66,8 +66,7 @@
 #include "SlicObject.h"
 #include "stringutils.h"
 
-#include "gold.h"
-
+#include "Gold.h"
 #include "ctp2_spinner.h"
 
 #include "intelligencewindow.h"
@@ -81,11 +80,10 @@
 #include "DiplomacyDetails.h"
 #include "Diplomat.h"
 
-extern C3UI                   *g_c3ui;
-
 static MBCHAR                 *s_dipWindowBlock = "DiplomacyWindow";
 static DiplomacyWindow        *s_dipWindow;
-
+extern C3UI                   *g_c3ui;
+extern ColorSet               *g_colorSet;
 static MBCHAR                 *k_DIP_WINDOW_ATTRACT_BUTTON = "ControlPanelWindow.ControlPanel.ShortcutPad.DiplomacyButton";
 
 #define k_INTELLIGENCE_TAB    0
@@ -2113,17 +2111,11 @@ void DiplomacyWindow::Exchange(aui_Control *control, uint32 action, uint32 data,
 
 class DiplomacyWindowChangeModeAction : public aui_Action
 {
-public:
+  public:
 	DiplomacyWindowChangeModeAction(DW_CREATE_MODE mode) {
 		m_mode = mode;
 	}
-
-	virtual void Execute
-    (
-        aui_Control *   control,
-		uint32          action,
-		uint32          data
-    );
+	virtual ActionCallback Execute;
 
   protected:
 	DW_CREATE_MODE m_mode;

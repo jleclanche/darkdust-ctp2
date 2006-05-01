@@ -57,8 +57,9 @@ int aehlog_Create(const char *logpath, aehlog_t *aehlog)
 	} else {
 		if (!getTempDir(aehlog->path, sizeof(aehlog->path)-strlen(aehlog_EXCEPTION_FILE)-1)) return aeh_RES_BAD;
 		strcat(aehlog->path, aehlog_EXCEPTION_FILE);
-		if (strlen(aehlog->path) > aeh_MAX_PATH)
+		if (strlen(aehlog->path) > aeh_MAX_PATH) {
 			aehDPRINT(("aehlog_Create: aehlog->path %d too large\n", strlen(aehlog->path)));
+		}
 	}
 	aehlog_clear(aehlog);
 	aeh_SetCurrent(__LINE__, __FILE__);
@@ -168,9 +169,10 @@ int aehlog_seek(aehlog_t *aehlog, long offset)
 			fseek(aehlog->fp, old_offset, SEEK_SET);
 		return aeh_RES_BUG;
 	}
-	readSwap((const void**)&ptr, &aehlog_tag, sizeof(int));
-	readSwap((const void**)&ptr, &ninst, sizeof(int));
-	readSwap((const void**)&ptr, &buflen, sizeof(int));
+	void *vptr = (void *) ptr;
+	readSwap((const void **) &vptr, &aehlog_tag, sizeof(int));
+	readSwap((const void **) &vptr, &ninst, sizeof(int));
+	readSwap((const void **) &vptr, &buflen, sizeof(int));
 	if ((aehlog_tag != aehlog_MAGIC) || (buflen > aeh_BUF_MAXLEN)) {
 		aehDPRINT(("aehlog_seek: bad offset:%d : tag %x, len %d\n",
 			offset, aehlog_tag, buflen));
@@ -195,9 +197,10 @@ static int aehlog_readfromfile(aehlog_t *aehlog, aeh_buf_t *aehbuf, unsigned int
 		aehDPRINT(("aehlog_readfromfile: read error\n"));
 		return aeh_RES_BUG;
 	}
-	readSwap((const void**)&ptr, &aehlog_tag, sizeof(aehlog_tag));
-	readSwap((const void**)&ptr, ninst, sizeof(*ninst));
-	readSwap((const void**)&ptr, &(aehbuf->buflen), sizeof(aehbuf->buflen));
+	void *vptr = (void *) ptr;
+	readSwap((const void**)&vptr, &aehlog_tag, sizeof(aehlog_tag));
+	readSwap((const void**)&vptr, ninst, sizeof(*ninst));
+	readSwap((const void**)&vptr, &(aehbuf->buflen), sizeof(aehbuf->buflen));
 	if ((aehlog_tag != aehlog_MAGIC) ||
 		(aehbuf->buflen > aeh_BUF_MAXLEN) ||
 		(fread(aehbuf->buf, sizeof(unsigned char), aehbuf->buflen, aehlog->fp) != aehbuf->buflen)) {
@@ -214,9 +217,10 @@ static int aehlog_writetofile(aehlog_t *aehlog, const aeh_buf_t *aehbuf, const u
 	unsigned char buf[3 * sizeof(unsigned int)];
 	unsigned char *ptr = buf;
 	int aehlog_tag = aehlog_MAGIC;
-	writeSwap((void**)&ptr, &aehlog_tag, sizeof(aehlog_tag));
-	writeSwap((void**)&ptr, &ninst, sizeof(ninst));
-	writeSwap((void**)&ptr, &(aehbuf->buflen), sizeof(aehbuf->buflen));
+	void *vptr = (void *) ptr;
+	writeSwap((void**)&vptr, &aehlog_tag, sizeof(aehlog_tag));
+	writeSwap((void**)&vptr, &ninst, sizeof(ninst));
+	writeSwap((void**)&vptr, &(aehbuf->buflen), sizeof(aehbuf->buflen));
 	if ((fwrite(buf, sizeof(unsigned int), 3, aehlog->fp) != 3) ||
 		(fwrite(aehbuf->buf, sizeof(unsigned char), aehbuf->buflen, aehlog->fp) != aehbuf->buflen)) {
 		aehDPRINT(("aehlog_writetofile: write err: tag %x, len %d\n", aehlog_tag, aehbuf->buflen));
@@ -235,11 +239,12 @@ int aehlog_readfrombuf(aeh_buf_t *aehbuf, unsigned int *ninst, const char *buf, 
 	const char *ptr = buf;
 	int aehlog_tag;
 
-	if (!aehbuf || !buf || (buflen < 3 * sizeof(int)))
+	if (!aehbuf || !buf || ((unsigned) buflen < 3 * sizeof(int)))
 		return -1;
-	readSwap((const void**)&ptr, &aehlog_tag, sizeof(aehlog_tag));
-	readSwap((const void**)&ptr, ninst, sizeof(*ninst));
-	readSwap((const void**)&ptr, &(aehbuf->buflen), sizeof(aehbuf->buflen));
+	void *vptr = (void *) &ptr;
+	readSwap((const void**)&vptr, &aehlog_tag, sizeof(aehlog_tag));
+	readSwap((const void**)&vptr, ninst, sizeof(*ninst));
+	readSwap((const void**)&vptr, &(aehbuf->buflen), sizeof(aehbuf->buflen));
 	if (aehlog_tag != aehlog_MAGIC) {
 		aehDPRINT(("aehlog_readfrombuf: err: tag %x != %x\n", aehlog_tag, aehlog_MAGIC));
 		return -1;
@@ -265,15 +270,16 @@ int aehlog_writetobuf(const aeh_buf_t *aehbuf, const unsigned int ninst, char *b
 	char *ptr = buf;
 	int aehlog_tag = aehlog_MAGIC;
 
-	if (!aehbuf || !buf || (buflen < (int)aehbuf->buflen + 3*sizeof(int)))
+	if (!aehbuf || !buf || ((unsigned) buflen < (int)aehbuf->buflen + 3*sizeof(int)))
 		return -1;
 	if (aehbuf->buflen > aeh_BUF_MAXLEN) {
 		aehDPRINT(("aehlog_writetobuf: err: aehbuf->buflen %d > max %d\n", aehbuf->buflen, aeh_BUF_MAXLEN));
 		return -1;
 	}
-	writeSwap((void**)&ptr, &aehlog_tag, sizeof(aehlog_tag));
-	writeSwap((void**)&ptr, &ninst, sizeof(ninst));
-	writeSwap((void**)&ptr, &(aehbuf->buflen), sizeof(aehbuf->buflen));
+	void *vptr = (void *) ptr;
+	writeSwap((void**)&vptr, &aehlog_tag, sizeof(aehlog_tag));
+	writeSwap((void**)&vptr, &ninst, sizeof(ninst));
+	writeSwap((void**)&vptr, &(aehbuf->buflen), sizeof(aehbuf->buflen));
 	memcpy(ptr, aehbuf->buf, aehbuf->buflen);
 	return (aehbuf->buflen + (ptr - buf));
 }
@@ -290,7 +296,7 @@ static int checkDupException(const unsigned char *buf, unsigned int size, unsign
 	long fpos;
 	aeh_SetCurrent(__LINE__, __FILE__);
 	fseek(aehlog->fp, 0L, SEEK_SET);
-	while ((fpos = ftell(aehlog->fp)) >= 0 && fpos < fsize) {
+	while ((fpos = ftell(aehlog->fp)) >= 0 && (unsigned) fpos < fsize) {
 		fgetpos(aehlog->fp, &fptr);
 		if ((err = aehlog_readfromfile(aehlog, &tmpaehbuf, &ninst)) != aeh_RES_OK) {
 			if (err == aeh_RES_EMPTY) break;

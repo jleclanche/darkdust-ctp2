@@ -23,6 +23,9 @@
 
 #include "colorset.h"
 
+extern ColorSet	*g_colorSet;
+
+
 StaticTextItem::StaticTextItem(
 	AUI_ERRCODE *retval,
 	uint32 id,

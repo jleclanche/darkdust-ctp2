@@ -57,7 +57,7 @@ public:
 	
 	
 	
-	virtual ~SpriteEditWindow();
+	virtual ~SpriteEditWindow() {}
 
 	
 	
@@ -146,6 +146,8 @@ private:
 
 	
 	C3TextField		*m_fileName;
+	ctp2_Button		*m_ok;		
+	ctp2_Button		*m_cancel;	
 
 	
 	ctp2_Button		*m_MOVEAnim;  
@@ -187,5 +189,5 @@ private:
 
 
 int SpriteEditWindow_Initialize( void );
-void SpriteEditWindow_Cleanup(void);
+int SpriteEditWindow_Cleanup( void );
 #endif

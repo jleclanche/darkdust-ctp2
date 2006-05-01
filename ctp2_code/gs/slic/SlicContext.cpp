@@ -300,7 +300,7 @@ SlicContext::~SlicContext()
 
 	if (m_actionList) 
     {
-		for (sint32 i = 0; i < m_numActions; ++i) 
+		for (size_t i = 0; i < (unsigned) m_numActions; ++i) 
         {
 			delete [] m_actionList[i];
 		}
@@ -667,7 +667,7 @@ Unit SlicContext::GetCity(sint32 index) const
 	}
 
 	if(!m_cityList)
-		return Unit();
+		return Unit(0);
 
 	return m_cityList->Access(index);
 }
@@ -689,7 +689,7 @@ Unit SlicContext::GetUnit(sint32 index) const
 	}
 
 	if(!m_unitList)
-		return Unit();
+		return Unit(0);
 	return m_unitList->Access(index);
 }
 
@@ -703,7 +703,7 @@ sint32 SlicContext::GetNumUnits() const
 Army SlicContext::GetArmy(sint32 index) const
 {
 	if(!m_armyList)
-		return Army();
+		return Army(0);
 	return m_armyList->Access(index);
 }
 
@@ -1118,7 +1118,7 @@ sint32 SlicContext::GetNumTradeOffers() const
 TradeOffer SlicContext::GetTradeOffer(sint32 index) const
 {
 	if(!m_tradeOffersList || index < 0 || index >= m_tradeOffersList->Num())
-		return TradeOffer();
+		return TradeOffer(0);
 
 	return m_tradeOffersList->Access(index);
 }
@@ -1411,14 +1411,14 @@ void SlicContext::Dump()
 	if(m_cityList) {
 		n = m_cityList->Num();
 		for(i = 0; i < n; i++) {
-			DPRINTF(k_DBG_INFO, (" City.%d: %lx\n", i, m_cityList->Access(i)));
+			DPRINTF(k_DBG_INFO, (" City.%d: %lx\n", i, m_cityList->Access(i).m_id));
 		}
 	}
 
 	if(m_unitList) {
 		n = m_unitList->Num();
 		for(i = 0; i < n; i++) {
-			DPRINTF(k_DBG_INFO, (" Unit.%d: %lx\n", i, m_unitList->Access(i)));
+			DPRINTF(k_DBG_INFO, (" Unit.%d: %lx\n", i, m_unitList->Access(i).m_id));
 		}
 	}
 

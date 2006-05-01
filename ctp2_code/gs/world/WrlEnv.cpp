@@ -43,7 +43,8 @@
 #include "CityRadius.h"
 #ifdef _DEBUG
 #include "pixelutils.h"
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
+extern ColorSet *g_colorSet;
 #endif
 #include "TradeDynArr.h"
 #include "RandGen.h"
@@ -890,7 +891,7 @@ void World::CutImprovements(const MapPoint &point)
 		if(rec && rec->GetIntBorderRadius(intRad)) {
 			rec->GetSquaredBorderRadius(sqRad);
 			MapPoint ISuck = point;
-			terrainutil_RemoveBorders(ISuck, thisCell->GetOwner(), intRad, sqRad, Unit());
+			terrainutil_RemoveBorders(ISuck, thisCell->GetOwner(), intRad, sqRad, Unit(0));
 		}
 		thisCell->RemoveDBImprovement(thisCell->GetDBImprovement(0));
 	}

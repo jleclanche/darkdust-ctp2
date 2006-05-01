@@ -1,6 +1,9 @@
 /**
  * $Id$
  */
+#ifdef HAVE_PRAGMA_ONCE
+#pragma once
+#endif
 #ifndef __os_include_config_win32_h__
 #define __os_include_config_win32_h__ 1
 
@@ -35,6 +38,9 @@
 
 /* Defined when automake runs yacc and renames the output files */
 /* #undef AUTOMAKE_INVOKES_YACC */
+
+/* Defined when slic debugging code in ui/slic_debug should be compiled */
+#define CTP2_ENABLE_DEBUGSLIC 1
 
 /** File seperator used on windows */
 #define FILE_SEP "\\"
@@ -108,8 +114,6 @@
 /* Define to 1 if `lex' declares `yytext' as a `char *' by default, not a
  *    `char[]'. */
 /* #undef YYTEXT_POINTER */
-
-#define CTP2_ENABLE_SLICDEBUG 1
 
 #endif
 

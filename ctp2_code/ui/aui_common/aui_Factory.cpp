@@ -27,13 +27,14 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
-#include "aui_Factory.h"
 
+#include "aui_Factory.h"
 #include "aui_directsurface.h"
 #include "aui_sdlsurface.h"
-#include "c3ui.h"   // C3UI
 
-extern C3UI *   g_c3ui;
+#include "c3ui.h"
+
+extern C3UI			*g_c3ui;
 
 aui_Surface *
 aui_Factory::new_Surface(AUI_ERRCODE &retval,

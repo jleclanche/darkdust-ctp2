@@ -8,13 +8,14 @@
 #ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
-
 #ifndef __AGENT_H__
 #define __AGENT_H__ 1
 
-class Agent;
-
 #include "c3.h"
+
+#ifdef _MSC_VER
+#pragma warning(disable: 4786)
+#endif
 
 #include "scheduler_types.h"
 #include "squad_Strength.h"

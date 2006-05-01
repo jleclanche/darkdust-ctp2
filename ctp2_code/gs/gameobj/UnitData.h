@@ -38,23 +38,18 @@
 #ifndef __UNIT_DATA_H__ 
 #define __UNIT_DATA_H__ 1
 
-class UnitData;
-class VisibilityDurationArray;
-
-#include "Unit.h"
+#include "ctp2_enums.h"
 #include "GameObj.h"
 #include "MapPoint.h"
 #include "Unit.h"
 #include "citydata.h"
 #include "Army.h"
-#include "Order.h"          // ORDER_RESULT
-#include "Player.h"         // k_MAX_PLAYERS
-#include "UnitActor.h"      // UnitActor
 
 
 class UnitList;
 class citydata; 
 class SpriteState; 
+class UnitActor; 
 class TradeRoute;
 class Installation;
 class UnitDynamicArray;
@@ -63,10 +58,17 @@ template <class T> class DynamicArray;
 class SlicObject;
 class BitMask;
 
+enum UNIT_ORDER_TYPE;
+enum HAPPY_REASON;
+
 #define k_UNITDATA_VERSION_MAJOR    0
 #define k_UNITDATA_VERSION_MINOR    0
 
 #define k_DEFAULT_VIS_DURATION_SIZE 2
+#ifndef k_MAX_PLAYERS
+
+#define k_MAX_PLAYERS 32
+#endif
 
 class VisibilityDurationArray
 {
@@ -139,6 +141,8 @@ private:
 	
 	friend class NetUnit;
 };
+
+enum CAUSE_REMOVE_CITY; 
 
 #define k_UDF_FIRST_MOVE                             0x00000001
 #define k_UDF_IS_VET                                 0x00000002
@@ -256,7 +260,6 @@ public:
 	void ClearFlag(uint32 f) { m_flags &= ~(f); }
 
 	bool IsImmobile()const; //PFT
-	bool CantGroup()const; //by E
 	sint32 ResetMovement();
 	
 	void GetPos(MapPoint &p) const { p = m_pos; };
@@ -276,10 +279,10 @@ public:
 	void GetCargoHP(sint32 &i, sint32 unit_type[100],
 	                sint32 unit_hp[100]);
 
-    BOOL CanAtLeastOneCargoUnloadAt(const MapPoint &old_pos, const MapPoint &dest_pos, const BOOL & use_vision) const;
-    BOOL CanThisCargoUnloadAt(const Unit &the_cargo, const MapPoint & old_pos, const MapPoint & new_pos, const BOOL & use_vision) const;
-    BOOL UnloadCargo(const MapPoint &new_pos, Army &debark,
-					 BOOL justOneUnit, const Unit &theUnit);
+	BOOL CanAtLeastOneCargoUnloadAt(const MapPoint &old_pos, const MapPoint &dest_pos, const BOOL & use_vision) const;
+	BOOL CanThisCargoUnloadAt(const Unit &the_cargo, const MapPoint & old_pos, const MapPoint & new_pos, const BOOL & use_vision) const;
+	BOOL UnloadCargo(const MapPoint &new_pos, Army &debark,
+	                 BOOL justOneUnit, const Unit &theUnit);
 	BOOL UnloadSelectedCargo(const MapPoint &new_pos, Army &debark);
 
 
@@ -502,7 +505,7 @@ public:
 
 	BOOL StoppedBySpies(const Unit &c);
 	ORDER_RESULT InvestigateCity(Unit &c);
-	ORDER_RESULT StealTechnology(Unit &c, sint32 whichAdvance);
+	ORDER_RESULT StealTechnology(const Unit &c, sint32 whichAdvance);
 	ORDER_RESULT InciteRevolution(Unit &c);
 	ORDER_RESULT AssassinateRuler(Unit &c);
 	ORDER_RESULT NullifyWalls(Unit &c);
@@ -669,7 +672,7 @@ public:
 	void AddEndGameObject(sint32 type);
 	double GetVisionRange() const;
 
-	BOOL SendSlaveTo(Unit &dest);
+	BOOL SendSlaveTo(const Unit &dest);
 
 	void SetFullHappinessTurns(sint32 turns);
 	sint32 GetIncomingTrade() const;

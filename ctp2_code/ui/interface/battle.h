@@ -3,20 +3,16 @@
 #ifndef __BATTLE_H__
 #define __BATTLE_H__
 
-class Battle;
-
-#include "Army.h"           // Army
 #include "dbtypes.h"
 #include "battleview.h"
-#include "cellunitlist.h"   // CellUnitList
 #include "colorset.h"
 
 class Battle {
 public:
 	Battle();
-	virtual ~Battle();
+	~Battle();
 
-	void Initialize(const Army &attackers, const CellUnitList &defenders);
+	void Initialize(const Army &attackers, CellUnitList &defenders);
 
 	
 	
@@ -25,7 +21,7 @@ public:
 	
 
 	void MakeAttackers(sint32 numAttackers, const Army &attackers);
-	void MakeDefenders(sint32 numDefenders, CellUnitList const &defenders);
+	void MakeDefenders(sint32 numDefenders, CellUnitList &defenders);
 
 	BattleViewActor			*ActorFromUnit(BOOL isDefender, Unit theUnit);
 	

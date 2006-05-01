@@ -1,24 +1,17 @@
-
-
-
-
-
-
-
-
-
 #ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
+
+#include "ctp2_config.h"
+
 #ifdef _PLAYTEST
 
 #ifndef _C3CMDLINE_H_
 #define _C3CMDLINE_H_
 
-class Command;
-class CommandLine;
-
 class aui_Surface; 
+
+class Command;
 
 struct CommandRecord
 {
@@ -67,7 +60,9 @@ COMMAND(FloodCommand);
 COMMAND(OzoneCommand);
 COMMAND(ToggleFogCommand);
 COMMAND(ToggleSmoothScrollCommand);
+#ifdef WIN32
 COMMAND(DumpCallStackCommand);
+#endif
 COMMAND(ToggleQuitFastCommand);
 COMMAND(ToggleGridCommand);
 COMMAND(ToggleHeraldCommand);
@@ -340,7 +335,7 @@ COMMAND(SetGovernorPwReserveCommand);
 
 COMMAND(ToggleCellText);
 COMMAND(ToggleArmyText);
-COMMAND(ToggleArmyName);
+
 
 COMMAND(ArmyClumps);
 
@@ -412,6 +407,7 @@ private:
 };
 
 extern CommandLine g_commandLine;
-
+#else
+class CommandLine;
 #endif
 #endif

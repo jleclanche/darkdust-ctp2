@@ -44,7 +44,6 @@
 // - Removed unnecessary include files. (Aug 28th 2005 Martin Gühmann)
 // - Initialized local variables. (Sep 9th 2005 Martin Gühmann)
 // - Removed unused local variables. (Sep 9th 2005 Martin Gühmann)
-// - Fixed memory leaks.
 //
 //----------------------------------------------------------------------------
 
@@ -86,6 +85,7 @@ BOOL                    g_showHeralds = TRUE;
 #define k_SHIELD_ON_TIME        650
 #define k_SHIELD_OFF_TIME       150
 
+extern ColorSet         *g_colorSet;
 extern SpriteGroupList  *g_unitSpriteGroupList;
 extern SpriteGroupList  *g_citySpriteGroupList;
 extern TiledMap         *g_tiledMap;
@@ -120,12 +120,12 @@ UnitActor::UnitActor(SpriteState *ss, Unit id, sint32 unitType, const MapPoint &
 	sint32 spriteID;
 
 	m_unitVisionRange = visionRange;
-	m_unitVisibility = NULL;
-	m_unitSaveVisibility = NULL;
+	m_unitVisibility = 0;
+	m_unitSaveVisibility = 0;
 
 	m_size = 0;
 	m_nextPop = 0;//PFT 29 mar 05, show # turns until city next grows a pop
-	GetIDAndType(owner, ss, id, unitType, (MapPoint)pos, &spriteID, &m_type);
+	GetIDAndType(owner, ss, id, unitType, pos, &spriteID, &m_type);
 	m_spriteID = (sint32)spriteID;
 
 	m_loadType = LOADTYPE_NONE;
@@ -166,8 +166,8 @@ UnitActor::UnitActor(CivArchive &archive)
 {
 	m_refCount = 1;
 
-	m_unitVisibility = NULL;
-	m_unitSaveVisibility = NULL;
+	m_unitVisibility = 0;
+	m_unitSaveVisibility = 0;
 
 	Serialize(archive);
 	Initialize();
@@ -175,7 +175,7 @@ UnitActor::UnitActor(CivArchive &archive)
 
 void UnitActor::AddVision(void)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	BOOL revealedUnexplored = FALSE;
@@ -187,7 +187,7 @@ void UnitActor::AddVision(void)
 
 void UnitActor::RemoveVision(void)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	
@@ -198,7 +198,7 @@ void UnitActor::RemoveVision(void)
 
 void UnitActor::PositionActor(MapPoint &pos)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	m_pos = pos;
@@ -298,7 +298,7 @@ void UnitActor::Initialize(void)
 	AddIdle();
 }
 
-void UnitActor::GetIDAndType(sint32 owner, SpriteState *ss, Unit id, sint32 unitType, MapPoint &pos, 
+void UnitActor::GetIDAndType(sint32 owner, SpriteState *ss, Unit id, sint32 unitType, const MapPoint &pos, 
 								sint32 *spriteID, GROUPTYPE *groupType)
 {
 	BOOL		isCity;
@@ -429,7 +429,7 @@ void UnitActor::ChangeImage(SpriteState *ss, sint32 type, Unit id)
 
 void UnitActor::ChangeType(SpriteState *ss, sint32 type,  Unit id, BOOL updateVision)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	if (g_soundManager)
@@ -462,7 +462,7 @@ void UnitActor::ChangeType(SpriteState *ss, sint32 type,  Unit id, BOOL updateVi
 		   !m_isUnseenCellActor)
 		{
 			DPRINTF(k_DBG_INFO, ("Adding vision for %lx, owner %d, range %lf, center: %d,%d\n",
-								 m_unitID, m_playerNum, m_unitVisionRange,
+								 m_unitID.m_id, m_playerNum, m_unitVisionRange,
 								 m_pos.x, m_pos.y));
 
 		}
@@ -485,15 +485,18 @@ void UnitActor::ChangeType(SpriteState *ss, sint32 type,  Unit id, BOOL updateVi
 
 void UnitActor::AddIdle(BOOL NoIdleJustDelay)
 {
-	Anim *  anim    = CreateAnim(UNITACTION_IDLE);
-	m_frame         = 0;
+	Anim		*anim;
+
+	anim = GetAnim(UNITACTION_IDLE);
+	m_frame = 0;
 
 	
 	if (anim == NULL) {
-		anim = CreateAnim(UNITACTION_MOVE);
+		anim = GetAnim(UNITACTION_MOVE);
 		Assert(anim != NULL);
 	}
 
+	Action		*idleAction;
 
 	if (anim && ((GetActionQueueNumItems() > 0) || NoIdleJustDelay))
 	{
@@ -501,9 +504,7 @@ void UnitActor::AddIdle(BOOL NoIdleJustDelay)
 	}
 
 
-	Action		*idleAction;
-
-	if (NoIdleJustDelay) {
+	if(NoIdleJustDelay == TRUE) {
 		idleAction = new Action(UNITACTION_IDLE, ACTIONEND_INTERRUPT, 
 								0, 
 								TRUE);
@@ -525,12 +526,17 @@ void UnitActor::AddIdle(BOOL NoIdleJustDelay)
 
 void UnitActor::ActionQueueUpIdle(BOOL NoIdleJustDelay)
 {
-	Anim * anim = CreateAnim(UNITACTION_IDLE);
+	Anim		*anim;
+
+
+
+
+	anim = GetAnim(UNITACTION_IDLE);
 
 	
 	if (anim == NULL) 
 	{
-		anim = CreateAnim(UNITACTION_MOVE);
+		anim = GetAnim(UNITACTION_MOVE);
 		Assert(anim != NULL);
 	}
 
@@ -746,7 +752,7 @@ void UnitActor::Process(void)
 				
 			}
 			delete moveActors;
-			m_curAction->SetMoveActors(NULL, NULL);
+			m_curAction->SetMoveActors(NULL, 0);
 		}
 
 		
@@ -825,7 +831,7 @@ void UnitActor::Process(void)
 
 Action *UnitActor::WillDie(void)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	sint32		numItems = GetActionQueueNumItems();
@@ -864,7 +870,7 @@ Action *UnitActor::WillDie(void)
 
 Action *UnitActor::WillMorph(void)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	sint32		numItems = GetActionQueueNumItems();
@@ -893,7 +899,7 @@ Action *UnitActor::WillMorph(void)
 
 void UnitActor::DumpAllActions(void)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	static MapPoint pos;
@@ -951,7 +957,7 @@ void UnitActor::DumpAllActions(void)
 
 void UnitActor::EndTurnProcess(void)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 
@@ -1003,7 +1009,7 @@ void UnitActor::EndTurnProcess(void)
 
 void UnitActor::AddAction(Action *actionObj)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	Assert(m_unitSpriteGroup != NULL);
@@ -1037,9 +1043,9 @@ void UnitActor::AddAction(Action *actionObj)
 	}
 }
 
-Anim *UnitActor::CreateAnim(UNITACTION action)
+Anim *UnitActor::GetAnim(UNITACTION action)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	Assert(m_unitSpriteGroup != NULL);
@@ -1067,9 +1073,11 @@ Anim *UnitActor::CreateAnim(UNITACTION action)
 		}
 	}
 
-	Anim * anim = new Anim(*origAnim);
+	Anim	*anim = new Anim();
+	*anim = *origAnim;
+	anim->SetSpecialCopyDelete(ANIMXEROX_COPY);
 
-	if (anim->GetType() == ANIMTYPE_LOOPED)
+	if(anim->GetType() == ANIMTYPE_LOOPED)
 	{
 
 		anim->SetDelayEnd(m_holdingCurAnimDelayEnd[action]);
@@ -1088,7 +1096,7 @@ Anim *UnitActor::CreateAnim(UNITACTION action)
 		anim->AdjustDelay(rand() % 2000);
 	}
 	
-	return anim; // Has to be deleted outside.
+	return anim;
 }
 
 #define k_FAKE_DEATH_FRAMES			15		
@@ -1687,7 +1695,7 @@ void UnitActor::DrawDirect(aui_Surface *surf, sint32 x, sint32 y, double scale)
 
 void UnitActor::DrawText(sint32 x, sint32 y, MBCHAR *unitText)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	if(m_unitSpriteGroup) {
@@ -1697,7 +1705,7 @@ void UnitActor::DrawText(sint32 x, sint32 y, MBCHAR *unitText)
 
 void UnitActor::DrawHerald(void)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	Pixel16		color;
@@ -1760,7 +1768,7 @@ void UnitActor::DrawHerald(void)
 
 void UnitActor::DrawStackingIndicator(sint32 x, sint32 y, sint32 stack)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	TileSet		*tileSet = g_tiledMap->GetTileSet();
@@ -1827,7 +1835,7 @@ void UnitActor::DrawStackingIndicator(sint32 x, sint32 y, sint32 stack)
 
 void UnitActor::DrawHealthBar(void)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	RECT		leftRect, rightRect;
@@ -1904,24 +1912,14 @@ void UnitActor::DrawHealthBar(void)
 
 	if(unit.IsValid()) {
 		if(stackSize > 1 && myCell->GetNumUnits()) {
-			if (myCell->UnitArmy()->GetAverageHealthPercentage() > 0) { // added by E (EMOD)
-				ratio = myCell->UnitArmy()->GetAverageHealthPercentage();
-			} else {
-				ratio = 0.0;
-				}
+			ratio = myCell->UnitArmy()->GetAverageHealthPercentage();
 		} else {
 			
 			
-			if (m_healthPercent < 0) {     //switch from < makes it zero
-				if (unit.GetHP() / unit.GetDBRec()->GetMaxHP() > 0) { // added by E (EMOD)
-					ratio =	unit.GetHP() / unit.GetDBRec()->GetMaxHP();
-				} else {
-					ratio = 0.0;
-				}
-			
-			} else {
-				ratio = 0.0;   //m_healthPercent;
-			}
+			if (m_healthPercent < 0) 
+				ratio = unit.GetHP() / unit.GetDBRec()->GetMaxHP();
+			else
+				ratio = m_healthPercent;
 		}
 	} else {
 		if (m_healthPercent >= 0.0)
@@ -2040,7 +2038,7 @@ void UnitActor::DrawHealthBar(void)
 
 void UnitActor::DrawSelectionBrackets(void)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	RECT		rect;
@@ -2105,7 +2103,7 @@ void UnitActor::DrawSelectionBrackets(void)
 
 BOOL UnitActor::IsAnimating(void)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	if (m_curAction) 
@@ -2120,7 +2118,7 @@ BOOL UnitActor::IsAnimating(void)
 
 uint16 UnitActor::GetWidth(void)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	Assert(m_unitSpriteGroup != NULL);
@@ -2148,7 +2146,7 @@ uint16 UnitActor::GetWidth(void)
 
 uint16 UnitActor::GetHeight(void)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	Assert(m_unitSpriteGroup != NULL);
@@ -2176,7 +2174,7 @@ uint16 UnitActor::GetHeight(void)
 
 void UnitActor::GetBoundingRect(RECT *rect)
 {
-#ifndef _TEST
+#if !defined(_TEST) && defined(WIN32)
 	STOMPCHECK();
 #endif
 	Assert(rect != NULL);
@@ -2327,8 +2325,17 @@ UnitActor::ActionMove(Action *actionObj)
 	if (actionObj == NULL) 
 		return false;
 
+	Anim	 *anim		=	NULL;
+	sint32    visiblePlayer;
+	
+	
+	sint32	  speed				= g_theProfileDB->GetUnitSpeed();
+	sint32	  maxActionCounter	= k_MAX_UNIT_MOVEMENT_ITERATIONS - speed;
+
+	
 	if(GetNeedsToDie())
 	   return false;
+
 	
 	SetIsFortifying(FALSE);
 	SetIsFortified (FALSE);
@@ -2339,37 +2346,45 @@ UnitActor::ActionMove(Action *actionObj)
 	actionObj->SetSpecialDelayProcess(GetHoldingCurAnimSpecialDelayProcess(UNITACTION_MOVE));
 	actionObj->SetCurrentEndCondition(ACTIONEND_PATHEND);
 	
+	
+	
 	if (GetLoadType()!=LOADTYPE_FULL) 
 	 	FullLoad(UNITACTION_MOVE);
 
-	Anim * anim	= CreateAnim(UNITACTION_MOVE);
+	
+	anim = GetAnim(UNITACTION_MOVE);
+	
 	Assert(anim != NULL);
-   	if (anim == NULL) 
+   
+	
+	if (anim == NULL) 
    		return false;
 
+	
 	actionObj->SetAnim(anim);
+
 	actionObj->SetUnitsVisibility(GetUnitVisibility());
 	actionObj->SetUnitVisionRange(GetUnitVisionRange());
-	actionObj->SetMaxActionCounter
-        (k_MAX_UNIT_MOVEMENT_ITERATIONS - g_theProfileDB->GetUnitSpeed());
+
+	actionObj->SetMaxActionCounter(maxActionCounter);
 	actionObj->SetCurActionCounter(0);
 
 	AddAction(actionObj);
 
-	if (GetIsTransported() == k_TRANSPORTREMOVEONLY) 
-    {
+	
+	
+	
+	if (GetIsTransported()==k_TRANSPORTREMOVEONLY) 
 		TerminateLoopingSound(SOUNDTYPE_SFX);
-    }
 	else 
 	{
-	    sint32 const visiblePlayer = g_selected_item->GetVisiblePlayer();
+		visiblePlayer = g_selected_item->GetVisiblePlayer();
 
 		if ((visiblePlayer == GetPlayerNum()) ||
 			(GetUnitVisibility() & (1 << visiblePlayer))) 
-        {
 			AddLoopingSound(SOUNDTYPE_SFX,actionObj->GetSoundEffect());
-        }
    	}
+
 	
 	return true;
 }
@@ -2387,25 +2402,33 @@ UnitActor::ActionAttack(Action *actionObj,sint32 facing)
 	if(GetNeedsToDie()) 
 	   return false;
 
+	sint32    visiblePlayer = g_selected_item->GetVisiblePlayer();
+	
+	
 	actionObj->SetCurrentEndCondition(ACTIONEND_ANIMEND);
+	
 	
    	if(!TryAnimation(actionObj,UNITACTION_ATTACK))
 	   if(!TryAnimation(actionObj,UNITACTION_IDLE))
 	 	 return false;
 	
 	actionObj->SetActionType(UNITACTION_ATTACK);
+
+	
 	actionObj->SetFacing(facing);
+
+	
 	actionObj->SetUnitsVisibility(GetUnitVisibility());
 	actionObj->SetUnitVisionRange(GetUnitVisionRange());
 
+	
 	AddAction(actionObj);
 
 	
 	TerminateLoopingSound(SOUNDTYPE_SFX);
 
-	sint32 const    visiblePlayer = g_selected_item->GetVisiblePlayer();
 	
-    if ((visiblePlayer == GetPlayerNum()) || (GetUnitVisibility() & (1 << visiblePlayer))) 
+	  if ((visiblePlayer == GetPlayerNum()) || (GetUnitVisibility() & (1 << visiblePlayer))) 
 		  AddSound(SOUNDTYPE_SFX,actionObj->GetSoundEffect());
 
 	
@@ -2424,6 +2447,9 @@ UnitActor::ActionSpecialAttack(Action *actionObj,sint32 facing)
 	if(GetNeedsToDie()) 
 	   return false;
 
+	sint32    visiblePlayer = g_selected_item->GetVisiblePlayer();
+	
+	
 	actionObj->SetCurrentEndCondition(ACTIONEND_ANIMEND);
 
 	
@@ -2434,19 +2460,25 @@ UnitActor::ActionSpecialAttack(Action *actionObj,sint32 facing)
 
 	
 	actionObj->SetActionType(UNITACTION_ATTACK);
+
+	
 	actionObj->SetFacing(facing);
+
+	
 	actionObj->SetUnitsVisibility(GetUnitVisibility());
 	actionObj->SetUnitVisionRange(GetUnitVisionRange());
+
 	
 	AddAction(actionObj);
+
 	
 	TerminateLoopingSound(SOUNDTYPE_SFX);
 
-	sint32 const    visiblePlayer = g_selected_item->GetVisiblePlayer();
 	
 	  if ((visiblePlayer == GetPlayerNum()) || (GetUnitVisibility() & (1 << visiblePlayer))) 
 		  AddSound(SOUNDTYPE_SFX,actionObj->GetSoundEffect());
 
+	
 	return true;
 }
 
@@ -2454,15 +2486,16 @@ UnitActor::ActionSpecialAttack(Action *actionObj,sint32 facing)
 bool 
 UnitActor::TryAnimation(Action *actionObj,UNITACTION action)
 {
+	
 	FullLoad(action);
 
-	Anim * theAnim = CreateAnim(action); // theAnim must be deleted
-	if (theAnim)
+	
+	if(GetAnim(action)!=NULL)
 	{ 
-        actionObj->SetAnimPos(GetHoldingCurAnimPos(action));
-        actionObj->SetSpecialDelayProcess(GetHoldingCurAnimSpecialDelayProcess(action));
-        actionObj->SetAnim(theAnim);
-        return true;
+	  actionObj->SetAnimPos(GetHoldingCurAnimPos(action));
+	  actionObj->SetSpecialDelayProcess(GetHoldingCurAnimSpecialDelayProcess(action));
+	  actionObj->SetAnim(GetAnim(action));
+	  return true;
 	}
 	
 	return false;
@@ -2474,7 +2507,7 @@ void UnitActor::DumpFullLoad(void)
 	if (!m_unitSpriteGroup) return;
 	if (m_loadType != LOADTYPE_FULL) return;
 
-	bool purged = g_unitSpriteGroupList->ReleaseSprite(m_spriteID, LOADTYPE_FULL);
+	BOOL purged = g_unitSpriteGroupList->ReleaseSprite(m_spriteID, LOADTYPE_FULL);
 
 	if (purged) {
 		m_unitSpriteGroup = NULL;
@@ -2547,7 +2580,7 @@ void UnitActor::DumpActor(void)
 	sint32 i;
 
 	DPRINTF(k_DBG_UI, ("Actor %#.8lx\n", this));
-	DPRINTF(k_DBG_UI, ("  m_unitID           :%#.8lx\n", m_unitID));
+	DPRINTF(k_DBG_UI, ("  m_unitID           :%#.8lx\n", m_unitID.m_id));
 	DPRINTF(k_DBG_UI, ("  m_unitDBIndex      :%d\n", m_unitDBIndex));
 	DPRINTF(k_DBG_UI, ("  m_curAction        :%#.8lx\n", m_curAction));
 

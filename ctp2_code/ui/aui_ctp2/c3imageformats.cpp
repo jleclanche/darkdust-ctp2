@@ -29,7 +29,23 @@
 #include "c3.h"                     // Pre-compiled header
 #include "c3imageformats.h"         // Own declarations: consistency check
 
+#ifdef _WIN32
 #include <io.h>
+#else
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#if defined(_MSC_VER)
+#define _stat stat
+#endif// _MSC_VER
+
+#endif
+
+#if defined(__AUI_USE_SDL__)
+#include <SDL.h>
+#include <SDL_image.h>
+#include "aui_sdlsurface.h"
+#endif
 
 #include "aui.h"
 #include "aui_image.h"
@@ -50,7 +66,7 @@ extern ProjectFile *g_ImageMapPF;
 
 
 
-AUI_ERRCODE TiffImageFormat::Load( MBCHAR *filename, aui_Image *image )
+AUI_ERRCODE TiffImageFormat::Load( const MBCHAR *filename, aui_Image *image )
 {
 	AUI_ERRCODE retcode = AUI_ERRCODE_OK;
 	AUI_ERRCODE errcode;
@@ -59,6 +75,7 @@ AUI_ERRCODE TiffImageFormat::Load( MBCHAR *filename, aui_Image *image )
 
 	TIFGetMetrics( filename, &width, &height);
 
+	assert(0);
 	errcode = image->LoadEmpty( width, height, 16 );
 	Assert( errcode == AUI_ERRCODE_OK );
 	if ( errcode != AUI_ERRCODE_OK ) {
@@ -93,7 +110,7 @@ AUI_ERRCODE TiffImageFormat::Load( MBCHAR *filename, aui_Image *image )
 
 
 
-AUI_ERRCODE TargaImageFormat::Load(MBCHAR *filename, aui_Image *image)
+AUI_ERRCODE TargaImageFormat::Load(const MBCHAR *filename, aui_Image *image)
 {
 	AUI_ERRCODE retcode = AUI_ERRCODE_OK;
 	AUI_ERRCODE errcode;
@@ -103,15 +120,20 @@ AUI_ERRCODE TargaImageFormat::Load(MBCHAR *filename, aui_Image *image)
 	int		width, height;
 	int		bpp;
 
-    
-    if (_access(filename, 0) != 0) {
+#ifdef _WIN322
+	if (_access(filename, 0) != 0) {
+#else
+	struct stat st;
+	if (stat(filename, &st) != 0) {
+#endif
 		return LoadRIM(filename, image);
-    }        
+	}        
 
 	if (!Get_TGA_Dimension(filename, width, height, bpp)) {
 		return AUI_ERRCODE_LOADFAILED;
-    }
+	}
 
+#ifndef __AUI_USE_SDL__
 	errcode = image->LoadEmpty( width, height, 16 );
 	Assert( errcode == AUI_ERRCODE_OK );
 	if ( errcode != AUI_ERRCODE_OK ) {
@@ -145,6 +167,25 @@ AUI_ERRCODE TargaImageFormat::Load(MBCHAR *filename, aui_Image *image)
             retcode = AUI_ERRCODE_LOADFAILED;
         }
 	}
+#else // !__AUI_USE_SDL__
+	SDL_Surface *s = IMG_Load(filename);
+	if (s != NULL) {
+		aui_Surface *as = new aui_SDLSurface(&retcode,
+		                                     0,
+						     0,
+						     0,
+						     s,
+						     FALSE,
+						     FALSE,
+						     TRUE);
+		Assert ( AUI_NEWOK(as, retcode));
+		image->AttachSurface(as);
+	} else {
+		fprintf(stderr, "aui_Image: Failed to load %s\n", filename);
+		retcode = AUI_ERRCODE_LOADFAILED;
+	}
+	
+#endif
 
 	return retcode;
 }
@@ -152,7 +193,7 @@ AUI_ERRCODE TargaImageFormat::Load(MBCHAR *filename, aui_Image *image)
 
 
 
-AUI_ERRCODE TargaImageFormat::LoadRIM(MBCHAR *filename, aui_Image *image)
+AUI_ERRCODE TargaImageFormat::LoadRIM(const MBCHAR *filename, aui_Image *image)
 {
     extern sint32 g_is565Format;
 
@@ -162,20 +203,23 @@ AUI_ERRCODE TargaImageFormat::LoadRIM(MBCHAR *filename, aui_Image *image)
 
 	int		width, height, pitch;
 	int		record_is_565;
-    long     size;
+	size_t     size;
 
-    char *basename;
+    const char *basename = NULL;
     char rname[256];
     int  rlen;
 
-    
-    if (((basename = strrchr(filename, '\\')) == NULL) &&
-        ((basename = strrchr(filename, '/')) == NULL)) {
+    if ((basename = strrchr(filename, FILE_SEPC)) == NULL) {
+        basename = strrchr(filename, '\\');
+    }
+    if (basename == NULL) {
+	basename = strrchr(filename, '/');
+    }
+    if (basename == NULL) {
         basename = filename;
     } else {
         basename++;
     }
-    
     
     strcpy(rname, basename);
     rlen = strlen(rname);
@@ -188,10 +232,10 @@ AUI_ERRCODE TargaImageFormat::LoadRIM(MBCHAR *filename, aui_Image *image)
     rname[rlen - 1] = 'm';
 
     
-    void *  buffer  = g_ImageMapPF ? g_ImageMapPF->getData(rname, &size) : NULL;
+    void * buffer = g_ImageMapPF ? g_ImageMapPF->getData(rname, &size) : NULL;
 
     if (buffer == NULL) {
-		c3errors_ErrorDialog("Targa Load", "Unable to find the file '%s'", filename);
+		c3errors_ErrorDialog("Targa Load", "Unable to find the file '%s'", rname);
         return AUI_ERRCODE_LOADFAILED;
     }
     
@@ -218,7 +262,27 @@ AUI_ERRCODE TargaImageFormat::LoadRIM(MBCHAR *filename, aui_Image *image)
     height = rhead->height;
     pitch = rhead->pitch;
 
+#ifdef __AUI_USE_SDL__
+    SDL_Surface* s =
+	SDL_CreateRGBSurfaceFrom(image_data,
+				 width, height, 16, pitch,
+				 0xf800, 0x03e0, 0x001f, 0x0000);
+    if (s != NULL) {
+	aui_Surface* as = new aui_SDLSurface(
+		&errcode,
+		0,	// width
+		0,	// height
+		0,	// bpp
+	     s, FALSE, FALSE, TRUE );
+	image->AttachSurface(as);
+    } else {
+	fprintf(stderr, "aui_Image: Failed to load %s: %s\n",
+		filename, SDL_GetError());
+	errcode = AUI_ERRCODE_LOADFAILED;
+    }
+#else
 	errcode = image->LoadFileMapped(width, height, 16, pitch, image_data);
+#endif
 	Assert( errcode == AUI_ERRCODE_OK );
 	if ( errcode != AUI_ERRCODE_OK ) {
 		c3errors_ErrorDialog("Targa Load", "Unable map the file '%s'", rname);
@@ -227,3 +291,4 @@ AUI_ERRCODE TargaImageFormat::LoadRIM(MBCHAR *filename, aui_Image *image)
 
 	return errcode;
 }
+

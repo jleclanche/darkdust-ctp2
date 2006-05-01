@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Single Player New game Start Screen
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -25,7 +25,7 @@
 // Modifications from the original Activision code:
 //
 // - Fixed crash when the game tries to display invalid text strings, 
-//   by Martin Gühmann.
+//   by MartinGühmann.
 // - Tribe index check updated.
 // - Allowed for a number of players less than 3 to be displayed
 //   - JJB 2005/06/28
@@ -65,7 +65,7 @@
 
 #include "civscenarios.h"
 
-#include "globals.h"
+#include "Globals.h"
 
 extern ProfileDB					*g_theProfileDB;
 extern StringDB						*g_theStringDB;
@@ -298,7 +298,7 @@ void SPNewGameWindow::Update( void )
 
 	
 	index = g_theProfileDB->GetDifficulty();
-//Added by Martin Gühmann
+//Added by MartinGühmann
 //Makes sure that the game doesn't crash if the according map size string is invalid.
 	sprintf( s, "%s", m_string->GetString(SP_NEWGAME_STR_CHIEFTAIN + index) );
 	m_spDifficulty->SetText( s );
@@ -335,14 +335,14 @@ void SPNewGameWindow::Update( void )
 
 
 
-//Added by Martin Gühmann
+//Added by MartinGühmann
 //Makes sure that the game doesn't crash if the according map size string is invalid.
 	sprintf( s, "%s", m_string->GetString(SP_NEWGAME_STR_SMALL + index) );
 	m_spMapSize->SetText( s );
 
 	
 	sint32 shape = g_theProfileDB->GetWorldShape();
-//Added by Martin Gühmann
+//Added by MartinGühmann
 //Makes sure that the game doesn't crash if the according world shape string is invalid.
 	sprintf( s, "%s", m_string->GetString(SP_NEWGAME_STR_EARTH + shape) );
 	m_worldShapeButton->SetText( s );

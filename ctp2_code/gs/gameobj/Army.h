@@ -17,6 +17,14 @@
 //
 // Compiler flags
 // 
+// _MSC_VER		
+// - Compiler version (for the Microsoft C++ compiler only)
+//
+// Note: For the blocks with _MSC_VER preprocessor directives, the following
+//       is implied: the (_MSC_VER) preprocessor directive lines, and the blocks
+//       that are inactive for _MSC_VER value 1200 are modified Apolyton code. 
+//       The blocks that are active for _MSC_VER value 
+//       1200 are the original Activision code.
 //
 //----------------------------------------------------------------------------
 //
@@ -29,19 +37,14 @@
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
 #ifndef __ARMY_H__
 #define __ARMY_H__ 1
 
-class Army;
-
-#include "AICause.h"
 #include "ID.h"
-#include "Player.h"
-#include "Unit.h"
 
 class CivArchive;
 class Path;
@@ -49,11 +52,13 @@ class ArmyData;
 class Unit;
 class CellUnitList;
 class UnitActor;
+typedef sint32 PLAYER_INDEX;
 class MapPoint;
 class Order;
 
 size_t const	MAX_UNIT_COUNT	= 100;	// TODO: check k_MAX_ARMY_SIZE
 
+#include "AICause.h"
 
 class Army : public ID
 { 
@@ -65,6 +70,10 @@ public:
 	Army(sint32 val) : ID(val) {}
 	Army(uint32 val) : ID(val) {}
 	Army(ID i) : ID(i.m_id) {}
+#if defined(WIN32)
+	Army(const int val) : ID(val) {}
+	Army(const unsigned int val) : ID(val) {}
+#endif
 
 	ArmyData *operator -> () const { return AccessData(); }
 

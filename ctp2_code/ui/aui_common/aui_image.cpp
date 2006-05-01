@@ -37,6 +37,7 @@
 #include "aui_ui.h"
 #include "aui_surface.h"
 #endif 
+#include "aui_Factory.h"
 
 #include "aui_blitter.h"
 #include "aui_memmap.h"
@@ -48,7 +49,7 @@
 
 aui_Image::aui_Image(
 	AUI_ERRCODE *retval,
-	MBCHAR const * filename )
+	const MBCHAR *filename )
 	:
 	aui_Base()
 {
@@ -67,7 +68,7 @@ aui_Image::aui_Image(
 
 
 
-AUI_ERRCODE aui_Image::InitCommon( MBCHAR const *filename )
+AUI_ERRCODE aui_Image::InitCommon( const MBCHAR *filename )
 {
 	m_surface = NULL,
 	m_format = NULL;
@@ -88,7 +89,7 @@ aui_Image::~aui_Image()
 
 
 
-AUI_ERRCODE aui_Image::SetFilename( MBCHAR const *filename )
+AUI_ERRCODE aui_Image::SetFilename( const MBCHAR *filename )
 {
 	
 	Unload();	// deletes and NULLs m_format and m_surface
@@ -104,6 +105,7 @@ AUI_ERRCODE aui_Image::SetFilename( MBCHAR const *filename )
 		m_format = static_cast<aui_ImageFormat *>
 						(g_ui->TheMemMap()->GetFileFormat(m_filename));
 	}
+	assert( m_format != NULL );
 	Assert( m_format != NULL );
 	if ( !m_format ) return AUI_ERRCODE_MEMALLOCFAILED;
 	
@@ -122,6 +124,9 @@ AUI_ERRCODE aui_Image::Load( void )
 	if ( m_surface ) return AUI_ERRCODE_OK;
 
 	AUI_ERRCODE retval=m_format->Load( m_filename, this );
+#ifdef _DEBUG
+	fprintf(stderr, "%d==aui_Image::Load(%s)", retval, m_filename);
+#endif
 
 	return retval;
 }
@@ -131,39 +136,41 @@ AUI_ERRCODE aui_Image::Load( void )
 
 AUI_ERRCODE aui_Image::Unload( void )
 {
-	if (g_ui && g_ui->TheMemMap() && m_format)
+	if ( m_format )
 	{
-		g_ui->TheMemMap()->ReleaseFileFormat(m_format);
+		g_ui->TheMemMap()->ReleaseFileFormat( m_format );
 		m_format = NULL;
 	}
 
-	delete  m_surface;
-    m_surface = NULL;
+	if ( m_surface )
+	{
+		delete m_surface;
+		m_surface = NULL;
+	}
 
 	return AUI_ERRCODE_OK;
 }
 
-
+void
+aui_Image::AttachSurface(aui_Surface *s)
+{
+	if (m_surface) {
+		delete m_surface;
+	}
+	
+	m_surface = s;
+}
 
 
 AUI_ERRCODE aui_Image::LoadEmpty( sint32 width, sint32 height, sint32 bpp )
 {
 	AUI_ERRCODE retcode = AUI_ERRCODE_OK;
 
-#ifdef __AUI_USE_DIRECTX__
-	m_surface = new aui_DirectSurface(
-		&retcode,
+	m_surface = aui_Factory::new_Surface(
+		retcode,
 		width,
 		height,
-		bpp,
-		((aui_DirectUI *)g_ui)->DD() );
-#else
-	m_surface = new aui_Surface(
-		&retcode,
-		width,
-		height,
-		bpp );
-#endif 
+		bpp);
 
 	Assert( AUI_NEWOK(m_surface,retcode) );
 
@@ -197,11 +204,13 @@ AUI_ERRCODE aui_Image::LoadFileMapped( sint32 width, sint32 height,
 
 
 
-AUI_ERRCODE aui_BmpImageFormat::Load( MBCHAR *filename, aui_Image *image )
+AUI_ERRCODE aui_BmpImageFormat::Load( const MBCHAR *filename, aui_Image *image )
 {
 	AUI_ERRCODE retcode = AUI_ERRCODE_OK;
+	Assert( filename != NULL );
+	Assert( image != NULL );
 
-	
+#ifdef WIN32	
 	uint8 *filebits = g_ui->TheMemMap()->GetFileBits( filename );
 	Assert( filebits != NULL );
 	if ( !filebits ) return AUI_ERRCODE_HACK;
@@ -363,7 +372,7 @@ AUI_ERRCODE aui_BmpImageFormat::Load( MBCHAR *filename, aui_Image *image )
 				bot -= pitch;
 			}
 
-			delete[ pitch ] temp;
+			delete[] temp;
 
 			errcode = surface->Unlock( bits );
 			Assert( AUI_SUCCESS(errcode) );
@@ -373,6 +382,30 @@ AUI_ERRCODE aui_BmpImageFormat::Load( MBCHAR *filename, aui_Image *image )
 	}
 
 	return retcode;
+#elif defined(__AUI_USE_SDL__)
+	assert(0);
+	SDL_Surface *bmp = SDL_LoadBMP(filename);
+	SDL_Surface *surf = NULL;
+	SDL_PixelFormat fmt = { 0 };
+#if 0
+	if (aui_image_SDLPixelFormat(image, &fmt)) {
+		surf = SDL_ConvertSurface(bmp, &fmt, 0);
+	}
+#endif
+	if (NULL == surf) {
+		surf = SDL_DisplayFormat(bmp);
+	}
+	SDL_FreeSurface(bmp);
+	if (NULL == surf)
+		return AUI_ERRCODE_LOADFAILED;
+	
+	if (image->TheSurface()) {
+	} else {		
+	}
+	return retcode;
+#else
+	return AUI_ERRCODE_LOADFAILED;
+#endif
 }
 
 
@@ -398,3 +431,4 @@ void aui_Image::SetChromakey(sint32 r, sint32 g, sint32 b)
 
 	surf->SetChromaKey((uint8) r, (uint8) g,(uint8) b);
 }
+

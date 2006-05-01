@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ header
 // Description  : The progress window displays the progress at loading and saving
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -18,6 +18,9 @@
 //
 // Compiler flags
 //
+// _MSC_VER
+// - Compiler version (for the Microsoft C++ compiler only)
+//
 //----------------------------------------------------------------------------
 //
 // Modifications from the original Activision code:
@@ -26,9 +29,12 @@
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
+
+#ifndef __UI__INTERFACE__PROGRESSWINDOW_H__
+#define __UI__INTERFACE__PROGRESSWINDOW_H__ 1
 
 #include "c3_popupwindow.h"
 #include "aui_progressbar.h"
@@ -93,3 +99,6 @@ public:
 protected:
 	virtual AUI_ERRCODE CalculateIntervals( double *start, double *stop );
 };
+
+#endif
+

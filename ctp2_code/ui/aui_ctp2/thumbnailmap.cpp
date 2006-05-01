@@ -28,31 +28,38 @@
 #include "c3.h"
 
 #include "aui.h"
-#include "aui_directsurface.h"
+#include "aui_Factory.h"
 #include "aui_blitter.h"
 #include "aui_window.h"
 #include "aui_ldl.h"
 #include "aui_action.h"
 
 #include "c3ui.h"
-#include "thumbnailmap.h"
 
-#include "player.h"             // g_player
+#include "player.h"
 #include "XY_Coordinates.h"
-#include "World.h"              // g_theWorld
+#include "World.h"
 #include "Cell.h"
 #include "UnseenCell.h"
 #include "citydata.h"
 #include "Unit.h"
 #include "UnitData.h"
+
 #include "pixelutils.h"
-#include "colorset.h"           // g_colorSet
-#include "SelItem.h"            // g_selected_item
-#include "tiledmap.h"           // g_tiledMap
+#include "colorset.h"
+#include "SelItem.h"
+#include "tiledmap.h"
+
 #include "primitives.h"
 
+#include "thumbnailmap.h"
 
 extern C3UI				*g_c3ui;
+extern TiledMap			*g_tiledMap;
+extern Player			**g_player;
+extern SelectedItem		*g_selected_item;
+extern ColorSet			*g_colorSet;
+extern World			*g_theWorld;
 
 
 ThumbnailMap::ThumbnailMap(AUI_ERRCODE *retval,
@@ -90,8 +97,13 @@ ThumbnailMap::ThumbnailMap(AUI_ERRCODE *retval,
 
 ThumbnailMap::~ThumbnailMap()
 {
-	delete m_mapSurface;
-	delete m_cityList;
+	if (m_mapSurface)
+		delete m_mapSurface;
+
+	if ( m_cityList ) {
+		delete m_cityList;
+		m_cityList = NULL;
+	}
 }
 
 
@@ -127,7 +139,7 @@ void ThumbnailMap::InitCommon(void)
 	m_tilePixelHeight = 0.0;
 
 	m_selectedRoute = NULL;
-	m_selectedCity = Unit();
+	m_selectedCity = 0;
 
 	m_displayUnits = TRUE;
 	m_displayLandOwnership = TRUE;
@@ -148,7 +160,7 @@ void ThumbnailMap::InitCommon(void)
 	m_cityFilterProc = NULL;
 
 	
-	m_mapSurface = new aui_DirectSurface(&errcode, m_width, m_height, 16, g_c3ui->DD());
+	m_mapSurface = aui_Factory::new_Surface(errcode, m_width, m_height, 16);
 	Assert( AUI_NEWOK(m_mapSurface, errcode) );
 
 	
@@ -167,7 +179,10 @@ void ThumbnailMap::BuildCityList(void)
 {
 	sint32		p, i;
 
-	delete m_cityList;
+	if (m_cityList) {
+		delete m_cityList;
+	}
+
 	m_cityList = new DynamicArray<CityInfo>();
 
 	for (p=0; p<k_MAX_PLAYERS; p++) {
@@ -274,7 +289,7 @@ AUI_ERRCODE	ThumbnailMap::Resize( sint32 width, sint32 height )
 		delete m_mapSurface;
 
 	
-	m_mapSurface = new aui_DirectSurface(&errcode, width, height, 16, g_c3ui->DD());
+	m_mapSurface = aui_Factory::new_Surface(errcode, width, height, 16);
 	Assert( AUI_NEWOK(m_mapSurface, errcode) );
 
 	CalculateMetrics();

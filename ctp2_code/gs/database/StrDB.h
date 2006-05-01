@@ -31,12 +31,10 @@
 // Modifications from the original Activision code:
 //
 // - Reimplemented containers as vectors, to make it less error prone.
-// - Load default strings if they are missing in the database so that mods
-//   also have a full set of strings. (Jan 30th 2006 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
 
-#if defined(_MSC_VER) && (_MSC_VER > 1000)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -103,11 +101,9 @@ public:
 		MBCHAR **				new_text
 	) const;
 
-	void Export(MBCHAR * file);
-
 
 private:
-	std::vector<StringRecord *>	m_all;	// a flattened list version of m_head
+	std::vector<StringRecord *> m_all;	// a flattened list version of m_head
 	std::vector<StringRecord *> m_head;	
 		// hash vector of B-trees of lexicographically ordered strings
 
@@ -121,7 +117,7 @@ private:
 	void					AssignIndex(StringRecord * & ptr);
 	void					Btree2Array(void); 
 	StringRecord * &		GetHead(MBCHAR const * id);
-	StringRecord const * const &	
+	StringRecord /*const*/ * const &	
 							GetHead(MBCHAR const * id) const;
 	bool					GetIndexNode
 	(
@@ -136,8 +132,7 @@ private:
 		MBCHAR **				new_text
 	) const;
 
-	bool					ParseAStringEntry            (Token *strToken);
-	bool					ParseAStringEntryNoDuplicates(Token *strToken);
+	sint32					ParseAStringEntry(Token * strToken);
 };
 
 #endif	// Multiple include guard

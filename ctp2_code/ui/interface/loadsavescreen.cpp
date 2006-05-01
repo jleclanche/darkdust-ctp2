@@ -17,7 +17,7 @@
 //----------------------------------------------------------------------------
 //
 // Compiler flags
-// 
+//
 // you_want_ai_civs_from_singleplayer_saved_game_showing_up_in_netshell
 //
 //----------------------------------------------------------------------------
@@ -71,9 +71,14 @@
 #include "spnewgametribescreen.h"
 #include "spnewgameplayersscreen.h"
 
-#include "io.h"
-#include "direct.h"
-
+#ifdef WIN32
+#include <io.h>
+#include <direct.h>
+#else
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
+#endif
 
 #include "civscenarios.h"
 extern CivScenarios			*g_civScenarios;
@@ -223,19 +228,17 @@ AUI_ERRCODE loadsavescreen_Initialize( aui_Control::ControlActionCallback *callb
 
 
 
-void loadsavescreen_Cleanup()
+AUI_ERRCODE loadsavescreen_Cleanup()
 {
-	if (g_loadsaveWindow)
-    {
-        if (g_c3ui)
-        {
+	if ( !g_loadsaveWindow  ) return AUI_ERRCODE_OK; 
+
 	g_c3ui->RemoveWindow( g_loadsaveWindow->Id() );
-        }
 	keypress_RemoveHandler(g_loadsaveWindow);
 
 	delete g_loadsaveWindow;
 	g_loadsaveWindow = NULL;
-}
+
+	return AUI_ERRCODE_OK;
 }
 
 void loadsavescreen_PostCleanupAction(void)
@@ -371,7 +374,8 @@ void loadsavescreen_TribeScreenActionCallback(aui_Control *control, uint32 actio
 		
 		
 		BOOL noCivsInList = TRUE;
-		for (sint32 i=0; i<k_MAX_PLAYERS; i++) {
+		sint32 i;
+		for (i=0; i<k_MAX_PLAYERS; i++) {
 			if (s_tempSaveInfo->playerCivIndexList[i] > 0) {
 				noCivsInList = FALSE;
 				break;
@@ -383,22 +387,22 @@ void loadsavescreen_TribeScreenActionCallback(aui_Control *control, uint32 actio
 			
 			
 			
- 			
+			
 			BOOL foundOne = FALSE;
 
- 			for (i=0; i<k_MAX_PLAYERS; i++) {
- 				MBCHAR		*civName;
- 				MBCHAR		*dbString;
+			for (i=0; i<k_MAX_PLAYERS; i++) {
+				MBCHAR		*civName;
+				MBCHAR		*dbString;
 
- 				civName = s_tempSaveInfo->civList[i];
+				civName = s_tempSaveInfo->civList[i];
 				dbString = (MBCHAR *)g_theStringDB->GetNameStr(g_theCivilisationDB->Get(tribeIndex)->GetPluralCivName());
- 				if (strlen(civName) > 0) {
- 					if (!stricmp(dbString, civName)) {
- 						
- 						g_scenarioUsePlayerNumber = i;
+				if (strlen(civName) > 0) {
+					if (!stricmp(dbString, civName)) {
+						
+						g_scenarioUsePlayerNumber = i;
 						foundOne = TRUE;
- 						break;
-	 				}
+						break;
+					}
 				}
 			}
 
@@ -556,7 +560,8 @@ void loadsavescreen_PlayersScreenActionCallback(aui_Control *control, uint32 act
 						
 						
 						BOOL noCivsInList = TRUE;
-						for (sint32 i=0; i<k_MAX_PLAYERS; i++) {
+						sint32 i;
+						for (i=0; i<k_MAX_PLAYERS; i++) {
 							if (s_tempSaveInfo->playerCivIndexList[i] > 0) {
 								noCivsInList = FALSE;
 								break;
@@ -656,7 +661,7 @@ void loadsavescreen_BeginLoadProcess(SaveInfo *saveInfo, MBCHAR *directoryPath)
 	
 	MBCHAR		path[_MAX_PATH];
 
-	sprintf(path, "%s\\%s", directoryPath, saveInfo->fileName);
+	sprintf(path, "%s%s%s", directoryPath, FILE_SEP, saveInfo->fileName);
 
 	
 	
@@ -802,7 +807,7 @@ void loadsavescreen_BeginLoadProcess(SaveInfo *saveInfo, MBCHAR *directoryPath)
 		}
 		
 		MBCHAR overridePath[_MAX_PATH];
-		sprintf(overridePath, "%s\\%s", g_civPaths->GetCurScenarioPath(), "turnlength.txt");
+		sprintf(overridePath, "%s%s%s", g_civPaths->GetCurScenarioPath(), FILE_SEP, "turnlength.txt");
 
 		g_useCustomYear = false;
 
@@ -974,7 +979,7 @@ void loadsavescreen_SaveGame(MBCHAR *usePath, MBCHAR *useName)
 	uint32 i;
 	for(i = 0; i < k_MAX_PLAYERS; i++)
 	{
-		if ( g_player[ i ] )
+		if(g_player[ i ])
 		{
 			TribeSlot ts;
 
@@ -1020,7 +1025,7 @@ void loadsavescreen_SaveGame(MBCHAR *usePath, MBCHAR *useName)
 		
 		char *testchars="\\*\"/:|?<>";
 		bool charschanged=false;
-		for(i=0; i<strlen(saveInfo->gameName); i++)
+		for(i=0; (unsigned) i<strlen(saveInfo->gameName); i++)
 		{
 			if(strchr(testchars,saveInfo->gameName[i]))
 			{
@@ -1033,7 +1038,7 @@ void loadsavescreen_SaveGame(MBCHAR *usePath, MBCHAR *useName)
 			MessageBoxDialog::Information("str_ldl_InvalidCharsFixed", "InfoInvalidCharsFixed");
 		}
 
-		sprintf(fullPath, "%s\\%s", path, saveInfo->gameName);
+		sprintf(fullPath, "%s%s%s", path, FILE_SEP, saveInfo->gameName);
 
 		// Verify that this directory exists, and if it doesn't, create it
 		if (!c3files_PathIsValid(fullPath)) {
@@ -1048,7 +1053,7 @@ void loadsavescreen_SaveGame(MBCHAR *usePath, MBCHAR *useName)
 
 		// Check for invalid characters in filename.
 		bool charschanged2=false;
-		for(i=0; i<strlen(saveInfo->fileName); i++)
+		for(i=0; (unsigned) i<strlen(saveInfo->fileName); i++)
 		{
 			if(strchr(testchars,saveInfo->fileName[i]))
 			{
@@ -1062,11 +1067,11 @@ void loadsavescreen_SaveGame(MBCHAR *usePath, MBCHAR *useName)
 		}
 
 		// Full path, including the save file's filename
-		sprintf(saveInfo->pathName, "%s\\%s", fullPath, saveInfo->fileName);
+		sprintf(saveInfo->pathName, "%s%s%s", fullPath, FILE_SEP, saveInfo->fileName);
 	} else {
 		sprintf(fullPath, "%s", path);
 		strcpy(saveInfo->fileName, useName);
-		sprintf(saveInfo->pathName, "%s\\%s", fullPath, useName);
+		sprintf(saveInfo->pathName, "%s%s%s", fullPath, FILE_SEP, useName);
 	}
 
 	// Build a power graph from the UI
@@ -1118,7 +1123,7 @@ void loadsavescreen_LoadMPGame(void)
 
 	MBCHAR		path[_MAX_PATH];
 
-	sprintf(path, "%s\\%s", gameInfo->path, saveInfo->fileName);
+	sprintf(path, "%s%s%s", gameInfo->path, FILE_SEP, saveInfo->fileName);
 	g_civApp->PostLoadSaveGameAction(path);
 }
 
@@ -1164,7 +1169,7 @@ void loadsavescreen_SaveMPGame(void)
 
 	if (!g_civPaths->GetSavePath(C3SAVEDIR_MP, path)) return;
 	
-	sprintf(fullPath, "%s\\%s", path, saveInfo->gameName);
+	sprintf(fullPath, "%s%s%s", path, FILE_SEP, saveInfo->gameName);
 	
 	// Verify that this directory exists, and if it doesn't, create it
 	if (!c3files_PathIsValid(fullPath)) {
@@ -1178,7 +1183,7 @@ void loadsavescreen_SaveMPGame(void)
 	}
 
 	// Full path, including the save file's filename
-	sprintf(saveInfo->pathName, "%s\\%s", fullPath, saveInfo->fileName);
+	sprintf(saveInfo->pathName, "%s%s%s", fullPath, FILE_SEP, saveInfo->fileName);
 
 	// Build a power graph from the UI
 	g_loadsaveWindow->GetPowerGraph(saveInfo);
@@ -1212,7 +1217,7 @@ void loadsavescreen_LoadSCENGame(void)
 
 	MBCHAR		path[_MAX_PATH];
 
-	sprintf(path, "%s\\%s", gameInfo->path, saveInfo->fileName);
+	sprintf(path, "%s%s%s", gameInfo->path, FILE_SEP, saveInfo->fileName);
 //	g_civApp->PostLoadSaveGameAction(path);
 
 	g_civPaths->SetCurScenarioPath(gameInfo->path);
@@ -1279,7 +1284,7 @@ void loadsavescreen_SaveSCENGame(void)
 
 	if (!g_civPaths->GetSavePath(C3SAVEDIR_SCEN, path)) return;
 	
-	sprintf(fullPath, "%s\\%s", path, saveInfo->gameName);
+	sprintf(fullPath, "%s%s%s", path, FILE_SEP, saveInfo->gameName);
 	
 	// Verify that this directory exists, and if it doesn't, create it
 	if (!c3files_PathIsValid(fullPath)) {
@@ -1293,7 +1298,7 @@ void loadsavescreen_SaveSCENGame(void)
 	}
 
 	// Full path, including the save file's filename
-	sprintf(saveInfo->pathName, "%s\\%s", fullPath, saveInfo->fileName);
+	sprintf(saveInfo->pathName, "%s%s%s", fullPath, FILE_SEP, saveInfo->fileName);
 
 	// Build a power graph from the UI
 	g_loadsaveWindow->GetPowerGraph(saveInfo);
@@ -1383,9 +1388,13 @@ void loadsavescreen_delete( void )
 	{
 		MBCHAR		path[_MAX_PATH];
 
-		sprintf(path, "%s\\%s", gameInfo->path, saveInfo->fileName);
+		sprintf(path, "%s%s%s", gameInfo->path, FILE_SEP, saveInfo->fileName);
 
+#ifdef WIN32
 		if ( DeleteFile( path ) )
+#else
+		if (!unlink(path))
+#endif
 		{
 			// FIXME ? Do we want to worry about deleting .gw files?
 
@@ -1415,16 +1424,17 @@ void loadsavescreen_delete( void )
 	}
 	else
 	{
+#ifdef WIN32
 		MBCHAR		path[_MAX_PATH];
 		int fileHandle;
 
-		sprintf(path, "%s\\*.*", gameInfo->path);
+		sprintf(path, "%s%s*.*", FILE_SEP, gameInfo->path);
 
 		_finddata_t findData;
 		fileHandle=_findfirst(path,&findData);
 		while(fileHandle)
 		{
-			sprintf(path, "%s\\%s", gameInfo->path, findData.name);
+			sprintf(path, "%s%s%s", gameInfo->path, FILE_SEP, findData.name);
 			DeleteFile(path);
 			if(_findnext(fileHandle,&findData))
 			{
@@ -1437,6 +1447,7 @@ void loadsavescreen_delete( void )
 		assert(!retval);
 		g_loadsaveWindow->FillListTwo(NULL);
 		g_loadsaveWindow->SetType(g_loadsaveWindow->GetType());
+#endif
 	}
 }
 

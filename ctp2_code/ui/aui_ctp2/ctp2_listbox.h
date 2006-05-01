@@ -17,6 +17,9 @@
 //
 // Compiler flags
 // 
+// _MSC_VER		
+// - Use Microsoft C++ extensions when set.
+//
 //----------------------------------------------------------------------------
 //
 // Modifications from the original Activision code:
@@ -26,8 +29,7 @@
 //
 //----------------------------------------------------------------------------
 
-
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -94,15 +96,22 @@ public:
 	void GetDisplayRange(sint32 &top, sint32 &bottom);
 	void EnsureItemVisible(sint32 index);
 
-	static uint32		m_ctp2_listboxClassId;
-
-	friend class ctp2_Menu;
-
 protected:
 	virtual AUI_ERRCODE DoneInstantiatingThis(const MBCHAR *ldlBlock);
 
 	AUI_ERRCODE ReformatItemFromHeader(aui_Item *item);		
 
+#if defined(_MSC_VER)
+	virtual MouseEventCallback MouseMoveOver;
+	virtual MouseEventCallback MouseMoveInside;
+	virtual MouseEventCallback MouseMoveOutside;
+	virtual MouseEventCallback MouseMoveAway;
+
+	virtual MouseEventCallback MouseLDragOver;
+	virtual MouseEventCallback MouseLDragAway;
+	virtual MouseEventCallback MouseRDragOver;
+	virtual MouseEventCallback MouseRDragAway;
+#else
 	virtual void	MouseMoveOver(aui_MouseEvent * mouseData);
 	virtual void	MouseMoveInside(aui_MouseEvent * mouseData);
 	virtual void	MouseMoveOutside(aui_MouseEvent * mouseData);
@@ -112,7 +121,14 @@ protected:
 	virtual void	MouseLDragAway(aui_MouseEvent * mouseData);
 	virtual void	MouseRDragOver(aui_MouseEvent * mouseData);
 	virtual void	MouseRDragAway(aui_MouseEvent * mouseData);
+#endif
 
+public:
+	
+	
+	static uint32		m_ctp2_listboxClassId;
+
+	friend class ctp2_Menu;
 private:
 	sint32		m_bevelWidth;
 	sint32		m_bevelType;

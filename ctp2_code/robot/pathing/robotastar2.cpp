@@ -3,7 +3,7 @@
 #include "c3.h"
 #include "c3math.h"
 #include "c3errors.h"
-#include "globals.h"
+#include "Globals.h"
 
 
 
@@ -171,7 +171,7 @@ bool RobotAstar2::FindPath( const PathType & pathType,
 	const BOOL check_units_in_cell = TRUE;
     sint32 is_broken_path = FALSE; 
 	const BOOL pretty_path = FALSE;
-	Path bad_path;
+	static Path bad_path;
 
     m_pathType = pathType; 
 	m_transDestCont = trans_dest_cont;
@@ -249,11 +249,14 @@ sint32 RobotAstar2::EntryCost( const MapPoint &prev,
 							   BOOL &is_zoc, 
 							   ASTAR_ENTRY_TYPE &entry )
 {
-	BOOL r = UnitAstar::EntryCost(prev, pos, cost, is_zoc, entry); 
+	BOOL r = TRUE;
+	r = UnitAstar::EntryCost(prev, pos, cost, is_zoc, entry); 
 
-	if (r)  
-    { 
-	    switch (m_pathType) 
+	if (r == FALSE)  { 
+		return FALSE; 
+	} 
+
+	switch (m_pathType) 
 		{
 		case PATH_TYPE_TRANSPORT:
 			r = TransportPathCallback(r, prev, pos, is_zoc, cost, entry);
@@ -263,15 +266,13 @@ sint32 RobotAstar2::EntryCost( const MapPoint &prev,
 			break;
 		}
 
-        if (cost < 1.0)
-        { 
-            cost = 1.0; 
-        }
-        else if ((k_ASTAR_BIG <= cost) && (entry != ASTAR_RETRY_DIRECTION)) 
-        { 
-		    return FALSE;
-	    }
-    }
+    if (cost < 1.0) 
+        cost = 1.0; 
+
+	if (((r == FALSE) || (k_ASTAR_BIG <= cost)) && 
+		(entry != ASTAR_RETRY_DIRECTION)) { 
+		return FALSE;
+	}
 
     return r; 
 }      

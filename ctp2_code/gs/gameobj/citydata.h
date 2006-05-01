@@ -18,6 +18,15 @@
 //
 // Compiler flags
 // 
+// _MSC_VER
+// - When defined, allows Microsoft C++ extensions.
+// - When not defined, generates standard C++.
+//
+// Note: For the blocks with _MSC_VER preprocessor directives, the following
+//       is implied: the (_MSC_VER) preprocessor directive lines and the blocks 
+//       between #else and #endif are modified Apolyton code. The blocks 
+//       between #if and #else are the original Activision code.
+//
 // CTP1_TRADE
 // - Creates an executable with trade like in CTP1. Currently broken.
 //
@@ -45,26 +54,19 @@
 // - Added code for new city resource calculation. (Aug 12th 2005 Martin Gühmann)
 // - Removed CITY_TILE_SIZE and k_CITY_RADIUS they aren't used. (Aug 12th 2005 Martin Gühmann)
 // - Removed more unused methods. (Aug 12th 2005 Martin Gühmann)
-// - Added city style specific happiness bonus method. (Oct 7th 2005 Martin Gühmann)
-// - Added	BOOL HasNeededGood by E
-// - Added	BOOL HasEitherGood by E
-// - Added	BOOL HasTileImpInRadius by E 4-7-2006 bool if a city has imp in radius
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
 #ifndef __CITY_DATA_H__
 #define __CITY_DATA_H__ 1
 
-class CityData;
-
+#include "ctp2_enums.h"
 #include "Unit.h"
-
 #include "BldQue.h"
-#include "HappyTracker.h"           // HAPPY_REASON
 
 
 #include "UnitDynArr.h"
@@ -91,11 +93,36 @@ class Cell;
 //#define NEW_RESOURCE_PROCESS 1
 
 
+enum OPTIMISE_STATE {
+	OPTIMISE_STATE_NONE,
+	OPTIMISE_STATE_FOOD,
+	OPTIMISE_STATE_PRODUCTION,
+	OPTIMISE_STATE_GOLD,
+	OPTIMISE_STATE_HAPPINESS,
+	OPTIMISE_STATE_SCIENCE,
+	OPTIMISE_STATE_INVALID,
+};
+
+enum CITY_ATTITUDE {
+	CITY_ATTITUDE_CONTENT,
+	CITY_ATTITUDE_WE_LOVE_THE_KING,
+	CITY_ATTITUDE_HAPPY,
+	CITY_ATTITUDE_DISORDER,
+};
+
+enum RADIUS_OP {
+	RADIUS_OP_UKNOWN = -1,
+	RADIUS_OP_REMOVE_IMPROVEMENTS = 0,
+	RADIUS_OP_KILL_UNITS,
+	RADIUS_OP_RESET_OWNER,
+	RADIUS_OP_KILL_TILE,
+	RADIUS_OP_ADD_GOODS,
+	RADIUS_OP_COUNT_GOODS,
+};
+
 struct TerrainValue;
 
-class CityData : public CityRadiusCallback 
-{
-private:
+class CityData : public CityRadiusCallback {
 
 //----------------------------------------------------------------------------
 // Do not change anything in the types or order of the following variable 
@@ -477,6 +504,7 @@ public:
 #endif
 
 	sint32 CalcWages(sint32 wage) const;
+	BOOL PayWages(sint32 wage, bool projectedOnly);
 	sint32 GetWagesNeeded(const sint32 & wages_per_person) const;
 	sint32 GetWagesNeeded();
 
@@ -659,9 +687,7 @@ public:
 	void Unconvert(BOOL makeUnhappy = TRUE);
 	sint32 IsConvertedTo() const { return m_convertedTo; }
 
-	bool HasResource(sint32 resource) const;
-// added by E for resources Oct 2005
-	bool HasNeededGood(sint32 resource) const;
+	BOOL HasResource(sint32 resource) const;
 #ifdef CTP1_TRADE
 	const Resources *GetResources() const { return &m_resources; }
 	const Resources *GetLocalResources() const { return &m_localResources; }
@@ -670,8 +696,7 @@ public:
 	const Resources *GetBuyingResources() const { return &m_buyingResources; }
 #endif
 
-	bool IsLocalResource( sint32 resource ) const;
-	bool HasTileImpInRadius(sint32 tileimp, MapPoint &cityPos) const; //EMOD 4-7-2006 bool if a city has imp in radius
+	BOOL IsLocalResource( sint32 resource ) const;
 
 	
 	
@@ -744,7 +769,7 @@ public:
 
 	void AddEndGameObject(sint32 type);
 
-	BOOL SendSlaveTo(Unit &dest);
+	BOOL SendSlaveTo(const Unit &dest);
 	void SetFullHappinessTurns(sint32 turns);
 
 	sint32 GetHappinessFromPops();
@@ -981,14 +1006,6 @@ public:
 	double GetScientistsEffect(sint32 ring){ return m_scientistsEff[ring];}
 
 #endif
-
-	sint32 StyleHappinessIncr() const;
-	sint32 GoodHappinessIncr() const; //EMOD 4-27-2006
-	bool CanCollectGood(sint32 good) const; //EMOD 4-27-2006 
-
-private:
-	bool    IsBankrupting(void) const;
-	bool    PayWages(bool projectedOnly);
 };
 
 uint32 CityData_CityData_GetVersion(void);

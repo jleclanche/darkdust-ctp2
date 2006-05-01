@@ -17,6 +17,8 @@
 //
 // Compiler flags
 // 
+// _MSC_VER		
+// - Compiler version (for the Microsoft C++ compiler only)
 //
 //----------------------------------------------------------------------------
 //
@@ -84,7 +86,7 @@ public:
 		if (rhs.m_data)
         {
             m_data = new sint32[m_total_len];
-            std::copy(rhs.m_data, rhs.m_data + static_cast<size_t>(m_total_len), m_data);
+            std::copy(rhs.m_data, rhs.m_data + m_total_len, m_data);
         }
 	};
 

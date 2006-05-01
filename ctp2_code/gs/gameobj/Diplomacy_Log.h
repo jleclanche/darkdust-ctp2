@@ -6,6 +6,7 @@
 
 class Diplomacy_Log;
 
+#include "ctp2_enums.h"
 #include "AgreementTypes.h"
 #include "player.h"
 #include "DiplomaticTypes.h"

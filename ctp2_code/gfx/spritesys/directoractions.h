@@ -1,8 +1,6 @@
 #ifndef __DIRECTORACTIONS_H__
 #define __DIRECTORACTIONS_H__
 
-class DQAction;
-
 class UnitActor;
 class ProjectileActor;
 class EffectActor;
@@ -11,10 +9,9 @@ class aui_Surface;
 class Battle;
 class SpriteState;
 
-#include "Unit.h"
-
-#include "MapPoint.h"
 #include "message.h"
+#include "Unit.h"
+#include "MapPoint.h"
 #include "GameOver.h"
 
 class DQAction {

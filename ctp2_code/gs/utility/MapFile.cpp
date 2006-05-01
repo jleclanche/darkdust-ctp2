@@ -59,19 +59,19 @@
 
 extern QuadTree<Unit>              *g_theUnitTree;
 
-#define k_TERRAIN_HEADER 'TERR'
-#define k_TERRAIN_ENV_HEADER 'TENV'
-#define k_CITIES_HEADER 'CITY'
-#define k_NEW_CITIES_HEADER 'NCTY'
-#define k_UNIT_TYPES_HEADER 'UTYP'
-#define k_UNITS_HEADER 'UNIT'
-#define k_IMPROVEMENT_TYPES_HEADER 'ITYP'
-#define k_IMPROVEMENTS_HEADER 'IMPS'
-#define k_VISION_HEADER 'VISN'
-#define k_ADVANCE_TYPES_HEADER 'ATYP'
-#define k_PLAYER_ADVANCES_HEADER 'PADV'
-#define k_HUTS_HEADER 'HUTS'
-#define k_CIVS_HEADER 'CIVS'
+#define k_TERRAIN_HEADER 0x54455252 //'TERR'
+#define k_TERRAIN_ENV_HEADER 0x54454E56 //'TENV'
+#define k_CITIES_HEADER 0x43495459 //'CITY'
+#define k_NEW_CITIES_HEADER 0x4E435459 //'NCTY'
+#define k_UNIT_TYPES_HEADER 0x55545950 //'UTYP'
+#define k_UNITS_HEADER 0x554E4954 //'UNIT'
+#define k_IMPROVEMENT_TYPES_HEADER 0x49545950 //'ITYP'
+#define k_IMPROVEMENTS_HEADER 0x494D5053 //'IMPS'
+#define k_VISION_HEADER 0x5649534E //'VISN'
+#define k_ADVANCE_TYPES_HEADER 0x41545950 //'ATYP'
+#define k_PLAYER_ADVANCES_HEADER 0x50414456 //'PADV'
+#define k_HUTS_HEADER 0x48555453 //'HUTS'
+#define k_CIVS_HEADER 0x43495653 //'CIVS'
 
 
 const uint32 k_MAPFILE_NAME_LEN = 32;
@@ -888,7 +888,7 @@ bool MapFile::LoadUnits(uint8 *buf, sint32 size)
 			} else {
 				if(m_unitTypeMap[type] >= 0) {
 					MapPoint pos(x,y);
-					g_player[owner]->CreateUnit(m_unitTypeMap[type], pos, Unit(), FALSE, CAUSE_NEW_ARMY_CHEAT);
+					g_player[owner]->CreateUnit(m_unitTypeMap[type], pos, Unit(0), FALSE, CAUSE_NEW_ARMY_CHEAT);
 				}
 			}
 		}
@@ -1204,7 +1204,7 @@ bool MapFile::LoadCivilizations(uint8 *buf, sint32 size)
 	uint32 currNation;
 
 	
-	if (size != k_CIVS_BLOCK_LENGTH)
+	if (size != (signed) k_CIVS_BLOCK_LENGTH)
 	{
 		
 		MessageBoxDialog::Information("Error loading civilizations.","ErrLoadCivs");
@@ -1220,7 +1220,7 @@ bool MapFile::LoadCivilizations(uint8 *buf, sint32 size)
 		{
 			g_player[i]->m_civilisation->ResetCiv((CIV_INDEX)currNation, g_player[i]->m_civilisation->GetGender());
 			MBCHAR name[k_MAPFILE_NAME_LEN];
-			for (int j = 0; j < k_MAPFILE_NAME_LEN; j++)
+			for (int j = 0; j < (signed) k_MAPFILE_NAME_LEN; j++)
 			{
 				PULLBYTE(name[j]);
 			}
@@ -1240,7 +1240,7 @@ bool MapFile::LoadCivilizations(uint8 *buf, sint32 size)
 		}
 		else
 		{
-			for (int j = 0; j < k_MAPFILE_NAME_LEN + 4; j++) 
+			for (int j = 0; j < (signed) k_MAPFILE_NAME_LEN + 4; j++) 
 			{
 				uint8 foo;
 				PULLBYTE(foo);

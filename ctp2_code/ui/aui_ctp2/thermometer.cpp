@@ -20,8 +20,9 @@
 
 #include "thermometer.h"
 
-#include "colorset.h"       // g_colorSet
+#include "colorset.h"
 
+extern ColorSet		*g_colorSet;
 extern C3UI			*g_c3ui;
 
 

@@ -49,10 +49,10 @@
  *
  *----------------------------------------------------------------------------
  */
+#include <stdio.h>
 #include "ctp2_config.h"
 #include "ctp2_inttypes.h"
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "ctpdb.h"
@@ -61,7 +61,7 @@
 
 void yyerror(char *err);
 
-int yylex();
+int yylex(void);
 
 int s_done = 0;
 int g_line_number = 1;
@@ -257,7 +257,7 @@ void yyerror(char *err)
 	s_done = 1;
 }
 
-int yyparse();
+int yyparse(void);
 
 int main(int argc, char **argv)
 {

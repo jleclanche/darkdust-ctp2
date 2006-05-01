@@ -17,6 +17,15 @@
 //
 // Compiler flags
 // 
+// _MSC_VER		
+// - When defined, allows Microsoft C++ extensions.
+// - When not defined, generates standard C++.
+//
+// Note: For the blocks with _MSC_VER preprocessor directives, the following
+//       is implied: the (_MSC_VER) preprocessor directive lines and the blocks 
+//       between #else and #endif are modified Apolyton code. The blocks 
+//       between #if and #else are the original Activision code.
+//
 //----------------------------------------------------------------------------
 //
 // Modifications from the original Activision code:
@@ -26,7 +35,7 @@
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -34,7 +43,12 @@
 #define __POLLUTION_H__
 
 
-class Pollution;
+
+
+#include "PollutionConst.h"
+
+class CivArchive ;
+class MapPoint;
 
 #define k_TREND_DOWNWARD	-1
 #define k_TREND_UPWARD		1
@@ -43,13 +57,6 @@ class Pollution;
 // A warning is triggered when the estimated number of rounds until disaster is 
 // less than this number.
 #define k_ROUNDS_BEFORE_DISASTER 10		
-
-#include "Player.h"
-#include "PollutionConst.h"
-
-class CivArchive ;
-class MapPoint;
-
 
 class Pollution
 	{ 
@@ -110,5 +117,9 @@ private:
 	void GotoNextLevel(void) ;
 
 	};
+
+#else
+
+class Pollution ;
 
 #endif 

@@ -42,7 +42,7 @@ public:
 	void			GetNextAction(void);
 	void			AddIdle(void);
 
-	Anim *          CreateAnim(UNITACTION action);
+	Anim			*GetAnim(UNITACTION action);
 
 	void			Draw(void);
 	void			DrawDirect(aui_Surface *surf, sint32 x, sint32 y, double scale);

@@ -34,9 +34,10 @@ int tech_MemMap::GetFileExtension( char *filename, char *extension )
 
 unsigned char *tech_MemMap::GetFileBits(
 	char *filename,
-	unsigned long *outfilesize )
+	size_t *outfilesize )
 {
 	if ( outfilesize ) *outfilesize = 0;
+
 	unsigned long filesize;
 	unsigned char *bits;
 	FILE *f = fopen( filename, "rb" );
@@ -64,7 +65,7 @@ unsigned char *tech_MemMap::GetFileBits(
 	}
 
 	if ( fread( bits, 1, filesize, f ) != filesize ) {
-		delete [] bits;
+		delete[] bits;
 		fclose(f);
 		return NULL;
 	}
@@ -80,6 +81,8 @@ unsigned char *tech_MemMap::GetFileBits(
 
 void tech_MemMap::ReleaseFileBits( unsigned char *&bits )
 {
-	delete [] bits;
-	bits = NULL;
+	if (bits) {
+		delete[] bits;
+		bits = NULL;
+	}
 }

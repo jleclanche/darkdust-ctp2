@@ -38,7 +38,7 @@
 #include "aui_ldl.h"
 #include "aui_switch.h"
 #include "c3ui.h"
-#include "colorset.h"               // g_colorSet
+#include "colorset.h"
 #include "ctp2_button.h"
 #include "ctp2_hypertextbox.h"
 #include "ctp2_listbox.h"
@@ -64,12 +64,13 @@
 #include "GovernmentRecord.h"
 #include "terrainutil.h"
 
-extern C3UI			*g_c3ui;
-extern ProjectFile	*g_GreatLibPF;
 
 static const sint32 k_SMD_CIVILIZATION_COLUMNS	= 8;
 
 
+extern C3UI			*g_c3ui;
+extern ColorSet		*g_colorSet;
+extern ProjectFile	*g_GreatLibPF;
 
 
 ScienceManagementDialog *g_scienceManagementDialog = NULL;
@@ -273,7 +274,7 @@ void ScienceManagementDialog::UpdateScience()
 	m_scienceTotalValue->SetText(buffer);
 
 	
-	long textLength = 0;
+	size_t textLength = 0;
 	MBCHAR *description = static_cast<MBCHAR *>(
 		g_GreatLibPF->getData(
 		const_cast<char*>(currentAdvanceRecord->GetIcon()->GetVari()),
@@ -502,7 +503,7 @@ AUI_ERRCODE ScienceManagementDialog::ColorBoxActionCallback(ctp2_Static *control
 
 	
 	return(g_c3ui->TheBlitter()->ColorBlt16(surface, &colorRect,
-		g_colorSet->GetPlayerColor(reinterpret_cast<sint32>(cookie)), 0));
+		g_colorSet->GetPlayerColor(*reinterpret_cast<sint32 *>(cookie)), 0));
 }
 
 
@@ -517,7 +518,7 @@ AUI_ERRCODE ScienceManagementDialog::ColorHeaderActionCallback(aui_Switch *contr
 	colorRect.bottom	-= 1;
 
 	
-	sint32 index = reinterpret_cast<sint32>(cookie);
+	sint32 index = *reinterpret_cast<sint32 *>(cookie);
 
 	
 	Player *player = g_player[g_selected_item->GetVisiblePlayer()];
@@ -544,9 +545,9 @@ sint32 ScienceManagementDialog::CompareAdvance(ctp2_ListItem *item1,
 
 	
 	const AdvanceRecord *advance1 = g_theAdvanceDB->Get(
-		reinterpret_cast<sint32>(item1->GetUserData()));
+		*reinterpret_cast<sint32 *>(item1->GetUserData()));
 	const AdvanceRecord *advance2 = g_theAdvanceDB->Get(
-		reinterpret_cast<sint32>(item2->GetUserData()));
+		*reinterpret_cast<sint32 *>(item2->GetUserData()));
 
 	
 	

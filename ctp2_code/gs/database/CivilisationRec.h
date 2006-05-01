@@ -25,24 +25,22 @@
 // - #pragma once commented out.
 //
 //----------------------------------------------------------------------------
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
 #ifndef __CIVILISATION_REC_H__
 #define __CIVILISATION_REC_H__
 
-class CivilisationRecord;
+#include "Rec.h"
+class Token;
+
+
+class CivArchive ;
 
 #define k_MAX_CITY_NAMES		500
 #define k_CAPITAL_UNDEFINED		-1
 #define k_CITY_NAME_UNDEFINED	-1
-
-#include "Rec.h"        // Record
-#include "dbtypes.h"    // StringId
-
-class Token;
-class CivArchive ;
 
 class CivilisationRecord : public Record
 	{

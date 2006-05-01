@@ -186,7 +186,7 @@ namespace
 SlicEngine::SlicEngine()
 :   m_tutorialActive        (FALSE),
 	m_tutorialPlayer        (SINGLE_PLAYER_DEFAULT),
-	m_currentMessage        (new Message()),
+	m_currentMessage        (new Message(0)),
 	m_segmentHash           (new SlicSegmentHash(k_SEGMENT_HASH_SIZE)),
 	m_functionHash          (NULL),
 	m_uiHash                (new StringHash<SlicUITrigger> (k_SEGMENT_HASH_SIZE)),
@@ -236,7 +236,7 @@ SlicEngine::SlicEngine()
 SlicEngine::SlicEngine(CivArchive &archive)
 :	m_tutorialActive        (FALSE),
 	m_tutorialPlayer        (SINGLE_PLAYER_DEFAULT),
-	m_currentMessage        (new Message()),
+	m_currentMessage        (new Message(0)),
 	m_segmentHash           (new SlicSegmentHash(k_SEGMENT_HASH_SIZE)),
 	m_functionHash          (NULL),
 	m_uiHash                (new StringHash<SlicUITrigger>(k_SEGMENT_HASH_SIZE)),
@@ -325,7 +325,7 @@ SlicEngine::~SlicEngine()
 		if (m_records[i]) 
         {
 			SlicRecord * sr;
-			while (sr = m_records[i]->RemoveHead()) 
+			while ((sr = m_records[i]->RemoveHead()))
             {
 				delete sr;
 			}
@@ -431,7 +431,7 @@ void SlicEngine::Serialize(CivArchive &archive)
 		    if (m_records[i]) 
             {
 			    SlicRecord * sr;
-			    while (sr = m_records[i]->RemoveHead()) 
+			    while ((sr = m_records[i]->RemoveHead()))
                 {
 				    delete sr;
 			    }
@@ -827,7 +827,7 @@ void SlicEngine::AddBuiltinFunctions()
 	m_functionHash->Add(new Slic_SetTrust);
 	m_functionHash->Add(new Slic_RecomputeRegard);
 	m_functionHash->Add(new Slic_ConsiderResponse);
-	m_functionHash->Add(new Slic_SetResponse);;
+	m_functionHash->Add(new Slic_SetResponse);
 	m_functionHash->Add(new Slic_ConsiderMotivation);
 	m_functionHash->Add(new Slic_ConsiderNewProposal);
 	m_functionHash->Add(new Slic_SetNewProposal);
@@ -1080,7 +1080,7 @@ void SlicEngine::KillCurrentMessage()
 	if(!g_theMessagePool->IsValid(*m_currentMessage))
 		return;
 	m_currentMessage->Kill();
-	*m_currentMessage = Message();
+	*m_currentMessage = Message(0);
 }
 
 void SlicEngine::AddCurrentMessage()
@@ -1091,7 +1091,7 @@ void SlicEngine::AddCurrentMessage()
 		return;
 
 	m_currentMessage->Minimize();
-	*m_currentMessage = Message();
+	*m_currentMessage = Message(0);
 }
 
 PointerList<SlicRecord> *SlicEngine::GetRecords(sint32 player)
@@ -1165,8 +1165,7 @@ void SlicEngine::StopTimer(sint32 timer)
 void SlicEngine::SetTutorialActive(BOOL on)
 { 
 	if(!on && m_tutorialActive) {
-		RunTrigger(TRIGGER_LIST_TUTORIAL_OFF,
-				   ST_END);
+		RunTrigger(TRIGGER_LIST_TUTORIAL_OFF);
 	}
 
 	m_tutorialActive = on; 
@@ -1217,8 +1216,8 @@ BOOL SlicEngine::IsMessageClassDisabled(sint32 mclass)
 void SlicEngine::ProcessUITriggers()
 {
 	SlicObject *obj;
-	while (obj = m_uiExecuteObjects->RemoveHead())
-    {
+	while ((obj = m_uiExecuteObjects->RemoveHead()))
+	{
 		Execute(obj);
 	}
 }
@@ -2436,7 +2435,7 @@ void SlicEngine::RunSentCeaseFireTriggers(sint32 owner, sint32 recipient)
 	}
 }
 
-void SlicEngine::RunTrigger(TRIGGER_LIST tlist, ...)
+void SlicEngine::RunTrigger(const TRIGGER_LIST tlist, const uint32 numArgs, const SLIC_TAG* argTypes, const void** args)
 {
 	Assert(tlist >= TRIGGER_LIST_YEARLY);
 	Assert(tlist < TRIGGER_LIST_MAX);
@@ -2455,18 +2454,14 @@ void SlicEngine::RunTrigger(TRIGGER_LIST tlist, ...)
 	while(walk.IsValid()) {
 		if(walk.GetObj()->IsEnabled()) {
 			SlicObject *obj = new SlicObject(walk.GetObj());
-			BOOL done = FALSE;
 			SLIC_TAG tag;
-			va_list vl;
-			va_start(vl, tlist);
-			do {
-				tag = va_arg(vl, SLIC_TAG);
+			uint32 currentArg = 0;
+			
+			while (currentArg < numArgs && !abort) {
+				tag = argTypes[currentArg];
 				switch(tag) {
-					case ST_END:
-						done = TRUE;
-						break;
 					case ST_UNIT:
-						u = va_arg(vl, Unit);
+						u = *(Unit*)(args[currentArg++]);
 						if(g_theUnitPool->IsValid(u)) {
 							obj->AddUnit(u);
 						} else {
@@ -2474,7 +2469,7 @@ void SlicEngine::RunTrigger(TRIGGER_LIST tlist, ...)
 						}
 						break;
 					case ST_CITY:
-						u = va_arg(vl, Unit);
+						u = *(Unit*)(args[currentArg++]);
 						if(g_theUnitPool->IsValid(u)) {
 							obj->AddCity(u);
 						} else {
@@ -2482,7 +2477,7 @@ void SlicEngine::RunTrigger(TRIGGER_LIST tlist, ...)
 						}
 						break;
 					case ST_PLAYER:
-						player = va_arg(vl, sint32);
+						player = *(sint32*)(args[currentArg++]);
 						if(g_player[player]) {
 							obj->AddCivilisation(player);
 						} else {
@@ -2490,23 +2485,23 @@ void SlicEngine::RunTrigger(TRIGGER_LIST tlist, ...)
 						}
 						break;
 					case ST_GOOD:
-						good = va_arg(vl, sint32);
+						good = *(sint32*)(args[currentArg++]);
 						obj->AddGood(good);
 						break;
 					case ST_GOLD:
-						gold = va_arg(vl, sint32);
+						gold = *(sint32*)(args[currentArg++]);
 						obj->AddGold(gold);
 						break;
 					case ST_LOCATION:
-						pos = va_arg(vl, MapPoint);
+						pos = *(MapPoint*)(args[currentArg++]);
 						obj->AddLocation(pos);
 						break;
 					case ST_ACTION:
-						str = va_arg(vl, char*);
+						str = *(char**)(args[currentArg++]);
 						obj->AddAction(str);
 						break;
 					case ST_ADVANCE:
-						advance = va_arg(vl, sint32);
+						advance = *(sint32*)(args[currentArg++]);
 						obj->AddAdvance(advance);
 						break;
 					default:
@@ -2516,8 +2511,8 @@ void SlicEngine::RunTrigger(TRIGGER_LIST tlist, ...)
 						break;
 					}
 				}
-			} while(!done && !abort);
-			va_end(vl);
+			}
+			
 			if(!abort) {
 				Execute(obj);
 			} else {
@@ -2528,6 +2523,45 @@ void SlicEngine::RunTrigger(TRIGGER_LIST tlist, ...)
 			break;
 		walk.Next();
 	}
+}
+
+void SlicEngine::RunTrigger(const TRIGGER_LIST tlist)
+{
+	const SLIC_TAG* argTypes = NULL;
+	const void** args= NULL;
+	RunTrigger(tlist, 0, argTypes, args);
+}
+
+void SlicEngine::RunTrigger(const TRIGGER_LIST tlist, const SLIC_TAG arg1Type, const sint32 arg1)
+{
+	const SLIC_TAG argTypes[] = { arg1Type };
+	const void* args[] = { &arg1 };
+	RunTrigger(tlist, 1, argTypes, args);
+}
+
+void SlicEngine::RunTrigger(const TRIGGER_LIST tlist, const SLIC_TAG arg1Type, const sint32 arg1,
+	const SLIC_TAG arg2Type, const sint32 arg2)
+{
+	const SLIC_TAG argTypes[] = { arg1Type, arg2Type };
+	const void* args[] = { &arg1, &arg2 };
+	RunTrigger(tlist, 2, argTypes, args);
+}
+
+void SlicEngine::RunTrigger(const TRIGGER_LIST tlist, const SLIC_TAG arg1Type, const ID &arg1,
+	const SLIC_TAG arg2Type, const sint32 arg2)
+{
+	const SLIC_TAG argTypes[] = { arg1Type, arg2Type };
+	const void* args[] = { &arg1, &arg2 };
+	RunTrigger(tlist, 2, argTypes, args);
+}
+
+void SlicEngine::RunTrigger(const TRIGGER_LIST tlist, const SLIC_TAG arg1Type, const sint32 arg1,
+	const SLIC_TAG arg2Type, const sint32 arg2, const SLIC_TAG arg3Type, const sint32 arg3,
+	const SLIC_TAG arg4Type, const sint32 arg4)
+{
+	const SLIC_TAG argTypes[] = { arg1Type, arg2Type, arg3Type, arg4Type };
+	const void* args[] = { &arg1, &arg2, &arg3, &arg4 };
+	RunTrigger(tlist, 4, argTypes, args);
 }
 
 void SlicEngine::RecreateTutorialRecord()
@@ -2563,7 +2597,7 @@ void SlicEngine::SetTriggerKey(sint32 index, MBCHAR key)
 	if(index >= 0 && index < k_MAX_TRIGGER_KEYS)
 		m_triggerKey[index] = key;
 }
-
+/*
 BOOL SlicEngine::IsKeyPressed(MBCHAR key)
 {
 	if(m_currentKeyTrigger && m_currentKeyTrigger == m_triggerKey[key])
@@ -2571,14 +2605,14 @@ BOOL SlicEngine::IsKeyPressed(MBCHAR key)
 	else
 		return FALSE;
 }
-
+*/
 BOOL SlicEngine::RunKeyboardTrigger(MBCHAR key)
 {
 	sint32 i;
 	for(i = 0; i < k_MAX_TRIGGER_KEYS; i++) {
 		if(m_triggerKey[i] == key) {
 			m_currentKeyTrigger = key;
-			RunTrigger(TRIGGER_LIST_KEY_PRESSED, ST_END);
+			RunTrigger(TRIGGER_LIST_KEY_PRESSED);
 			m_currentKeyTrigger = KEY_UNDEFINED;
 			return TRUE;
 		}
@@ -2794,7 +2828,9 @@ void SlicEngine::Break(SlicSegment *segment, sint32 offset, SlicObject *context,
 	
 	m_atBreak = true;
 
+#ifdef CTP2_ENABLE_SLICDEBUG
 	sourcelist_RegisterBreak(segment, offset);
+#endif
 }
 
 void SlicEngine::Continue()
@@ -2814,7 +2850,7 @@ void SlicEngine::Continue()
 	SlicObject *oldContext = NULL;
 	if (!m_atBreak) 
     {
-		while (oldContext = m_contextStack->RemoveTail()) 
+		while ((oldContext = m_contextStack->RemoveTail()))
         {
 			SetContext(oldContext);
 			oldContext->Continue();
@@ -3067,7 +3103,7 @@ void SlicEngine::AddModFuncs()
 	SMF_3A(mod_UnitDefense, ST_UNIT, ST_UNIT, ST_INT);
 }
 
-sint32 SlicEngine::CallMod(MOD_FUNC modFunc, sint32 def, ...)
+sint32 SlicEngine::CallMod(const MOD_FUNC modFunc, const sint32 def, const void** args)
 {
 	Assert(modFunc > mod_INVALID);
 	Assert(modFunc < mod_MAX);
@@ -3077,9 +3113,6 @@ sint32 SlicEngine::CallMod(MOD_FUNC modFunc, sint32 def, ...)
 
 	if(!mf->GetSegment())
 		return def;
-
-	va_list vl;
-	va_start(vl, def);
 
 	sint32 arg;
 	SlicArgList *slicArgs = new SlicArgList;
@@ -3091,21 +3124,21 @@ sint32 SlicEngine::CallMod(MOD_FUNC modFunc, sint32 def, ...)
 
 	for(arg = 0; arg < mf->GetNumArgs(); arg++) {
 		SlicSymbolData *sym;
-		switch(mf->GetArg(arg)) {			
+		switch(mf->GetArg(arg)) {
 			case ST_UNIT:
-				u.m_id = va_arg(vl, uint32);
+				u.m_id = *(uint32*)(args[arg]);
 				sym = new SlicSymbolData(SLIC_SYM_UNIT);
 				sym->SetUnit(u);
 				slicArgs->AddArg(SA_TYPE_INT_VAR, sym);
 				break;
 			case ST_CITY:
-				u.m_id = va_arg(vl, uint32);
+				u.m_id = *(uint32*)(args[arg]);
 				sym = new SlicSymbolData(SLIC_SYM_CITY);
 				sym->SetCity(u);
 				slicArgs->AddArg(SA_TYPE_INT_VAR, sym);
 				break;
 			case ST_PLAYER:
-				val = va_arg(vl, sint32);
+				val = *(sint32*)(args[arg]);
 				sym = new SlicSymbolData(SLIC_SYM_PLAYER);
 				sym->SetIntValue(val);
 				slicArgs->AddArg(SA_TYPE_INT_VAR, sym);
@@ -3114,27 +3147,25 @@ sint32 SlicEngine::CallMod(MOD_FUNC modFunc, sint32 def, ...)
 			case ST_GOLD:
 			case ST_ADVANCE:
 			case ST_INT:
-				val = va_arg(vl, sint32);
+				val = *(sint32*)(args[arg]);
 				sym = new SlicSymbolData(SLIC_SYM_IVAR);
 				sym->SetIntValue(val);
 				slicArgs->AddArg(SA_TYPE_INT_VAR, sym);
 				break;
 			case ST_LOCATION:
-				pos = va_arg(vl, MapPoint);
+				pos = *(MapPoint*)(args[arg]);
 				sym = new SlicSymbolData(SLIC_SYM_LOCATION);
 				sym->SetPos(pos);
 				slicArgs->AddArg(SA_TYPE_INT_VAR, sym);
 				break;
 			case ST_ARMY:
-				a.m_id = va_arg(vl, uint32);
+				a.m_id = *(uint32*)(args[arg]);
 				sym = new SlicSymbolData(SLIC_SYM_ARMY);
 				sym->SetArmy(a);
 				slicArgs->AddArg(SA_TYPE_INT_VAR, sym);
 				break;
 		}
 	}
-
-	va_end(vl);
 
 	SlicObject *obj;
 	mf->GetSegment()->Call(slicArgs, obj);
@@ -3148,6 +3179,18 @@ sint32 SlicEngine::CallMod(MOD_FUNC modFunc, sint32 def, ...)
 	obj->Release();
 
 	return result;
+}
+
+sint32 SlicEngine::CallMod(const MOD_FUNC modFunc, const sint32 def, const sint32 arg1, const sint32 arg2)
+{
+	const void* args[] = { &arg1, &arg2 };
+	return CallMod(modFunc, def, args);
+}
+
+sint32 SlicEngine::CallMod(const MOD_FUNC modFunc, const sint32 def, const uint32 arg1, const uint32 arg2, const sint32 arg3)
+{
+	const void* args[] = { &arg1, &arg2, &arg3 };
+	return CallMod(modFunc, def, args);
 }
 
 sint32 SlicEngine::CallExcludeFunc(const MBCHAR *name, sint32 type, sint32 player)

@@ -98,6 +98,8 @@ extern C3UI					*g_c3ui;
 #include "installationpool.h"
 #include "soundmanager.h"
 #include "gamesounds.h"
+#include "AICause.h"
+
 #include "HappyTracker.h"
 #include "WonderTracker.h"
 #include "AchievementTracker.h"
@@ -1320,7 +1322,7 @@ NetInfo::Unpacketize(uint16 id, uint8* buf, uint16 size)
 		{
 			DPRINTF(k_DBG_NET, ("Player %d is a non-robot\n", m_data));
 			if(g_player[m_data]) {
-				if(m_data == g_network.GetPlayerIndex()) {
+				if(m_data == (unsigned) g_network.GetPlayerIndex()) {
 					g_player[m_data]->m_playerType = PLAYER_TYPE_HUMAN;
 				} else {
 					g_player[m_data]->m_playerType = PLAYER_TYPE_NETWORK;
@@ -1400,7 +1402,7 @@ NetInfo::Unpacketize(uint16 id, uint8* buf, uint16 size)
 				g_theWorld->InsertUnit(pos, unit, revealedUnits);
 				g_player[unit.GetOwner()]->InsertUnitReference(unit,
 															   CAUSE_NEW_ARMY_UPRISING,
-															   Unit());
+															   Unit(0));
 			}
 			break;
 		}
@@ -1695,7 +1697,7 @@ NetInfo::Unpacketize(uint16 id, uint8* buf, uint16 size)
 				g_network.SetSensitiveUIBlocked(false);
 			}
 			MainControlPanel::SelectedCity();
-			if(m_data == g_network.GetPlayerIndex()) {
+			if(m_data == (unsigned) g_network.GetPlayerIndex()) {
 				
 				network_VerifyGameData();
 			}
@@ -1748,7 +1750,7 @@ NetInfo::Unpacketize(uint16 id, uint8* buf, uint16 size)
 			DPRINTF(k_DBG_NET, ("Server says ungrouping of Army %lx done (owner=%d)\n", m_data, m_data2));
 
 			Army army(m_data);
-			if(m_data2 == g_selected_item->GetVisiblePlayer()) {
+			if(m_data2 == (unsigned) g_selected_item->GetVisiblePlayer()) {
 				if(army.IsValid()) {
 					ArmyManagerWindow::NotifyRemoteGroupComplete(army);
 				} else {

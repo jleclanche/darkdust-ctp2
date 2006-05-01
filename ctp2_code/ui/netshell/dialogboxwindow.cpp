@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Multiplayer dialog box window
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -53,20 +53,24 @@ DialogBoxWindow::DialogBoxWindow(
 	AUI_ERRCODE *retval,
 	MBCHAR *ldlBlock,
 	aui_Action **actions )
-:
-	ns_Window	(retval,
-				 aui_UniqueId(),
-				 ldlBlock,
-				 0,
-				 AUI_WINDOW_TYPE_FLOATING 
-				),
-	m_numButtons	(0),
-	m_buttons		(NULL) 
+	:
+	ns_Window(
+		retval,
+		aui_UniqueId(),
+		ldlBlock,
+		0,
+		AUI_WINDOW_TYPE_FLOATING )
 {
+	Assert( AUI_SUCCESS(*retval) );
 	if ( !AUI_SUCCESS(*retval) ) return;
+
 	*retval = InitCommon();
+	Assert( AUI_SUCCESS(*retval) );
 	if ( !AUI_SUCCESS(*retval) ) return;
+
 	*retval = CreateControls( ldlBlock, actions );
+	Assert( AUI_SUCCESS(*retval) );
+	if ( !AUI_SUCCESS(*retval) ) return;
 }
 
 
@@ -76,6 +80,10 @@ AUI_ERRCODE DialogBoxWindow::InitCommon( void )
 	Assert( m_controls != NULL );
 	if ( !m_controls ) return AUI_ERRCODE_MEMALLOCFAILED;
 	memset( m_controls, 0, m_numControls * sizeof( aui_Control *) );
+
+	
+	m_numButtons = 0;
+	m_buttons = NULL;
 
 	return AUI_ERRCODE_OK;
 }
@@ -306,9 +314,21 @@ AUI_ERRCODE DialogBoxWindow::CreateControls(
 		}
 	}
 
+
+	
 	aui_Ldl::SetupHeirarchyFromRoot( ldlBlock );
 
+
+	
+	aui_Action *action;
+
+	
+	action = NULL;
+
+
+	
 	SetStronglyModal( TRUE );
+
 
 	return AUI_ERRCODE_OK;
 }
@@ -316,14 +336,22 @@ AUI_ERRCODE DialogBoxWindow::CreateControls(
 
 DialogBoxWindow::~DialogBoxWindow()
 {
-	if (m_buttons)
+	if ( m_buttons )
 	{
-		for (size_t i = 0; i < m_numButtons; ++i)
+		for ( sint32 i = 0; i < m_numButtons; i++ )
 		{
-			delete m_buttons[i];
+			if ( m_buttons[ i ] )
+			{
+				delete m_buttons[ i ];
+				m_buttons[ i ] = NULL;
+			}
 		}
+
 		delete[] m_buttons;
+		m_buttons = NULL;
 	}
+
+	m_numButtons = 0;
 }
 
 
@@ -340,7 +368,7 @@ DialogBoxWindow *DialogBoxWindow::PopUp(
 	Assert( AUI_NEWOK(dbw,errcode) );
 	if ( !AUI_NEWOK(dbw,errcode) )
 	{
-		delete dbw;
+		if ( dbw ) delete dbw;
 		dbw = NULL;
 	}
 
@@ -376,6 +404,9 @@ void DialogBoxWindow::SafeDeleteAction::Execute(
 	uint32 action,
 	uint32 data )
 {
-	delete m_dbw;
-	m_dbw = NULL;
+	if ( m_dbw )
+	{
+		delete m_dbw;
+		m_dbw = NULL;
+	}
 }

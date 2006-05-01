@@ -30,7 +30,7 @@ SlicButton::SlicButton(StringId name, SlicSegment *segment,
 	m_context = context;
 	m_context->AddRef();
 	m_segmentName = NULL;
-	m_message = new Message();
+	m_message = new Message(0);
 }
 
 SlicButton::SlicButton(SlicButton *copy)
@@ -54,7 +54,7 @@ SlicButton::SlicButton(SlicButton *copy)
 
 SlicButton::SlicButton(CivArchive &archive)
 {
-	m_message = new Message();
+	m_message = new Message(0);
 	Serialize(archive);
 }
 

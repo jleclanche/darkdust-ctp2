@@ -4,19 +4,25 @@
 #ifndef __MESSAGE_H__ 
 #define __MESSAGE_H__
 
-class Message;
+#include "ID.h"
+#include "MessageData.h"
 
-#include "Advances.h"       // AdvanceType
-#include "ID.h"             // ID
-#include "MessageData.h"    // MESSAGE_RESPONSE_TYPE, MESSAGE_TYPE
-#include "Player.h"         // PLAYER_INDEX
+enum MESSAGE_RESPONSE_TYPE ;
+typedef sint32 AdvanceType;
 
 class Message : public ID
-{
-public:
+	{
+	public:
+
+		
+		
 		Message() : ID() { return ; }
 		Message(sint32 val) : ID(val) { return ; }
 		Message(uint32 val) : ID(val) { return ; }
+#ifdef WIN32
+		Message(const int val) : ID(val) { return ; }
+		Message(const unsigned int val) : ID(val) { return ; }
+#endif
 
 		void KillMessage() ;
 		void Kill() { KillMessage() ; }
@@ -66,6 +72,10 @@ public:
 
 		void SetUseDirector() { AccessData()->SetUseDirector(); }
 		BOOL UseDirector() const { return GetData()->UseDirector(); }
-};
+	} ;
+
+#else
+
+class Message ;
 
 #endif

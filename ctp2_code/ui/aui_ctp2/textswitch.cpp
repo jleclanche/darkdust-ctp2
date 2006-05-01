@@ -12,21 +12,28 @@
 
 
 #include "c3.h"
-#include "textswitch.h"
 
 #include "aui.h"
-#include "aui_surface.h"
+#include "aui_Factory.h"
 #include "aui_window.h"
 #include "pattern.h"
 #include "aui_ldl.h"
 #include "aui_action.h"
+
 #include "c3ui.h"
+
 #include "pixelutils.h"
-#include "colorset.h"       // g_colorSet
+#include "colorset.h"
+
 #include "primitives.h"
 #include "textutils.h"
-#include "SlicEngine.h"     // g_slicEngine
 
+#include "textswitch.h"
+
+#include "SlicEngine.h"
+
+extern ColorSet		*g_colorSet;
+extern SlicEngine	*g_slicEngine;
 extern C3UI			*g_c3ui;
 
 

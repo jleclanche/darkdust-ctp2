@@ -42,7 +42,7 @@
 #include "StrDB.h"
 #include "GameEventManager.h"
 
-#include "aicause.h"
+#include "AICause.h"
 #include "Diplomat.h"
 #include "mapanalysis.h"
 #include "ProposalAnalysis.h"
@@ -93,8 +93,8 @@ STDEHANDLER(ThreatenAttackCity_CounterResponseEvent)
 
 	Response threat_response;
 
-	threat_response.priority = static_cast<sint16>
-		(sender_diplomat.GetRejectPriority(receiver, response.counter.second_type));
+	threat_response.priority =	sender_diplomat.
+		GetRejectPriority( receiver, response.counter.second_type );
 
 	
 	threat_response.type = RESPONSE_THREATEN;				
@@ -412,7 +412,7 @@ STDEHANDLER(AdvanceForGold_CounterResponseEvent)
 	DPRINTF(k_DBG_DIPLOMACY, ("Executing %s\n",name));
 	ProposalAnalysis::DebugResult(sender_proposal);
 	ProposalAnalysis::DebugResult(receiver_response);
-#endif _DEBUG
+#endif // _DEBUG
 	
 	sint32 accept_priority = 
 		sender_diplomat.GetAcceptPriority(receiver, PROPOSAL_REQUEST_GIVE_GOLD);
@@ -518,7 +518,7 @@ STDEHANDLER(ActionForValue_CounterResponseEvent)
 	DPRINTF(k_DBG_DIPLOMACY, ("Executing %s\n",name));
 	ProposalAnalysis::DebugResult(sender_proposal);
 	ProposalAnalysis::DebugResult(receiver_response);
-#endif _DEBUG
+#endif // _DEBUG
 
 	const MapAnalysis & map_analysis = MapAnalysis::GetMapAnalysis();
 	sint32 receiver_trade_total = map_analysis.GetTotalTrade(receiver);
@@ -707,7 +707,7 @@ STDEHANDLER(ReciprocateAction_CounterResponseEvent)
 	
 	Response counter_response;
 	
-	counter_response.priority = static_cast<sint16>(accept_priority);
+	counter_response.priority = accept_priority;
 	counter_response.type = RESPONSE_ACCEPT; 
 	counter_response.counter.tone = DIPLOMATIC_TONE_EQUAL;	
 	counter_response.senderId = sender;

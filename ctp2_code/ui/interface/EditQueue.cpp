@@ -44,7 +44,6 @@
 
 #include "c3.h"
 #include "EditQueue.h"
-
 #include "aui_uniqueid.h"
 #include "aui_ldl.h"
 #include "ctp2_Window.h"
@@ -77,12 +76,11 @@
 
 #include "UnitDynArr.h"
 
-#include "gold.h"
+#include "Gold.h"
 
 #include "network.h"
 #include "IconRecord.h"
 #include "NationalManagementDialog.h"
-#include "Globals.h"
 
 static EditQueue *s_editQueue = NULL;
 
@@ -1106,7 +1104,11 @@ void EditQueue::UpdateButtons()
 		}
 	}
 
-    m_addButton->Enable(visList && visList->GetSelectedItem());
+	if(visList && visList->GetSelectedItem()) {
+		m_addButton->Enable(TRUE);
+	} else {
+		m_addButton->Enable(FALSE);
+	}
 }
 
 
@@ -1311,7 +1313,7 @@ void EditQueue::InsertInQueue(EditItemInfo *info, bool insert, bool confirmed)
 
 	if(checkRemoveList) {
 		sint32 type = info->m_type;
-		sint32 cat = info->m_category;
+		uint32 cat = info->m_category;
 		sint32 i;
 		for(i = checkRemoveList->NumItems() - 1; i >= 0; i--) {
 			ctp2_ListItem *item = (ctp2_ListItem *)checkRemoveList->GetItemByIndex(i);
@@ -1560,7 +1562,7 @@ void EditQueue::ShowSelectedInfo()
 
 	ctp2_ListBox *visList = s_editQueue->GetVisibleItemList();
 
-	uint32 category = -1;
+	uint32 category = (unsigned) -1;
 	sint32 type = -1;
 
 	ctp2_ListItem *item;
@@ -1939,7 +1941,7 @@ void EditQueue::Save(const MBCHAR *saveFileName)
 	if(s_editQueue->m_cityData) {
 		s_editQueue->m_cityData->SaveQueue(saveFileName);
 	} else {
-		FILE * saveFile = c3files_fopen(C3DIR_DIRECT, saveFileName, "w");
+		FILE *saveFile = c3files_fopen(C3DIR_DIRECT, (MBCHAR *)saveFileName, "w");
 		Assert(saveFile);
 		if(!saveFile) return;
 		
@@ -2035,7 +2037,9 @@ void  EditQueue::LoadCustom(const MBCHAR *loadName)
 
 	s_editQueue->m_customBuildList.DeleteAll();
 
-	FILE	*fpQueue = c3files_fopen(C3DIR_DIRECT, loadFileName, "r");
+	FILE	*fpQueue ;
+
+	fpQueue = c3files_fopen(C3DIR_DIRECT, (char *)loadFileName, "r");
 	if(!fpQueue) return;
 
 	char buf[k_MAX_NAME_LEN];
@@ -2140,7 +2144,9 @@ void EditQueue::DisplayQueueContents(const MBCHAR *queueName)
 	strcat(loadFileName, FILE_SEP);
 	strcat(loadFileName, queueName);
 
-	FILE * fpQueue = c3files_fopen(C3DIR_DIRECT, loadFileName, "r");
+	FILE	*fpQueue ;
+
+	fpQueue = c3files_fopen(C3DIR_DIRECT, (char *)loadFileName, "r");
 	if(!fpQueue) return;
 
 	m_queueContents->Clear();
@@ -2245,7 +2251,7 @@ void EditQueue::DeleteQueryCallback(bool response, void *data)
 
 	char delFileName[_MAX_PATH];
 	g_civPaths->GetSavePath(C3SAVEDIR_QUEUES, delFileName);
-	strcat(delFileName, "\\");
+	strcat(delFileName, FILE_SEP);
 	strcat(delFileName, queueName);
 	
 	remove(delFileName);
@@ -2370,12 +2376,7 @@ class ConfirmOverwriteQueueAction:public aui_Action
   public:
 	ConfirmOverwriteQueueAction(MBCHAR *saveFileName, const MBCHAR *text) { m_saveFileName = saveFileName; strncpy(m_text, text, 256); m_text[256] = 0; }
 
-	virtual void	Execute
-	(
-		aui_Control	*	control,
-		uint32			action,
-		uint32			data
-	); 
+	virtual ActionCallback Execute;
 
   private:
 	MBCHAR m_text[257];
@@ -2392,7 +2393,12 @@ void ConfirmOverwriteQueueAction::Execute(aui_Control *control, uint32 action, u
 	MessageBoxDialog::Query(buf, "QueryOverwiteQueue", EditQueue::SaveQueryCallback, (void *)m_saveFileName);
 };
 
-AUI_ACTION_BASIC(MustEnterNameAction);
+class MustEnterNameAction : public aui_Action
+{
+  public:
+	  MustEnterNameAction() {};
+	virtual ActionCallback Execute;
+};
 
 void MustEnterNameAction::Execute(aui_Control *control, uint32 action, uint32 data)
 {
@@ -2433,7 +2439,7 @@ void EditQueue::SaveButton(aui_Control *control, uint32 action, uint32 data, voi
 								SaveNameResponse);
 }
 
-bool EditQueue::IsItemInQueueList(sint32 cat, sint32 type)
+bool EditQueue::IsItemInQueueList(uint32 cat, sint32 type)
 {
 	sint32 i;
 	for(i = 0; i < m_queueList->NumItems(); i++) {

@@ -17,7 +17,7 @@
 //----------------------------------------------------------------------------
 //
 // Compiler flags
-// 
+//
 // - None
 //
 //----------------------------------------------------------------------------
@@ -27,15 +27,12 @@
 // - Update the display (rush buy buttons) when receiving gold.
 // - Speeded up goody hut advance and unit selection.
 // - Replaced old risk database by new one. (Aug 29th 2005 Martin Gühmann)
-// - GoodyHutExcluded added to unit radomizer to prevent some units from appearing
-//   by E 8-MAR-2006
 //
 //----------------------------------------------------------------------------
 
 #include "c3.h"
 #include "GoodyHuts.h"
 
-#include "c3math.h"         // AsPercentage
 #include "player.h"
 #include "RandGen.h"
 #include "AICause.h"
@@ -64,12 +61,12 @@
 
 #include "MainControlPanel.h"
 
-extern Player **g_player;
-extern RandomGenerator *g_rand;
-extern ConstDB *g_theConstDB;
-extern TiledMap		*g_tiledMap;
+extern Player          **g_player;
+extern RandomGenerator  *g_rand;
+extern ConstDB          *g_theConstDB;
+extern TiledMap		    *g_tiledMap;
 
-extern SelectedItem	*g_selected_item;
+extern SelectedItem	    *g_selected_item;
 
 namespace
 {
@@ -103,27 +100,27 @@ namespace
 //----------------------------------------------------------------------------
         GoodyRiskData
         (
-            GameSettings const *        settings,
-            CTPDatabase<RiskRecord> *   risks
+            GameSettings      const *    settings,
+            CTPDatabase<RiskRecord> *    risks
         )
         {
-	        sint32 const    gameRiskLevel   = 
+	        sint32  gameRiskLevel   = 
                 std::min<sint32>(settings->GetRisk(), risks->NumRecords() - 1);
             m_risk                  = risks->Get(gameRiskLevel);
             Assert(m_risk);
 
             m_BarbarianThreshold    = 
-                AsPercentage(m_risk->GetHutChanceBarbarian());
+                static_cast<size_t>(m_risk->GetHutChanceBarbarian() * 100.0);       
             m_GoldThreshold         = m_BarbarianThreshold +
-                AsPercentage(m_risk->GetHutChanceGold());
+                static_cast<size_t>(m_risk->GetHutChanceGold() * 100.0);
             m_AdvanceThreshold      = m_GoldThreshold +
-                AsPercentage(m_risk->GetHutChanceAdvance());
+                static_cast<size_t>(m_risk->GetHutChanceAdvance() * 100.0);
             m_UnitThreshold         = m_AdvanceThreshold +
-                AsPercentage(m_risk->GetHutChanceUnit());
+                static_cast<size_t>(m_risk->GetHutChanceUnit() * 100.0);
             m_CityThreshold         = m_UnitThreshold +
-                AsPercentage(m_risk->GetHutChanceCity());
+                static_cast<size_t>(m_risk->GetHutChanceCity() * 100.0);
             m_SettlerThreshold      = m_CityThreshold +
-                AsPercentage(m_risk->GetHutChanceSettler());
+                static_cast<size_t>(m_risk->GetHutChanceSettler() * 100.0);
         };
 
 //----------------------------------------------------------------------------
@@ -141,29 +138,29 @@ namespace
 // Remark(s)  : -
 //
 //----------------------------------------------------------------------------
-        GOODY   Select(sint32 randomValue) const
+        GOODY   Select(uint32 randomValue) const
         {
-            if (randomValue < m_BarbarianThreshold)
+            if (randomValue < (signed) m_BarbarianThreshold)
             {
                 return GOODY_BARBARIANS;
             }
-            else if (randomValue < m_GoldThreshold)
+            else if (randomValue < (signed) m_GoldThreshold)
             {
                 return GOODY_GOLD;
             }
-            else if (randomValue < m_AdvanceThreshold)
+            else if (randomValue < (signed) m_AdvanceThreshold)
             {
                 return GOODY_ADVANCE;
             }
-            else if (randomValue < m_UnitThreshold)
+            else if (randomValue < (signed) m_UnitThreshold)
             {
                 return GOODY_UNIT;
             }
-            else if (randomValue < m_CityThreshold)
+            else if (randomValue < (signed) m_CityThreshold)
             {
                 return GOODY_CITY;
             }
-            else if (randomValue < m_SettlerThreshold)
+            else if (randomValue < (signed) m_SettlerThreshold)
             {
                 return GOODY_SETTLER;
             }
@@ -238,12 +235,12 @@ namespace
 
     private:
         RiskRecord const *  m_risk;
-        int                 m_BarbarianThreshold;       
-        int                 m_GoldThreshold;
-        int                 m_AdvanceThreshold;
-        int                 m_UnitThreshold;
-        int                 m_CityThreshold;
-        int                 m_SettlerThreshold;
+        size_t              m_BarbarianThreshold;       
+        size_t              m_GoldThreshold;
+        size_t              m_AdvanceThreshold;
+        size_t              m_UnitThreshold;
+        size_t              m_CityThreshold;
+        size_t              m_SettlerThreshold;
     };
 
 } // namespace
@@ -315,25 +312,17 @@ GOODY GoodyHut::ChooseType(PLAYER_INDEX const & owner)
 		    for (AdvanceType i = 0; i < g_theAdvanceDB->NumRecords(); ++i) 
             {
                 if (advances->HasAdvance(i)) 
-					continue;   // known
+                    continue;   // known
 
-				if (g_theAdvanceDB->Get(i)->GetGoodyHutExcluded())
-				    continue;   // EMOD new flag to prevent some unts from appearing
-
-				if ((g_theAdvanceDB->Get(i)->GetNumPrerequisites() > 0) &&
+			    if ((g_theAdvanceDB->Get(i)->GetNumPrerequisites() > 0) &&
 			        (g_theAdvanceDB->Get(i)->GetPrerequisitesIndex(0) == i)
                    )
                     continue;   // undiscoverable
 
-				//remove this and use advances->m_researching ??? EMOD
-
                 if (advances->GetMinPrerequisites(i, maxNovelty) <= maxNovelty)
                 {
-                    possible[nextPossible++] = i;			    
-			} else {
-				continue; //EMOD to prevent Bureaubert crash
-				}
-				//continue; 
+                    possible[nextPossible++] = i;
+                }
                 // else: too advanced
 		    }
 
@@ -372,7 +361,7 @@ GOODY GoodyHut::ChooseType(PLAYER_INDEX const & owner)
     case GOODY_UNIT:
         {
             Advances const *    advances     = g_player[owner]->m_advances;
-		    sint32 *            possible     = new sint32[g_theUnitDB->NumRecords()]; //EMOD changed from AdvancesDB recomended by Fromafar 4-12-2006
+		    sint32 *            possible     = new sint32[g_theAdvanceDB->NumRecords()];
 		    size_t              nextPossible = 0;
             sint32 const        maxNovelty   = risk.GetMaxUnitAdvanceLeap();
 
@@ -384,8 +373,6 @@ GOODY GoodyHut::ChooseType(PLAYER_INDEX const & owner)
 				    continue;   // would die immediately here
 			    if (rec->GetAttack() < 1)               
 				    continue;   // defenseless?
-			    if (rec->GetGoodyHutExcluded())
-				    continue;   // EMOD new flag to prevent some unts from appearing
 			    if (rec->GetHasPopAndCanBuild())
 				    continue;   // settler, handled separately
 			    if (g_exclusions->IsUnitExcluded(i))    
@@ -395,12 +382,12 @@ GOODY GoodyHut::ChooseType(PLAYER_INDEX const & owner)
 
 			    if (advances->GetMinPrerequisites
                         (rec->GetEnableAdvanceIndex(), maxNovelty) 
-                    <= maxNovelty)  {
-				   possible[nextPossible++] = i;
-			    } else {
-				continue; //EMOD to prevent Bureaubert crash
-				}
-				// else : too advanced
+                    <= maxNovelty
+                   )
+                {
+				    possible[nextPossible++] = i;
+			    }
+                // else : too advanced
 		    }
 
 		    if (nextPossible) 
@@ -513,7 +500,6 @@ void GoodyHut::OpenGoody(PLAYER_INDEX const & owner, MapPoint const & point)
 		case GOODY_ADVANCE:
 			so = new SlicObject("79DiscoveredRemnantsOfAncientCivilisation") ;
 			DPRINTF(k_DBG_GAMESTATE, ("You find advance %d\n", m_value));
-				//remove this and use advances->m_researching ??? EMOD
 			g_player[owner]->m_advances->GiveAdvance(m_value, CAUSE_SCI_GOODY);
 			so->AddRecipient(owner);
 			so->AddAdvance(m_value);
@@ -541,7 +527,7 @@ void GoodyHut::OpenGoody(PLAYER_INDEX const & owner, MapPoint const & point)
 			DPRINTF(k_DBG_GAMESTATE, ("You get unit %d\n", m_value));
 			Unit u = g_player[owner]->CreateUnit(m_value,
 												 point,
-												 Unit(),
+												 Unit(0),
 												 FALSE,
 												 CAUSE_NEW_ARMY_GOODY_HUT);
 

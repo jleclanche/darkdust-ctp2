@@ -13,12 +13,14 @@
 #include "patternbase.h"
 #include "pattern.h"
 #include "primitives.h"
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 
 #include "SlicEngine.h"
 
 extern C3UI			*g_c3ui;
 extern SlicEngine	*g_slicEngine;
+
+extern ColorSet		*g_colorSet;
 
 c3_CheckBox::c3_CheckBox(
 	AUI_ERRCODE *retval,

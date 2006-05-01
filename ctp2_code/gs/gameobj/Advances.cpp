@@ -3,7 +3,6 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Advance (tech) handling
-// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -17,16 +16,13 @@
 //----------------------------------------------------------------------------
 //
 // Compiler flags
-//
-// -None
-//
+// 
 //----------------------------------------------------------------------------
 //
 // Modifications from the original Activision code:
 //
 // - Safeguard FindLevel against infinite recursion.
 // - Speeded up goody hut advance and unit selection.
-// - Replaced old civilisation database by new one. (Aug 22nd 2005 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
 
@@ -58,8 +54,7 @@
 #include "Sci.h"
 #include "Gold.h"
 
-#include "DifficultyRecord.h"
-#include "Diffcly.h"
+#include "DiffDB.h"
 #include "profileDB.h"
 #include "ConstDB.h"
 #include "RandGen.h"
@@ -77,34 +72,35 @@
 #include "wonderutil.h"
 #include "MainControlPanel.h"
 
-#include <stdexcept>    // overflow_error
+#include <stdexcept>	// overflow_error
 
 namespace
 {
-    char const  REPORT_ADVANCE_LOOP[]   = "Advance loop detected";
+	char const	REPORT_ADVANCE_LOOP[]	= "Advance loop detected";
     char const  REPORT_ADVANCE_SELF[]   = "Advance undiscoverable";
 }
 
 extern Player** g_player;
 
-extern SelectedItem     *g_selected_item;
-extern TiledMap         *g_tiledMap;
-extern ProfileDB        *g_theProfileDB;
-extern ConstDB          *g_theConstDB;
-extern RandomGenerator  *g_rand;
-extern StringDB         *g_theStringDB ;
+extern SelectedItem *g_selected_item;
+extern TiledMap		*g_tiledMap;
+extern DifficultyDB *g_theDifficultyDB;
+extern ProfileDB    *g_theProfileDB;
+extern ConstDB      *g_theConstDB;
+extern RandomGenerator *g_rand;
+extern StringDB     *g_theStringDB ;
 extern CivilisationPool *g_theCivilisationPool;
 
 #define k_MAX_ADVANCE_TURNS 1000
 
-#define k_ADVANCES_VERSION_MAJOR	0
-#define k_ADVANCES_VERSION_MINOR	0
+#define k_ADVANCES_VERSION_MAJOR	0								
+#define k_ADVANCES_VERSION_MINOR	0								
 
 
 Advances::Advances()
 {
 	m_size = g_theAdvanceDB->NumRecords();
-	Assert(m_size);
+    Assert(m_size);
 	m_hasAdvance = new uint8[m_size];
 	m_canResearch = new uint8[m_size];
 	m_turnsSinceOffered = new uint16[m_size];
@@ -119,7 +115,7 @@ Advances::Advances()
 Advances::Advances(sint32 num)
 {
 	m_size = num;
-	Assert(m_size);
+    Assert(m_size);
 	m_hasAdvance = new uint8[m_size];
 	memset(m_hasAdvance, 0, m_size * sizeof(uint8));
 	m_canResearch = new uint8[m_size];
@@ -235,49 +231,63 @@ void Advances::UpdateCitySprites(BOOL forceUpdate)
 
 void Advances::SetHasAdvance(AdvanceType advance)
 {
-	if (   !g_player[m_owner]       // non-existing player
-        || m_hasAdvance[advance]    // advance already known
-        || !g_slicEngine->CallMod   // forbidden by game settings
-                (mod_CanPlayerHaveAdvance, TRUE, m_owner, advance)
-       )  
-    {
+	if(m_hasAdvance[advance]) {
+		
+		
 		return;
 	}
+	if(!g_slicEngine->CallMod(mod_CanPlayerHaveAdvance, TRUE, m_owner, advance))
+		return;
 
-	m_hasAdvance[advance]   = TRUE;
-	m_canResearch[advance]  = FALSE;
+	m_hasAdvance[advance] = TRUE;
 
-    const AdvanceRecord	* rec = g_theAdvanceDB->Get(advance);
+	const AdvanceRecord	*rec;
+	rec = g_theAdvanceDB->Get(advance);
 	
-	if (rec->GetDeepOcean()) 
-    {
-		g_player[m_owner]->SetDeepOceanVisible(TRUE);
+	m_canResearch[advance] = FALSE;
 
-		if (g_tiledMap) 
-        {
+	
+	if (rec->GetDeepOcean()) {
+		if (g_player[m_owner]) {
+			g_player[m_owner]->SetDeepOceanVisible(TRUE);
+		}
+
+		
+		if (g_tiledMap) {
 			g_tiledMap->Refresh();
 			g_tiledMap->InvalidateMix();
 		}
 	}
 
-	if (rec->GetCapitalization()) 
-    {
+	if(rec->GetCapitalization()) {
 		g_player[m_owner]->m_can_build_capitalization = TRUE;
 	}
 
-	if (rec->GetInfrastructure()) 
-    {
+	if(rec->GetInfrastructure()) {
 		g_player[m_owner]->m_can_build_infrastructure = TRUE;
 	}
 
-	if (rec->GetTransform()) 
-    {
+	
+	if ( rec->GetTransform()) {
 		g_player[m_owner]->m_can_use_terra_tab = TRUE;
 	}
 
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
     if (strcmp(g_theStringDB->GetIdStr(g_theAdvanceDB->Get(advance)->m_name),
-               "ADVANCE_AERODYNAMICS") == 0) 
-    {
+               "ADVANCE_AERODYNAMICS") == 0) {
         QuickSlic("42IAAirportTip", m_owner, TRUE);
     }
 
@@ -328,65 +338,73 @@ Advances::GrantAdvance()
 
 void Advances::GiveAdvance(AdvanceType adv, CAUSE_SCI cause, BOOL fromClient) 
 {
+
+
+
+
+
+
 	DPRINTF(k_DBG_GAMESTATE, ("Advance: Player %d was given %s\n", m_owner,
 			g_theAdvanceDB->GetNameStr(adv)));
 
-	if (    m_hasAdvance[adv]           // already known
-         || !g_slicEngine->CallMod      // forbidden by game settings
-                (mod_CanPlayerHaveAdvance, TRUE, m_owner, adv) 
-       ) 
-    {
+	if(m_hasAdvance[adv]) {
+		
 		return;
 	}
 
-	if (g_network.IsActive() && g_network.SetupMode()) 
-    {
-        // Multiplayer game setup
+	if(!g_slicEngine->CallMod(mod_CanPlayerHaveAdvance, TRUE, m_owner, adv))
+		
+		return;
 
-	    sint32 const pointCost = g_theAdvanceDB->Get(adv)->GetPowerPoints();
+	sint32 pointCost = g_theAdvanceDB->Get(adv)->GetPowerPoints();
+	if(g_network.IsActive() && g_network.SetupMode()) {
+		if(g_player[m_owner]->GetPoints() < pointCost)
+			
+			return;
 
-		if (g_player[m_owner]->GetPoints() < pointCost)
-			return; // Too expensive
+		
+		
+		
+		if(g_network.IsClient() && m_owner != g_selected_item->GetVisiblePlayer())
+			return;
 
-		if (g_network.IsClient() && m_owner != g_selected_item->GetVisiblePlayer())
-			return; // Not for me
-
-		if (g_network.IsHost()) 
-        {
-			if (!fromClient && m_owner != g_selected_item->GetVisiblePlayer())
-				return; // Not for me
+		if(g_network.IsHost()) {
+			if(!fromClient && m_owner != g_selected_item->GetVisiblePlayer())
+				return;
 		}
 
 		g_player[m_owner]->DeductPoints(pointCost);
-		
-        if (g_network.IsClient()) 
-        {
-			g_network.SendAction(new NetAction(NET_ACTION_ADVANCE_CHEAT, adv));
+		if(g_network.IsClient()) {
+			g_network.SendAction(new NetAction(NET_ACTION_ADVANCE_CHEAT,
+											   adv));
 		}
 	}
 
 
 	SetHasAdvance(adv);
 
-	++m_discovered;
-	m_total_cost += g_theAdvanceDB->Get(adv)->GetCost();
+	m_discovered++;
 
-	if (g_network.IsActive() && g_network.IsHost()) 
-    {
-		g_network.Enqueue(new NetInfo(NET_INFO_CODE_ADVANCE,
-									  m_owner, adv, m_discovered,
-									  g_player[m_owner]->m_science->GetLevel()
-                                     )
-                         );
+	
+	m_total_cost = m_total_cost + g_theAdvanceDB->Get(adv)->GetCost();
+
+	if(g_network.IsActive()) {
+		if(g_network.IsHost()) {
+			g_network.Enqueue(new NetInfo(NET_INFO_CODE_ADVANCE,
+										  m_owner, adv, m_discovered,
+										  g_player[m_owner]->m_science->GetLevel()));
+		}
 	}
 }
 
 void Advances::GiveAdvancePlusPrerequisites(AdvanceType adv)
 {
-	GiveAdvance(adv, CAUSE_SCI_INITIAL, FALSE);
+	if(!g_slicEngine->CallMod(mod_CanPlayerHaveAdvance, TRUE, m_owner, adv))
+		return;
 
-	for (sint32 i = 0; i < g_theAdvanceDB->Get(adv)->GetNumPrerequisites(); i++) 
-    {
+	GiveAdvance(adv, CAUSE_SCI_INITIAL, FALSE);
+	sint32 i;
+	for(i = 0; i < g_theAdvanceDB->Get(adv)->GetNumPrerequisites(); i++) {
 		if(adv == g_theAdvanceDB->Get(adv)->GetPrerequisitesIndex(i))
 			continue;
 		if(!HasAdvance(g_theAdvanceDB->Get(adv)->GetPrerequisitesIndex(i))) {
@@ -410,8 +428,8 @@ void Advances::TakeAdvance(AdvanceType adv)
 	if(!m_hasAdvance[adv])
 		return;
 
+	sint32 pointCost = g_theAdvanceDB->Get(adv)->GetPowerPoints();
 	if(g_network.IsActive() && g_network.SetupMode()) {
-	    sint32 pointCost = g_theAdvanceDB->Get(adv)->GetPowerPoints();
 		g_player[m_owner]->AddPoints(pointCost);
 		if(g_network.IsClient()) {
 			g_network.SendAction(new NetAction(NET_ACTION_TAKE_ADVANCE_CHEAT,
@@ -441,7 +459,7 @@ void Advances::InitialAdvance(AdvanceType adv)
 
 	
 	
-	m_total_cost += g_theAdvanceDB->Get(adv)->GetCost();
+	m_total_cost = m_total_cost + g_theAdvanceDB->Get(adv)->GetCost();
 
 	if(g_network.IsActive() && g_network.IsHost()) {
 		g_network.Enqueue(new NetInfo(NET_INFO_CODE_ADVANCE,
@@ -653,53 +671,6 @@ void Advances::ResetCanResearch(sint32 justGot)
 						justEnabled = TRUE;
 					}
 				}
-
-//	if(rec->GetNumNeedsCityGood() > 0) {  //EMOD use as template for EitherPreReq, for more fluid tech tree
-//		sint32 g;
-//		bool found = false;
-//		for(g = 0; g < rec->GetNumEitherPrerequisites(); g++) {
-////				for(sint32 prereq = 0; prereq < rec->GetNumPrerequisites(); prereq++) {
-//					if(rec->GetIndex() == rec->GetPrerequisitesIndex(prereq)) {
-//						canResearch = FALSE;
-//						continue;
-//					}
-//
-//					if(!m_hasAdvance[rec->GetPrerequisitesIndex(prereq)]) {
-//						
-//						canResearch = FALSE;
-//					}
-//					if(rec->GetPrerequisitesIndex(prereq) == justGot)
-////						justEnabled = TRUE;
-//			if(m_hasAdvance[rec->GetEitherPrerequisitesIndex(g)] > 0){
-//				canResearch = true;
-//				break;
-//			}
-//		}
-//		if(!canResearch)
-//			return FALSE;
-//	}
-
-// Added by E - checks all cities for buying or collecting a good, but its either/or not AND; this is to have tech's require resources
-//	if(rec->GetNumNeedsCityGoodAnyCity()) {
-//		sint32 i, g;
-//		bool goodavail = false;
-//
-//			for(i = 0; i < m_all_cities->Num(); i++) {
-//				for(g = 0; g < rec->GetNumNeedsCityGoodAnyCity(); g++) {
-//					if(m_all_cities->Access(i).AccessData()->GetCityData()->HasEitherGood(rec->GetNeedsCityGoodAnyCityIndex(g))){ 
-//						goodavail = true;
-//						break;
-//					}
-//				}
-//					if(goodavail){
-//					break;
-//					}
-//			}
-//			if(!goodavail)
-//			return FALSE;
-//	}
-//
-
 				if(justEnabled && canResearch) {
 					m_canResearch[i] = TRUE;
 				}
@@ -852,15 +823,18 @@ sint32 Advances::GetCost(const AdvanceType adv) const
 	if(g_player[m_owner]->GetPlayerType() == PLAYER_TYPE_ROBOT &&
 	   !(g_network.IsClient() && g_network.IsLocalPlayer(m_owner))) {
 		sint32 age = 0; 
-		cost = static_cast<sint32>(ceil(static_cast<double>(cost) * 
-		                           diffutil_GetAiTechnologyCost(g_theGameSettings->GetDifficulty(), m_owner, age)));
+		if(age >= k_MAX_AGES)
+			age = k_MAX_AGES - 1;
+
+		cost = sint32(ceil(double(cost) * 
+							g_theDifficultyDB->Get(g_theGameSettings->GetDifficulty())->GetAiTechnologyCost(m_owner,age)));
 	} else {
-		cost += static_cast<sint32>(ceil(static_cast<double>(cost) * 
-		          g_theDifficultyDB->Get(g_theGameSettings->GetDifficulty())->GetHumanScienceBonus()));
+		cost += sint32(ceil((double(cost) * g_theDifficultyDB->Get(g_theGameSettings->GetDifficulty())->m_human_science_bonus)));
 	}
 
 	return cost;
 }
+
 
 //----------------------------------------------------------------------------
 //
@@ -952,7 +926,7 @@ Advances::DebugDumpTree()
 	{
 		// Report loops
 		DPRINTF(k_DBG_INFO, ("%s\n", REPORT_ADVANCE_LOOP));
-		for (size_t n = 0; n < m_size; ++n)
+		for (size_t n = 0; n < (unsigned) m_size; ++n)
 		{
 			if (LEVEL_LOOPED == level[n])
 			{
@@ -971,7 +945,7 @@ Advances::DebugDumpTree()
 void
 Advances::Serialize(CivArchive& archive)
 {
-	CHECKSERIALIZE
+    CHECKSERIALIZE
 
 	if(archive.IsStoring()) {
 		archive.StoreChunk((uint8 *)&m_owner, ((uint8 *)&m_discovered)+sizeof(m_discovered));
@@ -1171,7 +1145,6 @@ void Advances::SetResearching(AdvanceType adv)
 
 	g_slicEngine->RunTrigger(TRIGGER_LIST_PLAYER_RESEARCHING,
 							 ST_ADVANCE, adv,
-							 ST_PLAYER, m_owner,
-							 ST_END);
+							 ST_PLAYER, m_owner);
 }
 

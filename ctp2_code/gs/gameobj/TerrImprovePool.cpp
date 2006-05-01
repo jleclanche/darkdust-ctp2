@@ -44,7 +44,7 @@
 #include "SoundRecord.h"
 #include "soundmanager.h"
 #include "SelItem.h"
-#include "Network.h"                    // g_network
+#include "network.h"                    // g_network
 
 TerrainImprovementPool::TerrainImprovementPool() 
 	: ObjPool(k_BIT_GAME_OBJ_TYPE_TERRAIN_IMPROVEMENT)
@@ -97,7 +97,7 @@ TerrainImprovementPool::Create(sint32 owner,
        )
 	{
 		// Invalid or inapplicable improvement 
-		return TerrainImprovement();
+		return TerrainImprovement(0);
 	}
 
 	// Obscure the improvement for all but the owner
@@ -177,7 +177,6 @@ TerrainImprovementPool::Serialize(CivArchive &archive)
 	}
 }
 
-//not implemented??? E 4-7-2006
 BOOL TerrainImprovementPool::HasImprovement(const MapPoint &point,
 											TERRAIN_IMPROVEMENT type,
 											sint32 extraData)

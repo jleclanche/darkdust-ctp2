@@ -44,6 +44,8 @@
 extern "C" {
 #endif
 
+#include "ctp2_config.h"
+
 typedef enum {
 	SLIC_ERROR_OK,
 	SLIC_ERROR_SYNTAX,
@@ -200,7 +202,9 @@ extern int slic_parse_error;
 extern int g_slicLineNumber;
 
 extern int g_slicWarnUndeclared;
+#ifdef _DEBUG
 extern FILE *debuglog;
+#endif
 
 SLIC_ERROR slicif_run_parser(char *filename, int symStart);
 void slicif_add_object(struct PSlicObject* obj);

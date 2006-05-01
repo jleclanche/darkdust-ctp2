@@ -98,7 +98,7 @@ void CTPAgent::Init()
     Agent::Init();
     
     
-    m_army = Army(); 
+    m_army = 0; 
 
 	
 	m_squad_class = SQUAD_CLASS_DEFAULT;
@@ -475,7 +475,7 @@ sint32 CTPAgent::GetRounds(const MapPoint & pos, sint32 & cells) const
 	   ///Improvement of rounds evaluation (based on minimum cost point between
 	   ///start and destination mappoints. - Calvitix
 		Cell * myCell = g_theWorld->GetCell(pos);
-		sint32 movement = myCell->GetMoveCost();
+		sint32 movement = sint32(myCell->GetMoveCost());
 		myCell = g_theWorld->GetCell(Get_Pos());
 		movement = std::min((long)movement,(long)myCell->GetMoveCost());
 
@@ -586,11 +586,12 @@ bool CTPAgent::Follow_Path(const Path & found_path, const sint32 & order_type)
 
 	
 	sint32 range = 0;
-	if (order_type >= 0)
+	if (order_type >= 0 && g_theOrderDB->Get(order_type)->GetRange())
 	{
-		(void) g_theOrderDB->Get(order_type)->GetRange(range);
+		g_theOrderDB->Get(order_type)->GetRange(range);
 	}
 
+	
 	Assert(range < 10);
 
 	
@@ -640,10 +641,14 @@ void CTPAgent::Execute_Order(const sint32 & order_type, const MapPoint & target_
 
 	
 	sint32 range = 0;
-	(void) g_theOrderDB->Get(order_type)->GetRange(range);
+	if (g_theOrderDB->Get(order_type)->GetRange())
+	{
+		g_theOrderDB->Get(order_type)->GetRange(range);
+	}
 
 	if (range > 0)
 	{
+		
 		g_gevManager->AddEvent( GEV_INSERT_Tail, 
 							static_cast<GAME_EVENT>(game_event), 
 							GEA_Army, m_army, 
@@ -652,10 +657,13 @@ void CTPAgent::Execute_Order(const sint32 & order_type, const MapPoint & target_
 	}
 	else
 	{
+	
+		
 		g_gevManager->AddEvent( GEV_INSERT_Tail, 
 			static_cast<GAME_EVENT>(game_event), 
 			GEA_Army, m_army, 
 			GEA_End);
+
 	}
 
 	

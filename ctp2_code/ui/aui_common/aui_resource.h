@@ -232,7 +232,7 @@ AUI_ERRCODE aui_Resource<T>::AddSearchPath( const MBCHAR *path )
 	Assert( path != NULL );
 	if ( !path ) return AUI_ERRCODE_INVALIDPARAM;
 
-	uint32 len = strlen( path );
+	size_t len = strlen( path );
 
 	Assert( len != 0 );
 	if ( !len ) return AUI_ERRCODE_INVALIDPARAM;
@@ -405,11 +405,11 @@ BOOL aui_Resource<T>::FindFile( MBCHAR *fullPath, const MBCHAR *name )
 #if defined(WIN32)
 				if ( GetFileAttributes( fullPath ) != 0xffffffff )
 #else
-            struct stat st;
-            if (0 == stat(fullPath, &st))
+				struct stat st;
+				if (0 == stat(fullPath, &st))
 #endif
 				{
-                    return TRUE;
+					return TRUE;
 				}
 			}
 

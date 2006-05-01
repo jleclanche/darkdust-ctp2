@@ -1,11 +1,6 @@
-
-
-
-
-
-
-
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
+#endif
 #ifndef CTP2_TAB_H__
 #define CTP2_TAB_H__
 
@@ -71,7 +66,7 @@ private:
 
 	
 	
-	friend ctp2_TabGroup;
+	friend class ctp2_TabGroup;
 };
 
 #endif 

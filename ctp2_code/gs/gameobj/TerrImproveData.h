@@ -1,32 +1,10 @@
-//----------------------------------------------------------------------------
-//
-// Project      : Call To Power 2
-// File type    : C++ header
-// Description  : Terrain improvement data
-// Id           : $Id$
-//
-//----------------------------------------------------------------------------
-//
-// Disclaimer
-//
-// THIS FILE IS NOT GENERATED OR SUPPORTED BY ACTIVISION.
-//
-// This material has been developed at apolyton.net by the Apolyton CtP2 
-// Source Code Project. Contact the authors at ctp2source@apolyton.net.
-//
-//----------------------------------------------------------------------------
-//
-// Compiler flags
-//
-// HAVE_PRAGMA_ONCE
-//
-//----------------------------------------------------------------------------
-//
-// Modifications from the original Activision code:
-//
-// - Restored save game compatibilty. (April 22nd 2006 Martin Gühmann)
-//
-//----------------------------------------------------------------------------
+
+
+
+
+
+
+
 
 #ifdef HAVE_PRAGMA_ONCE
 #pragma once
@@ -76,7 +54,6 @@ private:
 	sint32 m_materialCost;
 	bool m_isComplete;
 	bool m_isBuilding;
-	sint32 m_materialBonus;
 
 	friend class NetTerrainImprovement;
 
@@ -97,8 +74,6 @@ public:
 	BOOL Complete(void);
 	BOOL AddTurn(sint32 turns);
 	sint32 PercentComplete() const;
-
-	sint32 GetBonusProductionExport() const { return m_materialBonus; } //EMOD 4-5-2006
 	sint32 GetMaterialCost() const { return m_materialCost; }
 	bool IsBuilding() const { return m_isBuilding; }
 

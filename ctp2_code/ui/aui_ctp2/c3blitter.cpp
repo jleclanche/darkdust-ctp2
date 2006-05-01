@@ -31,6 +31,8 @@
 #include "c3.h"
 
 #include "aui.h"
+#include "aui_surface.h"
+#include "aui_sdlsurface.h"
 #include "aui_directsurface.h"
 #include "aui_rectangle.h"
 
@@ -45,17 +47,15 @@ extern BOOL		g_useDDBlit;
 unsigned which_blit=0;
 
 
-C3Blitter::C3Blitter() 
+C3Blitter::C3Blitter() : aui_NativeBlitter()
 {
    
    
    
    if(CheckMMXTechnology())	
-	   
-	   
-	   _Blt16To16Fast =Blt16To16Fast;
+	   _Blt16To16Fast = &Blt16To16Fast;
    else
-	   _Blt16To16Fast =Blt16To16Fast;
+	   _Blt16To16Fast = &Blt16To16Fast;
 };
 
 
@@ -66,7 +66,12 @@ AUI_ERRCODE C3Blitter::Blt16To16(
 	RECT *srcRect,
 	uint32 flags )
 {
+	// Blitting in assembler code is not portable
+#if defined(__AUI_USE_SDL__) || (!defined(WIN32))
+	if (0)
+#else
 	if ((flags & k_AUI_BLITTER_FLAG_FAST)) 
+#endif
 	{
 		
 #ifdef _TRY_ALL_BLITTERS	
@@ -88,7 +93,7 @@ AUI_ERRCODE C3Blitter::Blt16To16(
 		return (this->*_Blt16To16Fast)(destSurf, destRect, srcSurf, srcRect, flags);
 	} else {	
 		if (g_useDDBlit)
-			return aui_DirectBlitter::Blt16To16(destSurf, destRect, srcSurf, srcRect, flags);
+			return aui_NativeBlitter::Blt16To16(destSurf, destRect, srcSurf, srcRect, flags);
 		else
 		   	return aui_Blitter::Blt16To16(destSurf, destRect, srcSurf, srcRect, flags);
 	}
@@ -101,7 +106,7 @@ AUI_ERRCODE C3Blitter::ColorBlt16(
 	uint32 flags )
 {
 	if (g_useDDBlit) 
-		return aui_DirectBlitter::ColorBlt16(destSurf, destRect, color, flags);
+		return aui_NativeBlitter::ColorBlt16(destSurf, destRect, color, flags);
 	else
 		return aui_Blitter::ColorBlt16(destSurf, destRect, color, flags);
 }
@@ -114,10 +119,7 @@ AUI_ERRCODE C3Blitter::ColorStencilBlt16(
 	uint32 color,
 	uint32 flags)
 {
-
-
-
-		return aui_Blitter::ColorStencilBlt16(destSurf, destRect, stencilSurf, stencilRect, color, flags);
+	return aui_Blitter::ColorStencilBlt16(destSurf, destRect, stencilSurf, stencilRect, color, flags);
 }
 
 AUI_ERRCODE C3Blitter::StretchBlt16To16(
@@ -128,7 +130,7 @@ AUI_ERRCODE C3Blitter::StretchBlt16To16(
 	uint32 flags )
 {
 	if (g_useDDBlit) 
-		return aui_DirectBlitter::StretchBlt16To16(destSurf, destRect, srcSurf, srcRect, flags);
+		return aui_NativeBlitter::StretchBlt16To16(destSurf, destRect, srcSurf, srcRect, flags);
 	else
 		return aui_Blitter::StretchBlt16To16(destSurf, destRect, srcSurf, srcRect, flags);
 }
@@ -151,7 +153,7 @@ AUI_ERRCODE C3Blitter::Blt16To16Fast(
 	
 	BOOL wasDestLocked;
 	uint16 *destBuf = (uint16 *)destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -172,7 +174,7 @@ AUI_ERRCODE C3Blitter::Blt16To16Fast(
 		
 		BOOL wasSrcLocked;
 		uint16 *srcBuf = (uint16 *)srcSurf->Buffer();
-		if ( wasSrcLocked = srcBuf != NULL )
+		if ((wasSrcLocked = srcBuf != NULL))
 		{
 			srcBuf += srcRect->top * srcPitch + srcRect->left;
 		}
@@ -202,26 +204,11 @@ AUI_ERRCODE C3Blitter::Blt16To16Fast(
 				
 				do
 				{
-					
-					
-
-					
 					destBuf += destPitch;
+#ifndef _MSC_VER
+					assert(0);
+#else
 					__asm {
-			  		
-
-
-
-
-
-
-
-
-
-
-
-
-
 							mov		ecx, scanWidth
 				  			mov		esi, srcBuf
 				  			mov     edx, ecx
@@ -253,6 +240,7 @@ L1:
 							mov		[edi], ax
 L2:
 					}
+#endif // _MSC_VER
 				} while ( (srcBuf += srcPitch) != stop );
 			}
 			else if ( flags & k_AUI_BLITTER_FLAG_CHROMAKEY )
@@ -337,7 +325,7 @@ AUI_ERRCODE C3Blitter::Blt16To16FastMMX(
 	
 	BOOL wasDestLocked;
 	uint16 *destBuf = (uint16 *)destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -358,7 +346,7 @@ AUI_ERRCODE C3Blitter::Blt16To16FastMMX(
 		
 		BOOL wasSrcLocked;
 		uint16 *srcBuf = (uint16 *)srcSurf->Buffer();
-		if ( wasSrcLocked = srcBuf != NULL )
+		if ((wasSrcLocked = srcBuf != NULL))
 		{
 			srcBuf += srcRect->top * srcPitch + srcRect->left;
 		}
@@ -399,7 +387,9 @@ AUI_ERRCODE C3Blitter::Blt16To16FastMMX(
 
 					destBuf += destPitch;
 					
-					
+#ifndef _MSC_VER
+					assert(0);
+#else
 					_asm
 					{
 						mov eax, scanWidth
@@ -427,8 +417,8 @@ AUI_ERRCODE C3Blitter::Blt16To16FastMMX(
 						
 	   					shr ecx,1
 	   					rep movsw
-					}	
-
+				         }	
+#endif // _MSC_VER
 				} while ( (srcBuf += srcPitch) != stop );
 			}
 			else if ( flags & k_AUI_BLITTER_FLAG_CHROMAKEY )
@@ -512,7 +502,7 @@ AUI_ERRCODE C3Blitter::Blt16To16FastFPU(
 	
 	BOOL wasDestLocked;
 	uint16 *destBuf = (uint16 *)destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -533,7 +523,7 @@ AUI_ERRCODE C3Blitter::Blt16To16FastFPU(
 		
 		BOOL wasSrcLocked;
 		uint16 *srcBuf = (uint16 *)srcSurf->Buffer();
-		if ( wasSrcLocked = srcBuf != NULL )
+		if ((wasSrcLocked = srcBuf != NULL))
 		{
 			srcBuf += srcRect->top * srcPitch + srcRect->left;
 		}
@@ -568,7 +558,10 @@ AUI_ERRCODE C3Blitter::Blt16To16FastFPU(
 
 					
 					destBuf += destPitch;
-	
+
+#ifndef _MSC_VER
+					assert(0);
+#else
 					_asm
 			  		{
 						mov eax, scanWidth
@@ -594,7 +587,7 @@ AUI_ERRCODE C3Blitter::Blt16To16FastFPU(
 					   	shr ecx,1
 					   	rep movsw
 					}
-
+#endif // _MSC_VER
 				} while ( (srcBuf += srcPitch) != stop );
 			}
 			else if ( flags & k_AUI_BLITTER_FLAG_CHROMAKEY )
@@ -663,6 +656,7 @@ AUI_ERRCODE C3Blitter::Blt16To16FastFPU(
 
 bool C3Blitter::CheckMMXTechnology(void)
 {
+#ifdef _MSC_VER
     bool retval = true;
     DWORD RegEDX = 0;
 
@@ -684,610 +678,18 @@ bool C3Blitter::CheckMMXTechnology(void)
        __try { _asm emms }          
        __except(EXCEPTION_EXECUTE_HANDLER) { retval = false; }
     }
-
+#else
+    bool retval = false;
+#endif // _MSC_VER
     
     
     return retval;
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 void BlockCopy(uint8 *src, uint8 *dest, uint32 len)
 {
+#ifdef _MSC_VER
 	__asm {
 		mov		esi, src
 		mov		edi, dest
@@ -1307,4 +709,8 @@ void BlockCopy(uint8 *src, uint8 *dest, uint32 len)
 End:	add		ecx, eax
 	rep movsb
 	}
+#else
+	assert(0);
+#endif // _MSC_VER
 }
+

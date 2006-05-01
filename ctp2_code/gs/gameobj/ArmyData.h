@@ -1,9 +1,9 @@
 //----------------------------------------------------------------------------
+//----------------------------------------------------------------------------
 //
 // Project      : Call To Power 2
 // File type    : C++ header
 // Description  : Army data handling
-// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -18,8 +18,6 @@
 //
 // Compiler flags
 //
-// HAVE_PRAGMA_ONCE
-//
 //----------------------------------------------------------------------------
 //
 // Modifications from the original Activision code:
@@ -30,11 +28,10 @@
 // - Added a isstealth paramater in characterizeArmy method - Calvitix
 // - Moved UnitValidForOrder to Unit.h to be able to access the Unit
 //   properties. - April 24th 2005 Martin Gühmann
-// - Added Cleanup. (Sep. 25th 2005 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -596,7 +593,7 @@ public:
 
 
 
-	static void Cleanup(){ delete[] s_orderDBToEventMap; s_orderDBToEventMap = NULL; };
+
 
 
 private:

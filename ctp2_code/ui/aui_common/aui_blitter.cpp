@@ -170,7 +170,7 @@ AUI_ERRCODE aui_Blitter::Blt8To8(
 	
 	BOOL wasDestLocked;
 	uint8 *destBuf = destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -191,7 +191,7 @@ AUI_ERRCODE aui_Blitter::Blt8To8(
 		
 		BOOL wasSrcLocked;
 		uint8 *srcBuf = srcSurf->Buffer();
-		if ( wasSrcLocked = srcBuf != NULL )
+		if ((wasSrcLocked = srcBuf != NULL))
 		{
 			srcBuf += srcRect->top * srcPitch + srcRect->left;
 		}
@@ -323,7 +323,7 @@ AUI_ERRCODE aui_Blitter::Blt16To16(
 	
 	BOOL wasDestLocked;
 	uint16 *destBuf = (uint16 *)destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -344,7 +344,7 @@ AUI_ERRCODE aui_Blitter::Blt16To16(
 		
 		BOOL wasSrcLocked;
 		uint16 *srcBuf = (uint16 *)srcSurf->Buffer();
-		if ( wasSrcLocked = srcBuf != NULL )
+		if ((wasSrcLocked = srcBuf != NULL))
 		{
 			srcBuf += srcRect->top * srcPitch + srcRect->left;
 		}
@@ -405,10 +405,11 @@ AUI_ERRCODE aui_Blitter::Blt16To16(
 						{
 							
 							if ( *srcBuf != chromakey )
-								*destBuf++ = aui_Pixel::Blend555(
+							{
+								*destBuf = aui_Pixel::Blend555(
 									*destBuf, *srcBuf, blend );
-							else
-								destBuf++;
+							}
+							destBuf++;
 						} while ( ++srcBuf != stopHorizontal );
 
 						stopHorizontal += srcPitch;
@@ -424,10 +425,11 @@ AUI_ERRCODE aui_Blitter::Blt16To16(
 						{
 							
 							if ( *srcBuf != chromakey )
-								*destBuf++ = aui_Pixel::Blend565(
+							{
+								*destBuf = aui_Pixel::Blend565(
 									*destBuf, *srcBuf, blend );
-							else
-								destBuf++;
+							}
+							destBuf++;
 						} while ( ++srcBuf != stopHorizontal );
 
 						stopHorizontal += srcPitch;
@@ -491,8 +493,9 @@ AUI_ERRCODE aui_Blitter::Blt16To16(
 					{
 						do
 						{
-							*destBuf++ =
+							*destBuf =
 								aui_Pixel::Blend555( *destBuf, *srcBuf, blend );
+							destBuf++;
 						} while ( ++srcBuf != stopHorizontal );
 
 						stopHorizontal += srcPitch;
@@ -506,8 +509,9 @@ AUI_ERRCODE aui_Blitter::Blt16To16(
 					{
 						do
 						{
-							*destBuf++ =
+							*destBuf =
 								aui_Pixel::Blend565( *destBuf, *srcBuf, blend );
+							destBuf++;
 						} while ( ++srcBuf != stopHorizontal );
 
 						stopHorizontal += srcPitch;
@@ -736,7 +740,7 @@ AUI_ERRCODE aui_Blitter::TileBlt8To8(
 	
 	BOOL wasDestLocked;
 	uint8 *destBuf = destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -757,7 +761,7 @@ AUI_ERRCODE aui_Blitter::TileBlt8To8(
 		
 		BOOL wasSrcLocked;
 		uint8 *srcBuf = srcSurf->Buffer();
-		if ( wasSrcLocked = srcBuf != NULL )
+		if ((wasSrcLocked = srcBuf != NULL))
 		{
 			srcBuf += srcRect->top * srcPitch + srcRect->left;
 		}
@@ -947,7 +951,7 @@ AUI_ERRCODE aui_Blitter::TileBlt16To16(
 	
 	BOOL wasDestLocked;
 	uint16 *destBuf = (uint16 *)destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -968,7 +972,7 @@ AUI_ERRCODE aui_Blitter::TileBlt16To16(
 		
 		BOOL wasSrcLocked;
 		uint16 *srcBuf = (uint16 *)srcSurf->Buffer();
-		if ( wasSrcLocked = srcBuf != NULL )
+		if ((wasSrcLocked = srcBuf != NULL))
 		{
 			srcBuf += srcRect->top * srcPitch + srcRect->left;
 		}
@@ -1361,10 +1365,11 @@ AUI_ERRCODE aui_Blitter::BevelBlt8(
 
 		
 
-		
-		for ( sint32 i = 0; i < bevelThickness; i++ )
+		sint32 i;		
+		for ( i = 0; i < bevelThickness; i++ )
 		{
-			for ( sint32 j = i; j; j-- )
+			sint32 j;
+			for ( j = i; j; j-- )
 			{
 				
 				*destBuf++ = white;
@@ -1389,7 +1394,8 @@ AUI_ERRCODE aui_Blitter::BevelBlt8(
 		
 		for ( i = skipHeight; i; i-- )
 		{
-			for ( sint32 j = bevelThickness; j; j-- )
+			sint32 j;
+			for ( j = bevelThickness; j; j-- )
 			{
 				
 				*destBuf++ = white;
@@ -1412,7 +1418,8 @@ AUI_ERRCODE aui_Blitter::BevelBlt8(
 		
 		for ( i = bevelThickness; i; i-- )
 		{
-			for ( sint32 j = i - 1; j; j-- )
+			sint32 j;
+			for ( j = i - 1; j; j-- )
 			{
 				
 				*destBuf++ = white;
@@ -1529,25 +1536,26 @@ AUI_ERRCODE aui_Blitter::BevelBlt16(
 
 		if ( destSurf->PixelFormat() == AUI_SURFACE_PIXELFORMAT_555 )
 		{
-			
-			for ( sint32 i = 0; i < bevelThickness; i++ )
+			sint32 i;
+			for ( i = 0; i < bevelThickness; i++ )
 			{
-				for ( sint32 j = i; j; j-- )
+				sint32 j;
+				for ( j = i; j; j-- )
 				{
-					
-					*destBuf++ = aui_Pixel::Darken555( *destBuf, -xscalar );
+					*destBuf = aui_Pixel::Darken555( *destBuf, -xscalar );
+					destBuf++;
 				}
 
 				do
 				{
-					
-					*destBuf++ = aui_Pixel::Darken555( *destBuf, -yscalar );
+					*destBuf = aui_Pixel::Darken555( *destBuf, -yscalar );
+					destBuf++;
 				} while ( destBuf != stop );
 
 				for ( j = i; j; j-- )
 				{
-					
-					*destBuf++ = aui_Pixel::Darken555( *destBuf, xscalar );
+					*destBuf = aui_Pixel::Darken555( *destBuf, xscalar );
+					destBuf++;
 				}
 
 				destBuf += destDiff;
@@ -1557,10 +1565,11 @@ AUI_ERRCODE aui_Blitter::BevelBlt16(
 			
 			for ( i = skipHeight; i; i-- )
 			{
-				for ( sint32 j = bevelThickness; j; j-- )
+				sint32 j;
+				for ( j = bevelThickness; j; j-- )
 				{
-					
-					*destBuf++ = aui_Pixel::Darken555( *destBuf, -xscalar );
+					*destBuf = aui_Pixel::Darken555( *destBuf, -xscalar );
+					destBuf++;
 				}
 
 				
@@ -1568,8 +1577,8 @@ AUI_ERRCODE aui_Blitter::BevelBlt16(
 
 				for ( j = bevelThickness; j; j-- )
 				{
-					
-					*destBuf++ = aui_Pixel::Darken555( *destBuf, xscalar );
+					*destBuf = aui_Pixel::Darken555( *destBuf, xscalar );
+					destBuf++;
 				}
 
 				destBuf += destDiff;
@@ -1580,22 +1589,23 @@ AUI_ERRCODE aui_Blitter::BevelBlt16(
 			
 			for ( i = bevelThickness; i; i-- )
 			{
-				for ( sint32 j = i - 1; j; j-- )
+				sint32 j;
+				for ( j = i - 1; j; j-- )
 				{
-					
-					*destBuf++ = aui_Pixel::Darken555( *destBuf, -xscalar );
+					*destBuf = aui_Pixel::Darken555( *destBuf, -xscalar );
+					destBuf++;
 				}
 
 				do
 				{
-					
-					*destBuf++ = aui_Pixel::Darken555( *destBuf, yscalar );
+					*destBuf = aui_Pixel::Darken555( *destBuf, yscalar );
+					destBuf++;
 				} while ( destBuf != stop );
 
 				for ( j = i - 1; j; j-- )
 				{
-					
-					*destBuf++ = aui_Pixel::Darken555( *destBuf, xscalar );
+					*destBuf = aui_Pixel::Darken555( *destBuf, xscalar );
+					destBuf++;
 				}
 
 				destBuf += destDiff;
@@ -1604,25 +1614,26 @@ AUI_ERRCODE aui_Blitter::BevelBlt16(
 		}
 		else 
 		{
-			
-			for ( sint32 i = 0; i < bevelThickness; i++ )
+			sint32 i;
+			for ( i = 0; i < bevelThickness; i++ )
 			{
-				for ( sint32 j = i; j; j-- )
+				sint32 j;
+				for ( j = i; j; j-- )
 				{
-					
-					*destBuf++ = aui_Pixel::Darken565( *destBuf, -xscalar );
+					*destBuf = aui_Pixel::Darken565( *destBuf, -xscalar );
+					destBuf++;
 				}
 
 				do
 				{
-					
-					*destBuf++ = aui_Pixel::Darken565( *destBuf, -yscalar );
+					*destBuf = aui_Pixel::Darken565( *destBuf, -yscalar );
+					destBuf++;
 				} while ( destBuf != stop );
 
 				for ( j = i; j; j-- )
 				{
-					
-					*destBuf++ = aui_Pixel::Darken565( *destBuf, xscalar );
+					*destBuf = aui_Pixel::Darken565( *destBuf, xscalar );
+					destBuf++;
 				}
 
 				destBuf += destDiff;
@@ -1632,10 +1643,11 @@ AUI_ERRCODE aui_Blitter::BevelBlt16(
 			
 			for ( i = skipHeight; i; i-- )
 			{
-				for ( sint32 j = bevelThickness; j; j-- )
+				sint32 j;
+				for ( j = bevelThickness; j; j-- )
 				{
-					
-					*destBuf++ = aui_Pixel::Darken565( *destBuf, -xscalar );
+					*destBuf = aui_Pixel::Darken565( *destBuf, -xscalar );
+					destBuf++;
 				}
 
 				
@@ -1643,8 +1655,8 @@ AUI_ERRCODE aui_Blitter::BevelBlt16(
 
 				for ( j = bevelThickness; j; j-- )
 				{
-					
-					*destBuf++ = aui_Pixel::Darken565( *destBuf, xscalar );
+					*destBuf = aui_Pixel::Darken565( *destBuf, xscalar );
+					destBuf++;
 				}
 
 				destBuf += destDiff;
@@ -1655,22 +1667,23 @@ AUI_ERRCODE aui_Blitter::BevelBlt16(
 			
 			for ( i = bevelThickness; i; i-- )
 			{
-				for ( sint32 j = i - 1; j; j-- )
+				sint32 j;
+				for ( j = i - 1; j; j-- )
 				{
-					
-					*destBuf++ = aui_Pixel::Darken565( *destBuf, -xscalar );
+					*destBuf = aui_Pixel::Darken565( *destBuf, -xscalar );
+					destBuf++;
 				}
 
 				do
 				{
-					
-					*destBuf++ = aui_Pixel::Darken565( *destBuf, yscalar );
+					*destBuf = aui_Pixel::Darken565( *destBuf, yscalar );
+					destBuf++;
 				} while ( destBuf != stop );
 
 				for ( j = i - 1; j; j-- )
 				{
-					
-					*destBuf++ = aui_Pixel::Darken565( *destBuf, xscalar );
+					*destBuf = aui_Pixel::Darken565( *destBuf, xscalar );
+					destBuf++;
 				}
 
 				destBuf += destDiff;
@@ -1840,7 +1853,7 @@ AUI_ERRCODE aui_Blitter::ColorBlt8(
 	
 	BOOL wasDestLocked;
 	uint8 *destBuf = destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -1900,7 +1913,7 @@ AUI_ERRCODE aui_Blitter::ColorBlt16(
 	
 	BOOL wasDestLocked;
 	uint16 *destBuf = (uint16 *)destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -2004,7 +2017,7 @@ AUI_ERRCODE aui_Blitter::ColorStencilBlt16(
 	
 	BOOL wasDestLocked;
 	uint16 *destBuf = (uint16 *)destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -2019,7 +2032,7 @@ AUI_ERRCODE aui_Blitter::ColorStencilBlt16(
 	const sint32 stencilPitch = stencilSurf->Pitch() / 2;
 	BOOL wasStencilLocked;
 	uint16 *stencilBuf = (uint16 *)stencilSurf->Buffer();
-	if(wasStencilLocked = stencilBuf != NULL)
+	if ((wasStencilLocked = stencilBuf != NULL))
 	{
 		stencilBuf += stencilRect->top * stencilPitch + stencilRect->left;
 	}
@@ -2121,7 +2134,7 @@ AUI_ERRCODE aui_Blitter::StencilBlt16(
 	
 	BOOL wasDestLocked;
 	uint16 *destBuf = (uint16 *)destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -2136,7 +2149,7 @@ AUI_ERRCODE aui_Blitter::StencilBlt16(
 	const sint32 stencilPitch = stencilSurf->Pitch() / 2;
 	BOOL wasStencilLocked;
 	uint16 *stencilBuf = (uint16 *)stencilSurf->Buffer();
-	if(wasStencilLocked = stencilBuf != NULL)
+	if ((wasStencilLocked = stencilBuf != NULL))
 	{
 		stencilBuf += stencilRect->top * stencilPitch + stencilRect->left;
 	}
@@ -2150,7 +2163,7 @@ AUI_ERRCODE aui_Blitter::StencilBlt16(
 	const sint32 sourcePitch = sourceSurf->Pitch() / 2;
 	BOOL wasSourceLocked;
 	uint16 *sourceBuf = (uint16 *)sourceSurf->Buffer();
-	if(wasSourceLocked = sourceBuf != NULL)
+	if ((wasSourceLocked = sourceBuf != NULL))
 	{
 		sourceBuf += sourceRect->top * sourcePitch + sourceRect->left;
 	}
@@ -2353,7 +2366,9 @@ aui_Stencil *aui_CreateStencil(aui_Surface *pSurface)
 
 void BlockCopy16(uint16 *pDst, uint16 *pSrc, sint32 copylength)
 {
-	
+#ifndef WIN32
+	memcpy(pDst, pSrc, copylength * sizeof(uint16));
+#else
 	if (((uint32 )pDst) & 2)
 	{
 		*pDst = *pSrc;
@@ -2395,6 +2410,7 @@ __asm
 		mov		[edi], ax
 	L2:
 	}
+#endif
 }
 
 
@@ -2421,7 +2437,7 @@ AUI_ERRCODE aui_Blitter::StencilMixBlt16(
 	{ \
 		buf = (uint16 *)surf->Buffer();\
 		pitch = surf->Pitch() / 2; \
-		if (check = (buf != NULL)) { \
+		if ((check = (buf != NULL))) { \
 			buf += rect->top * pitch + rect->left; \
 		} else if (surf->Lock(rect, (LPVOID *)&buf, 0) != AUI_ERRCODE_OK) { \
 			buf = NULL; \
@@ -2632,7 +2648,7 @@ AUI_ERRCODE aui_Blitter::StretchBlt8To8(
 	
 	BOOL wasDestLocked;
 	uint8 *destBuf = destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -2653,7 +2669,7 @@ AUI_ERRCODE aui_Blitter::StretchBlt8To8(
 		
 		BOOL wasSrcLocked;
 		uint8 *srcBuf = srcSurf->Buffer();
-		if ( wasSrcLocked = srcBuf != NULL )
+		if ((wasSrcLocked = srcBuf != NULL))
 		{
 			srcBuf += srcRect->top * srcPitch + srcRect->left;
 		}
@@ -2801,7 +2817,7 @@ AUI_ERRCODE aui_Blitter::StretchBlt16To16(
 	
 	BOOL wasDestLocked;
 	uint16 *destBuf = (uint16 *)destSurf->Buffer();
-	if ( wasDestLocked = destBuf != NULL )
+	if ((wasDestLocked = destBuf != NULL))
 	{
 		destBuf += destRect->top * destPitch + destRect->left;
 	}
@@ -2822,7 +2838,7 @@ AUI_ERRCODE aui_Blitter::StretchBlt16To16(
 		
 		BOOL wasSrcLocked;
 		uint16 *srcBuf = (uint16 *)srcSurf->Buffer();
-		if ( wasSrcLocked = srcBuf != NULL )
+		if ((wasSrcLocked = srcBuf != NULL))
 		{
 			srcBuf += srcRect->top * srcPitch + srcRect->left;
 		}

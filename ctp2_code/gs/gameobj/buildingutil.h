@@ -24,13 +24,6 @@ double buildingutil_GetPreventConversion(const uint64 built_improvements);
 double buildingutil_GetPreventSlavery(const uint64 built_improvements);
 double buildingutil_GetLowerPeaceMovement(const uint64 built_improvements);
 sint32 buildingutil_GetGoldPerCitizen(const uint64 built_improvements);
-sint32 buildingutil_GetUpkeepPerCity(const uint64 built_improvements); // EMOD
-sint32 buildingutil_GetUpkeepPerUnit(const uint64 built_improvements); // EMOD
-sint32 buildingutil_GetUpkeepPerUnitWagesReadiness(const uint64 built_improvements); // EMOD
-sint32 buildingutil_GetGoldPerCity(const uint64 built_improvements); // EMOD
-sint32 buildingutil_GetGoldPerUnitSupport(const uint64 built_improvements); // EMOD
-sint32 buildingutil_GetGoldPerUnit(const uint64 built_improvements); // EMOD
-sint32 buildingutil_GetGoldPerUnitReadiness(const uint64 built_improvements); // EMOD
 BOOL buildingutil_GetProtectFromNukes(const uint64 built_improvements);
 double buildingutil_GetProtectFromBioAgents(const uint64 built_improvements);
 double buildingutil_GetProtectFromNanoVirus(const uint64 built_improvements);
@@ -63,9 +56,5 @@ sint32 buildingutil_GetStarvationProtection(const uint64 built_improvements);
 double buildingutil_GetOffenseBonusLand(const uint64 built_improvements);
 double buildingutil_GetOffenseBonusWater(const uint64 built_improvements);
 double buildingutil_GetOffenseBonusAir(const uint64 built_improvements);
-
-BOOL buildingutil_IsObsolete(sint32 building_type); //EMOD 4-28-2006
-BOOL buildingutil_GetEmbassiesEverywhereEvenAtWar(const uint64 built_improvements); //EMOD 4-28-2006
-sint32 buildingutil_GetIncreaseHP(const sint32 building_type); //EMOD 4-28-2006
 
 #endif

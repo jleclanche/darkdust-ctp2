@@ -632,7 +632,7 @@ STDEHANDLER(ClearTargetEvent)
 
 	if(!args->GetUnit(0, u)) return GEV_HD_Continue;
 
-	u->SetTargetCity(Unit());
+	u->SetTargetCity(Unit(0));
 	return GEV_HD_Continue;
 }
 

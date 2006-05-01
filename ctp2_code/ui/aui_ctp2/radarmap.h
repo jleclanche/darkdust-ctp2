@@ -31,13 +31,15 @@
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
 #ifndef ___BMH_RADAR_MAP_HEADER
 #define ___BMH_RADAR_MAP_HEADER
 
+
+#include "colorset.h"
 #include "aui_control.h"
 #include "MapPoint.h"
 #include "patternbase.h"
@@ -84,7 +86,7 @@ public:
 	
 	
 	void		ClearMapOverlay(void);
-	void		SetMapOverlayCell(MapPoint &pos, COLOR color);
+	void		SetMapOverlayCell(const MapPoint &pos, COLOR color);
 
 	
 	void		CalculateMetrics(void);
@@ -102,7 +104,7 @@ public:
 
 	
 	BOOL		IncludePointInView(MapPoint &pos, sint32 radius);
-	MapPoint	ComputeCenteredMap(MapPoint const & pos, RECT *viewRect);	
+	MapPoint	ComputeCenteredMap(const MapPoint &pos, RECT *viewRect);	
 	MapPoint	CenterMap(const MapPoint &pos );
 	void		Setup( void );
 	void		Update( void );
@@ -114,8 +116,13 @@ public:
 	
 	virtual AUI_ERRCODE			DrawThis(aui_Surface *surface, sint32 x, sint32 y);
 
+#if defined(_MSC_VER)
+	virtual MouseEventCallback	MouseLGrabInside;
+	virtual MouseEventCallback	MouseRGrabInside;
+#else
 	virtual void	MouseLGrabInside(aui_MouseEvent * mouseData);
 	virtual void	MouseRGrabInside(aui_MouseEvent * mouseData);
+#endif
 
 	virtual AUI_ERRCODE			Idle( void );
 

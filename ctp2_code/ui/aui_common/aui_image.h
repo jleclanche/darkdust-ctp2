@@ -31,11 +31,10 @@ class aui_ImageFormat : public aui_FileFormat
 {
 public:
 	
-	aui_ImageFormat() {}
+	aui_ImageFormat() : aui_FileFormat() {}
 	virtual ~aui_ImageFormat() {}
 
-	virtual AUI_ERRCODE	Load( MBCHAR *filename, aui_Image *image )
-		{ return AUI_ERRCODE_OK; }
+	virtual AUI_ERRCODE	Load( const MBCHAR *filename, aui_Image *image ) = 0;
 };
 
 
@@ -46,7 +45,7 @@ public:
 	
 	aui_Image(
 		AUI_ERRCODE *retval,
-		MBCHAR const *filename = NULL );
+		const MBCHAR *filename = NULL );
 	virtual ~aui_Image();
 
 	
@@ -57,14 +56,14 @@ public:
 
 protected:
 	aui_Image() : aui_Base() {}
-	AUI_ERRCODE InitCommon( MBCHAR const * filename );
+	AUI_ERRCODE InitCommon( const MBCHAR *filename );
 
 public:
 	
 	AUI_ERRCODE Load( void );
 	AUI_ERRCODE Unload( void );
 
-	
+	virtual void AttachSurface(aui_Surface *surface);
 	virtual AUI_ERRCODE LoadEmpty( sint32 width, sint32 height, sint32 bpp );
 
     
@@ -77,7 +76,7 @@ public:
 	MBCHAR		*GetFilename( void ) const { return (MBCHAR *)m_filename; }
 
 	
-	AUI_ERRCODE	SetFilename( MBCHAR const *filename );
+	AUI_ERRCODE	SetFilename( const MBCHAR *filename );
 
 protected:
 	MBCHAR			m_filename[ MAX_PATH + 1 ];	
@@ -98,10 +97,10 @@ class aui_BmpImageFormat : public aui_ImageFormat
 {
 public:
 	
-	aui_BmpImageFormat() {}
+	aui_BmpImageFormat() : aui_ImageFormat() {}
 	virtual ~aui_BmpImageFormat() {}
 
-	virtual AUI_ERRCODE	Load( MBCHAR *filename, aui_Image *image );
+	virtual AUI_ERRCODE	Load( const MBCHAR *filename, aui_Image *image );
 };
 
 

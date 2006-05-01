@@ -29,8 +29,10 @@
 // - Added cleanup method. (Sep 13th 2005 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
-
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
+#endif 
+
 #ifndef __INFOWINDOW_H__
 #define __INFOWINDOW_H__
 

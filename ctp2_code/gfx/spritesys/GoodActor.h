@@ -46,7 +46,7 @@ public:
 
 	void			DumpAllActions();
 
-	Anim *          CreateAnim(GOODACTION action);
+	Anim			*GetAnim(GOODACTION action);
 
 	void			DrawSelectionBrackets(void);
 	BOOL			Draw(BOOL fogged = FALSE);

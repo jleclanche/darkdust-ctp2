@@ -82,7 +82,7 @@ enum AUI_ERRCODE
 	AUI_ERRCODE_RESIZEFAILED,
 	AUI_ERRCODE_MOVEFAILED,
 	AUI_ERRCODE_DONTDRAWCHILDREN,
-#ifdef __AUI_USE_DIRECTX__
+
 	AUI_ERRCODE_CREATEFAILED,
 	AUI_ERRCODE_SETCOOPLEVELFAILED,
 	AUI_ERRCODE_CREATESURFACEFAILED,
@@ -90,7 +90,7 @@ enum AUI_ERRCODE
 	AUI_ERRCODE_NODIRECTINPUTDEVICE,
 	AUI_ERRCODE_SETPROPERTYFAILED,
 	AUI_ERRCODE_SETFORMATFAILED,
-#endif 
+
 	AUI_ERRCODE_MAX
 };
 
@@ -100,13 +100,15 @@ enum AUI_ERRCODE
 #define AUI_NEWOK(obj,err)	((obj)&&AUI_SUCCESS(err))
 
 #if defined(WIN32)
-// _TCHAR has been predefined
+typedef _TCHAR				tchar;
+typedef tchar				MBCHAR;
+typedef MBCHAR*				LPMBCHAR;
 #else
-typedef char                _TCHAR; // TODO: or wchar_t, for Unicode
+typedef char                            _TCHAR;
+typedef _TCHAR                          tchar;
+typedef tchar                           MBCHAR;
+typedef MBCHAR*                         LPMBCHAR;
 #endif
 
-typedef _TCHAR              tchar;
-typedef tchar               MBCHAR;
-typedef MBCHAR*             LPMBCHAR;
 
 #endif 

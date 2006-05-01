@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Map analysis
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -31,7 +31,8 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
-#include "mapanalysis.h"
+
+
 
 #include "Army.h"
 #include "ArmyData.h"
@@ -52,14 +53,20 @@
 #include "Strengths.h"
 #include "AgreementMatrix.h"
 #include "Diplomat.h"
+#include "mapanalysis.h"
 
 #include "Scheduler.h"
 #include <vector>
 using namespace std;
 
-
-MapGrid < sint32 >::MapGridArray MapGrid < sint32 >::s_scratch;
-
+/* Removed since static data removed - JJB
+#ifdef __GNUC__
+// Force instantiation of static template data
+static template class MapGrid<sint32>;
+template<>
+#endif
+std::valarray<sint32> MapGrid<sint32>::s_scratch;
+*/
 
 MapAnalysis MapAnalysis::s_mapAnalysis;
 
@@ -147,7 +154,7 @@ const sint16 route_value)
 
     sint16 index = (victimId * m_piracyLossGrid.size()) + playerId;
     Assert(index >= 0);
-    Assert(index < m_piracyIncomeMatrix.size());
+    Assert((unsigned) index < m_piracyIncomeMatrix.size());
 
     m_piracyIncomeMatrix[index] += route_value;
 }
@@ -207,9 +214,9 @@ void MapAnalysis::BeginTurn()
     ComputeHandicapRatios();
 
 
-	
-	
-    for (sint16 player = 0; player < m_threatGrid.size(); player++)
+    /// \todo Check, why it's not PLAYER_INDEX
+    sint16 player;
+    for (player = 0; (unsigned) player < m_threatGrid.size(); player++)
     {
 
         m_threatGrid[player].Clear();
@@ -436,7 +443,7 @@ void MapAnalysis::BeginTurn()
 
     const sint8 cycles = 1;
     const double coef = 0.8;
-    for (player = 0; player < m_threatGrid.size(); player++)
+    for (player = 0; (unsigned) player < m_threatGrid.size(); player++)
     {
         m_threatGrid[player].Relax(cycles, coef);
         m_valueGrid[player].Relax(cycles, coef);
@@ -811,7 +818,7 @@ const MapPoint & MapAnalysis::GetNearestForeigner(const PLAYER_INDEX player, con
     sint32 tmp_squared_distance;
     sint16 closest_player = 1;
 
-    for (sint16 i = 0; i < m_empireCenter.size(); i++)
+    for (sint16 i = 0; (unsigned) i < m_empireCenter.size(); i++)
     {
 
         if (i == player)
@@ -827,7 +834,7 @@ const MapPoint & MapAnalysis::GetNearestForeigner(const PLAYER_INDEX player, con
             }
 		}
     }
-    Assert(closest_player < m_empireCenter.size());
+    Assert((unsigned) closest_player < m_empireCenter.size());
     return m_empireCenter[closest_player];
 }
 
@@ -925,7 +932,7 @@ const PLAYER_INDEX & opponentId) const
     }
 
 
-    return (ratio * 100);
+    return sint32(ratio * 100);
 }
 
 
@@ -989,7 +996,7 @@ const PLAYER_INDEX victimId) const
 
     sint16 index = (victimId * m_piracyLossGrid.size()) + playerId;
     Assert(index >= 0);
-    Assert(index < m_piracyIncomeMatrix.size());
+    Assert((unsigned) index < m_piracyIncomeMatrix.size());
 
     return m_piracyIncomeMatrix[index];
 }
@@ -1115,7 +1122,7 @@ void MapAnalysis::ComputeAllianceSize(const PLAYER_INDEX playerId, PLAYER_INDEX 
     leaderId = playerId;
     sint32 max_population = m_totalPopulation[playerId];
     sint32 allies = 0;
-    for (PLAYER_INDEX foreignerId = 0; foreignerId < m_threatGrid.size(); foreignerId++)
+    for (PLAYER_INDEX foreignerId = 0; (unsigned) foreignerId < m_threatGrid.size(); foreignerId++)
     {
         if (g_player[foreignerId] == NULL)
             continue;
@@ -1163,7 +1170,7 @@ void MapAnalysis::ComputeHandicapRatios()
 
 
     sint16 player;
-    for (player = 0; player < m_threatGrid.size(); player++)
+    for (player = 0; (unsigned) player < m_threatGrid.size(); player++)
     {
 
         if (g_player[player] == NULL)
@@ -1205,7 +1212,7 @@ void MapAnalysis::ComputeHandicapRatios()
     }
 
 
-    for (player = 0; player < m_threatGrid.size(); player++)
+    for (player = 0; (unsigned) player < m_threatGrid.size(); player++)
     {
 
         m_productionHandicapRatio[player] = 1.0;
@@ -1286,14 +1293,14 @@ void MapAnalysis::ComputeHandicapRatios()
 
 double MapAnalysis::GetProductionHandicapRatio(const PLAYER_INDEX playerId) const
 {
-    Assert(playerId < m_productionHandicapRatio.size());
+    Assert((unsigned) playerId < m_productionHandicapRatio.size());
     Assert(playerId >= 0);
     return m_productionHandicapRatio[playerId];
 }
 
 double MapAnalysis::GetGoldHandicapRatio(const PLAYER_INDEX playerId) const
 {
-    Assert(playerId < m_goldHandicapRatio.size());
+    Assert((unsigned) playerId < m_goldHandicapRatio.size());
     Assert(playerId >= 0);
     return m_goldHandicapRatio[playerId];
 }
@@ -1301,7 +1308,7 @@ double MapAnalysis::GetGoldHandicapRatio(const PLAYER_INDEX playerId) const
 
 double MapAnalysis::GetScienceHandicapRatio(const PLAYER_INDEX playerId) const
 {
-    Assert(playerId < m_scienceHandicapRatio.size());
+    Assert((unsigned) playerId < m_scienceHandicapRatio.size());
     Assert(playerId >= 0);
     return m_scienceHandicapRatio[playerId];
 }
@@ -1309,7 +1316,7 @@ double MapAnalysis::GetScienceHandicapRatio(const PLAYER_INDEX playerId) const
 
 void MapAnalysis::DebugLog() const
 {
-    for (sint16 player = 0; player < m_threatGrid.size(); player++)
+    for (sint16 player = 0; (unsigned) player < m_threatGrid.size(); player++)
     {
         if (m_threatGrid[player].GetMaxValue() > 0)
         {
@@ -1335,38 +1342,4 @@ void MapAnalysis::DebugLog() const
 MapAnalysis::MapAnalysis()
 {
 
-}
-
-MapAnalysis::~MapAnalysis()
-{
-    MapGridVector().swap(m_threatGrid);
-    MapGridVector().swap(m_valueGrid);
-    MapGridVector().swap(m_tradeAtRiskGrid);
-    MapGridVector().swap(m_piracyLossGrid);
-    BoundingRectVector().swap(m_empireBoundingRect);
-    MapPointVector().swap(m_empireCenter);
-    Sint16Vector().swap(m_piracyIncomeMatrix);
-    Sint32Vector().swap(m_minCityProduction);
-    Sint32Vector().swap(m_maxCityProduction);
-    Sint32Vector().swap(m_minCityGrowth);
-    Sint32Vector().swap(m_maxCityGrowth);
-    Sint32Vector().swap(m_minCityGold);
-    Sint32Vector().swap(m_maxCityGold);
-    Sint32Vector().swap(m_minCityHappiness);
-    Sint32Vector().swap(m_maxCityHappiness);
-    Sint32Vector().swap(m_minCityThreat);
-    Sint32Vector().swap(m_maxCityThreat);
-    Sint16Vector().swap(m_nuclearWeapons);
-    Sint16Vector().swap(m_bioWeapons);
-    Sint16Vector().swap(m_nanoWeapons);
-    Sint16Vector().swap(m_specialAttackers);
-    Sint32Vector().swap(m_continentSize);
-    Sint16Vector().swap(m_totalPopulation);
-    Sint16Vector().swap(m_landArea);
-    Sint32Vector().swap(m_totalTrade);
-    Sint32Vector().swap(m_projectedScience);
-    DoubleVector().swap(m_productionHandicapRatio);
-    DoubleVector().swap(m_goldHandicapRatio);
-    DoubleVector().swap(m_scienceHandicapRatio);
-    Uint32Vector().swap(m_movementTypeUnion);
 }

@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Unit manager
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -83,6 +83,8 @@ static MBCHAR *s_unitManagerAdviceBlock = "UnitManagerAdviceWindow";
 bool UnitManager::sm_statsTabVisible = true;
 
 extern C3UI *g_c3ui;
+
+extern ColorSet *g_colorSet;
 
 #define k_UNITMAN_STATS 0
 #define k_UNITMAN_TACTICAL 1
@@ -932,7 +934,7 @@ void UnitManager::TacticalList(aui_Control *control, uint32 action, uint32 data,
 	ctp2_ListItem *item = (ctp2_ListItem *)lb->GetSelectedItem();
 	if(!item) return;
 
-	Unit u(reinterpret_cast<uint32>(item->GetUserData()));
+	Unit u(*reinterpret_cast<uint32 *>(item->GetUserData()));
 	Assert(u.IsValid());
 
 	if (u.IsValid())

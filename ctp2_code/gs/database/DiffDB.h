@@ -4,9 +4,6 @@
 #ifndef __DIFF_DB_H__
 #define __DIFF_DB_H__ 1
 
-class DifficultyDB; 
-class DifficultyDBRecord;
-
 #define LEVELS_OF_DIFFICULTY 6
 
 class CivArchive ;
@@ -309,5 +306,9 @@ public:
 	sint32 Parse(char *filename);
 
 };
+
+#else 
+
+class DifficultyDB; 
 
 #endif

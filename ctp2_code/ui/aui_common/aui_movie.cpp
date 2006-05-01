@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Activision User Interface movie window
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -45,7 +45,7 @@ aui_Movie *aui_Movie::m_onScreenMovie = NULL;
 
 aui_Movie::aui_Movie(
 	AUI_ERRCODE *retval,
-	MBCHAR const * filename )
+	const MBCHAR *filename )
 	:
 	aui_Base()
 {
@@ -56,7 +56,7 @@ aui_Movie::aui_Movie(
 
 
 
-AUI_ERRCODE aui_Movie::InitCommon( MBCHAR const * filename )
+AUI_ERRCODE aui_Movie::InitCommon( const MBCHAR *filename )
 {
 	m_format = NULL;
 	m_surface = NULL;
@@ -72,18 +72,22 @@ AUI_ERRCODE aui_Movie::InitCommon( MBCHAR const * filename )
 	memset( &m_rect, 0, sizeof( m_rect ) );
 	memset(&m_windowRect, 0, sizeof(m_windowRect));
 
+#ifndef USE_SDL
 	m_aviFile = NULL;
 	m_aviStream = NULL;
 	memset( &m_aviFileInfo, 0, sizeof( m_aviFileInfo ) );
 	memset( &m_aviStreamInfo, 0, sizeof( m_aviStreamInfo ) );
 	m_getFrame = NULL;
+#endif
 	m_curFrame = 0;
 
 	AUI_ERRCODE errcode = SetFilename( filename );
 	Assert( AUI_SUCCESS(errcode) );
 	if ( !AUI_SUCCESS(errcode) ) return errcode;
 
+#ifndef USE_SDL
 	AVIFileInit();
+#endif
 
 	return AUI_ERRCODE_OK;
 }
@@ -94,12 +98,14 @@ aui_Movie::~aui_Movie()
 {
 	Unload();
 
+#ifndef USE_SDL
 	AVIFileExit();
+#endif
 }
 
 
 
-AUI_ERRCODE aui_Movie::SetFilename( MBCHAR const *filename )
+AUI_ERRCODE aui_Movie::SetFilename( const MBCHAR *filename )
 {
 	
 	Unload();
@@ -246,7 +252,7 @@ AUI_ERRCODE aui_Movie::Open(
 			SetDestRect( rect );
 
 		uint32 err;
-
+#ifndef USE_SDL
 		err = AVIFileOpen(
 			&m_aviFile,
 			m_filename,
@@ -306,6 +312,7 @@ AUI_ERRCODE aui_Movie::Open(
 		
 		m_rect.right = m_rect.left + m_aviStreamInfo.rcFrame.right;
 		m_rect.bottom = m_rect.top + m_aviStreamInfo.rcFrame.bottom;
+#endif
 
 		m_isOpen = TRUE;
 		m_isPlaying = FALSE;
@@ -324,6 +331,7 @@ AUI_ERRCODE aui_Movie::Close( void )
 		
 		Stop();
 
+#ifndef USE_SDL
 		if ( m_getFrame )
 		{
 			AVIStreamGetFrameClose( m_getFrame );
@@ -341,6 +349,7 @@ AUI_ERRCODE aui_Movie::Close( void )
 			AVIFileRelease( m_aviFile );
 			m_aviFile = NULL;
 		}
+#endif
 
 		m_isOpen = FALSE;
 	}
@@ -357,6 +366,7 @@ AUI_ERRCODE aui_Movie::Play( void )
 		
 		Open();
 
+#ifndef USE_SDL
 		uint32 err = AVIStreamBeginStreaming(
 			m_aviStream,
 			0,
@@ -364,7 +374,7 @@ AUI_ERRCODE aui_Movie::Play( void )
 			1000 );
 		Assert( err == 0 );
 		if ( err ) return AUI_ERRCODE_HACK;
-
+#endif
 		m_isPlaying = TRUE;
 		m_isPaused = FALSE;
 
@@ -400,7 +410,7 @@ AUI_ERRCODE aui_Movie::PlayOnScreenMovie( void )
 		mouse->Hide();
 	}
 
-	
+#ifndef USE_SDL
 	MSG msg;
 	m_windowProc = (WNDPROC)GetWindowLong( g_ui->TheHWND(), GWL_WNDPROC );
 	SetWindowLong( g_ui->TheHWND(), GWL_WNDPROC, (LONG)OnScreenMovieWindowProc );
@@ -444,6 +454,7 @@ AUI_ERRCODE aui_Movie::PlayOnScreenMovie( void )
 
 	SetWindowLong( g_ui->TheHWND(), GWL_WNDPROC, (LONG)m_windowProc );
 	m_windowProc = NULL;
+#endif
 
 	if (mouse)
 		mouse->Show();
@@ -461,9 +472,11 @@ AUI_ERRCODE aui_Movie::Stop( void )
 {
 	if ( m_isPlaying )
 	{
+#ifndef USE_SDL
 		uint32 err = AVIStreamEndStreaming( m_aviStream );
 		Assert( err == 0 );
 		if ( err ) return AUI_ERRCODE_HACK;
+#endif
 
 		m_isPlaying = FALSE;
 		m_isPaused = FALSE;
@@ -502,6 +515,7 @@ AUI_ERRCODE aui_Movie::Process( void )
 {
 	AUI_ERRCODE retval = AUI_ERRCODE_UNHANDLED;
 
+#ifndef USE_SDL
 	if ( m_isPlaying && !m_isPaused )
 	{
 		uint32 time = GetTickCount();
@@ -578,12 +592,12 @@ AUI_ERRCODE aui_Movie::Process( void )
 			retval = AUI_ERRCODE_HANDLED;
 		}
 	}
+#endif
 
 	return retval;
 }
 
-
-
+#ifndef USE_SDL
 LRESULT CALLBACK OnScreenMovieWindowProc(
 	HWND hwnd,
 	UINT message,
@@ -613,9 +627,7 @@ LRESULT CALLBACK OnScreenMovieWindowProc(
 			
 			aui_Movie::m_onScreenMovie->Close();
 
-			
 			PostMessage( g_ui->TheHWND(), WM_CLOSE, 0, 0 );
-
 			
 			return 0;
 		}
@@ -627,3 +639,4 @@ LRESULT CALLBACK OnScreenMovieWindowProc(
 
 	return lr;
 }
+#endif

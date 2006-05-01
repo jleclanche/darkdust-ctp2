@@ -26,18 +26,26 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
-#include "ns_civlistbox.h"
 
 #include "aui_ui.h"
 #include "aui_ldl.h"
 #include "aui_uniqueid.h"
 #include "aui_window.h"
 #include "aui_item.h"
+
 #include "c3_ranger.h"
+
 #include "pattern.h"
 #include "primitives.h"
-#include "colorset.h"       // g_colorSet
+#include "colorset.h"
+
 #include "ns_header.h"
+
+#include "ns_civlistbox.h"
+
+
+extern ColorSet		*g_colorSet;
+
 
 
 ns_CivListBox::ns_CivListBox(

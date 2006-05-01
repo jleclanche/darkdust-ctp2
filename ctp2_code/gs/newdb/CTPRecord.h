@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ header
 // Description  : Database Record template class
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -48,7 +48,7 @@ public:
 	StringId m_name;
 
 	CTPRecord() { m_index = -1; m_textName = NULL; m_name = -1;}
-	virtual ~CTPRecord() { delete [] m_textName; }
+	virtual ~CTPRecord() { if(m_textName) delete [] m_textName; }
 
 	sint32 GetIndex() const { return m_index; }
 	void SetIndex(sint32 index) { m_index = index; }

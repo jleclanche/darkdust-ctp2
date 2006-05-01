@@ -2,19 +2,14 @@
 #ifndef ARMY_MANAGER_WINDOW_H__
 #define ARMY_MANAGER_WINDOW_H__
 
-class ArmyListNode;
-class ArmyManagerWindow;
-
-#include "MapPoint.h"
-#include "Army.h"
-#include "Unit.h"
-#include "aui_Control.h"    // aui_Control
-#include "ctp2_inttypes.h"  // uint32
-
 class ctp2_Window;
 class ctp2_ListItem;
 class ctp2_ListBox;
 class ctp2_Static;
+
+#include "MapPoint.h"
+#include "Army.h"
+#include "Unit.h"
 
 template <class T> class PointerList;
 
@@ -22,7 +17,7 @@ class ArmyListNode {
   public:
 	Army m_army;
 
-	ArmyListNode(Army &a) { m_army = a; }
+	ArmyListNode(const Army &a) { m_army = a; }
 	ArmyListNode() { m_army.m_id = 0; }
 };
 

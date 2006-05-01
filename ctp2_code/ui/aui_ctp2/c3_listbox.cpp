@@ -35,10 +35,6 @@
 //----------------------------------------------------------------------------
 
 
-#if defined(_MSC_VER) && (_MSC_VER > 1000)
-#pragma once
-#endif
-
 #include "c3.h"
 #include "aui.h"
 
@@ -57,9 +53,10 @@
 
 #include "pattern.h"
 #include "primitives.h"
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 
 extern aui_UI		*g_ui;
+extern ColorSet		*g_colorSet;
 
 
 

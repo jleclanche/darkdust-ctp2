@@ -17,22 +17,24 @@
 //
 // Compiler flags
 // 
-// None
+// _MSC_VER		
+// - Compiler version (for the Microsoft C++ compiler only)
 //
 //----------------------------------------------------------------------------
 //
 // Modifications from the original Activision code:
 //
-// - Removed MSVC specific code.
-// - Standardised imports.
+// - Marked MS version specific code.
+// - Standardised list import.
 //
 //----------------------------------------------------------------------------
 
 #ifndef __SCHEDULER_TYPES_H__
 #define __SCHEDULER_TYPES_H__ 1
 
-#include <list>       // std::list
-#include <utility>    // std::pair
+#include <list>
+#include <limits>
+
 
 #include "Goal_And_Squad_Types.h"
 
@@ -41,7 +43,7 @@ enum GOAL_RESULT
 {
     GOAL_FAILED,
     GOAL_NEEDS_TRANSPORT,
-    GOAL_ALREADY_MOVED,
+	GOAL_ALREADY_MOVED,
     GOAL_IN_PROGRESS,
     GOAL_COMPLETE
 };
@@ -64,15 +66,15 @@ typedef Plan*			Plan_ptr;
 typedef std::pair<Utility, Goal_ptr> Sorted_Goal_ptr; 
 
 
-template<class _T1, class _T2>
-bool operator <
-(
-    const Sorted_Goal_ptr& _X,
-    const Sorted_Goal_ptr& _Y
-)
-{
-    return (_X.first < _Y.first); 
-};
+template<class _T1, class _T2> inline
+#ifdef WIN32
+bool __cdecl operator<(const Sorted_Goal_ptr& _X,
+#else
+bool operator<(const Sorted_Goal_ptr& _X,
+#endif
+			   const Sorted_Goal_ptr& _Y)
+
+{return (_X.first < _Y.first); }
 
 
 class STAgent;

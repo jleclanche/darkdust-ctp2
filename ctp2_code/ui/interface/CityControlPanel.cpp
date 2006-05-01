@@ -37,9 +37,13 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
+
+
 #include "CityControlPanel.h"
 
-#include <strstream>
+
+#include <sstream>
+
 
 #include "aui_ldl.h"
 #include "BuildingRecord.h"
@@ -66,7 +70,6 @@
 #include "network.h"
 #include "c3ui.h"
 #include "aui_blitter.h"
-#include "Globals.h"                        // k_GAME_OBJ_TYPE_... 
 
 extern C3UI *g_c3ui;
 
@@ -942,7 +945,7 @@ AUI_ERRCODE CityControlPanel::ProgressDrawCallback(ctp2_Static *control,
 		percentComplete = 1.0;
 
 	RECT destRect = rect;
-	destRect.right = destRect.left + percentComplete * (destRect.right - destRect.left);
+	destRect.right = sint32(destRect.left + percentComplete * (destRect.right - destRect.left));
 
 	g_c3ui->TheBlitter()->ColorBlt(surface, &destRect, RGB(0,0,255), 0);
 	return AUI_ERRCODE_OK;

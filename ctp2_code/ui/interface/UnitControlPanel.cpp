@@ -317,15 +317,16 @@ void UnitControlPanel::SetSelectionMode(UnitSelectionMode mode)
 
 void UnitControlPanel::UpdateSingleSelectionDisplay()
 {
+	
+	
 	Army army = GetSelectedArmy();	
-	Unit unit;
+	static Unit unit; unit.m_id = 0;
 	double movement = -1;
 	double health = -1;
 	sint32 cargo = -1;
 	sint32 fuel = -1;
 	sint32 maxFuel = -1;
-	if(army.IsValid()) 
-    {
+	if(g_theArmyPool->IsValid(army)) {
 		if(m_armySelectionUnit >= 0 && m_armySelectionUnit < army.Num()) {
 			unit.m_id = army[m_armySelectionUnit].m_id;
 		} else {
@@ -559,22 +560,29 @@ void UnitControlPanel::UpdateMultipleSelectionDisplay()
 
 void UnitControlPanel::UpdateArmySelectionDisplay()
 {
+	
+	
 	Army army = GetSelectedArmy();
-
-	if(!army.IsValid() || (army.Num() <= 1)) 
-    {
+	if(!g_theArmyPool->IsValid(army)) {
 		SetSelectionMode(SINGLE_SELECTION);
 		return;
 	}
+
+	
+	if(army.Num() <= 1) {
+		SetSelectionMode(SINGLE_SELECTION);
+		return;
+	}
+
+	
 	
 	Unit unit = army[0];
-	if (unit.IsValid())
-    {
-		m_armySelectionIcon->ExchangeImage
-            (0, 0, unit.GetDBRec()->GetDefaultIcon()->GetIcon());
-    }
+	if(unit.IsValid())
+		m_armySelectionIcon->ExchangeImage(0, 0,
+		unit.GetDBRec()->GetDefaultIcon()->GetIcon());
 
-	for (int armyIndex = 0; armyIndex <
+	
+	for(int armyIndex = 0; armyIndex <
 		NUMBER_OF_ARMY_SELECTION_BUTTONS; armyIndex++) {
 		
 		
@@ -612,10 +620,9 @@ void UnitControlPanel::UpdateTransportSelectionDisplay()
 		return;
 
 	Army army = GetSelectedArmy();	
-	Unit unit;
+	static Unit unit; unit.m_id = 0;
 
-	if (army.IsValid()) 
-    {
+	if(g_theArmyPool->IsValid(army)) {
 		if(m_armySelectionUnit >= 0 && m_armySelectionUnit < army.Num()) {
 			unit.m_id = army[m_armySelectionUnit].m_id;
 		} else {
@@ -702,8 +709,8 @@ void UnitControlPanel::UpdateOrderButtons()
 	m_lastSelectedArmy = army;
 	m_lastSelectedArmyCount = army.IsValid() ? army.Num() : 0;
 
-	
-	for(sint32 orderIndex = 0; orderIndex < NUMBER_OF_ORDER_BUTTONS; orderIndex++) {
+	sint32 orderIndex;	
+	for(orderIndex = 0; orderIndex < NUMBER_OF_ORDER_BUTTONS; orderIndex++) {
 		
 		m_orderButton[orderIndex]->ExchangeImage(4, 0, NULL);
 		m_orderButton[orderIndex]->ShouldDraw();
@@ -720,7 +727,7 @@ void UnitControlPanel::UpdateOrderButtons()
 		}
 	}
 
-	if (army.IsValid()) {
+	if(g_theArmyPool->IsValid(army)) {
 		
 		
 		ArmyData *armyData = army.AccessData();
@@ -809,14 +816,14 @@ Army UnitControlPanel::GetSelectedArmy()
 	
 	
 	if(!g_selected_item)
-		return(Army());
+		return(Army(0));
 
 	
 	Player *player = g_player[g_selected_item->GetVisiblePlayer()];
 
 	
 	if(!player)
-		return(Army());
+		return(Army(0));
 
 	
 	ID id;
@@ -845,7 +852,7 @@ Army UnitControlPanel::GetSelectedArmy()
 	}
 
 	
-	return Army();
+	return(Army(0));
 }
 
 
@@ -952,21 +959,27 @@ void UnitControlPanel::NextUnitButtonActionCallback(aui_Control *control,
 AUI_ERRCODE UnitControlPanel::HealthBarActionCallback(ctp2_Static *control,
 	aui_Surface *surface, RECT &rect, void *cookie)
 {
-	Unit        unit        (reinterpret_cast<uint32>(cookie));
+	
+	Unit unit;
+	unit.m_id = (uint32)(cookie);
+
 	
 	AUI_ERRCODE errorCode =
 		g_c3ui->TheBlitter()->ColorBlt(surface, &rect, RGB(0,0,0), 0);
-
 	if(errorCode != AUI_ERRCODE_OK)
 		return(errorCode);
+
 	
 	if(!unit.IsValid())
 		return AUI_ERRCODE_OK;
 
+	
+	
 	double healthPercent = (unit.GetDBRec()->GetMaxHP() > 0) ?
 		static_cast<double>(unit.GetHP()) /
 		static_cast<double>(unit.GetDBRec()->GetMaxHP()) : 1.0;
 
+	
 	Pixel16 color = RGB(255, 0, 0);		
 	if(healthPercent > 0.666) {
 		color = RGB(0, 255, 0);			
@@ -993,9 +1006,9 @@ AUI_ERRCODE UnitControlPanel::HealthBarActionCallback(ctp2_Static *control,
 AUI_ERRCODE UnitControlPanel::FuelBarDrawCallback(ctp2_Static *control,
  												  aui_Surface *surface, RECT &rect, void *cookie)
 {
-	Unit        u  (reinterpret_cast<uint32>(cookie));
-	AUI_ERRCODE errCode = g_c3ui->TheBlitter()->ColorBlt(surface, &rect, RGB(0,0,0), 0);
+	Unit u; u.m_id = (uint32)cookie;
 
+	AUI_ERRCODE errCode = g_c3ui->TheBlitter()->ColorBlt(surface, &rect, RGB(0,0,0), 0);
 	if(errCode != AUI_ERRCODE_OK)
 		return errCode;
 
@@ -1040,22 +1053,31 @@ AUI_ERRCODE UnitControlPanel::FuelBarDrawCallback(ctp2_Static *control,
 void UnitControlPanel::MultiButtonActionCallback(aui_Control *control,
 	uint32 action, uint32 data, void *cookie)
 {
-	if (action != static_cast<uint32>(AUI_BUTTON_ACTION_EXECUTE))
+	
+	if(action != static_cast<uint32>(AUI_BUTTON_ACTION_EXECUTE))
 		return;
 
+	
 	std::pair<UnitControlPanel*, uint32> *multiPair =
 		static_cast<std::pair<UnitControlPanel*, uint32>*>(cookie);
 
+	
+	
 	Army army(multiPair->second);
-	if (army.IsValid())
-    {
-    	Unit unit = army[0];
-	    if (unit.IsValid())
-        {
-        	g_selected_item->SetSelectUnit(unit);
-        	multiPair->first->SetSelectionMode(ARMY_SELECTION);
-        }
-    }
+	if(!g_theArmyPool->IsValid(army))
+		return;
+
+	
+	
+	Unit unit = army[0];
+	if(!unit.IsValid())
+		return;
+
+	
+	g_selected_item->SetSelectUnit(unit);
+
+	
+	multiPair->first->SetSelectionMode(ARMY_SELECTION);
 }
 
 
@@ -1104,7 +1126,7 @@ void UnitControlPanel::OrderButtonActionCallback(aui_Control *control,
 void UnitControlPanel::Activated()
 {
 	
-	m_lastSelectedArmy.m_id = -1;
+	m_lastSelectedArmy.m_id = (unsigned) -1;
 
 	Army a;
 	if(g_selected_item->GetSelectedArmy(a))
@@ -1121,8 +1143,8 @@ AUI_ERRCODE UnitControlPanel::DrawCargoCallback(ctp2_Static *control,
 										 RECT &rect, 
 										 void *cookie)
 {
-	Unit theTransport   (reinterpret_cast<uint32>(cookie));
-	if (!theTransport.IsValid())
+	Unit theTransport;  theTransport.m_id = uint32(cookie);
+	if(!theTransport.IsValid())
 		return AUI_ERRCODE_OK;
 
 	sint32 numCarried = theTransport.GetNumCarried();

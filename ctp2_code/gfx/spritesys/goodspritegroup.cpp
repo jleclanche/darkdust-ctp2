@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Good sprite handling
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -77,7 +77,9 @@ void GoodSpriteGroup::Draw(GOODACTION action, sint32 frame, sint32 drawX, sint32
 		frame = 0;
 
 	m_sprites[action]->SetCurrentFrame((uint16)frame);
-	m_sprites[action]->Draw(drawX, drawY, facing, scale, transparency, outlineColor, flags);
+
+	if (m_sprites[action] != NULL)
+		m_sprites[action]->Draw(drawX, drawY, facing, scale, transparency, outlineColor, flags);
 }
 
 void GoodSpriteGroup::DrawDirect(aui_Surface *surf, GOODACTION action, sint32 frame, sint32 drawX, sint32 drawY, 
@@ -89,7 +91,9 @@ void GoodSpriteGroup::DrawDirect(aui_Surface *surf, GOODACTION action, sint32 fr
 	if (m_sprites[action] == NULL) return;
 
 	m_sprites[action]->SetCurrentFrame((uint16)frame);
-	m_sprites[action]->DrawDirect(surf, drawX, drawY, facing, scale, transparency, outlineColor, flags);
+
+	if (m_sprites[action] != NULL)
+		m_sprites[action]->DrawDirect(surf, drawX, drawY, facing, scale, transparency, outlineColor, flags);
 }
 
 POINT GoodSpriteGroup::GetHotPoint(GOODACTION action)
@@ -108,6 +112,103 @@ POINT GoodSpriteGroup::GetHotPoint(GOODACTION action)
 
 void GoodSpriteGroup::RunBenchmark(aui_Surface *surf)
 {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	exit(0);
 }
 
@@ -177,33 +278,41 @@ void GoodSpriteGroup::DeallocateFullLoadAnims(void)
 
 void GoodSpriteGroup::DrawText(sint32 x, sint32 y, char *s)
 {
-	primitives_DrawText((aui_DirectSurface *)g_screenManager->GetSurface(), x, y, (MBCHAR *)s, 0, 0);
+	primitives_DrawText(g_screenManager->GetSurface(), x, y, (MBCHAR *)s, 0, 0);
 }
 
 sint32 GoodSpriteGroup::Parse(uint16 id,GROUPTYPE group)
 {
+	Token			*theToken=NULL; 
+	MBCHAR			name[k_MAX_NAME_LENGTH];
 	MBCHAR			scriptName[k_MAX_NAME_LENGTH];
+
+	MBCHAR			*imageNames[k_MAX_NAMES];
+	MBCHAR			*shadowNames[k_MAX_NAMES];
+
+	sint32			i;
+
 	char			prefixStr[80];
 
 	sprintf(prefixStr, ".%s%d%s", FILE_SEP, id, FILE_SEP);
 	sprintf(scriptName, "GG%.2d.txt", id);
 
 
-	Token * theToken = new Token(scriptName, C3DIR_SPRITES); 
+	theToken = new Token(scriptName, C3DIR_SPRITES); 
 	Assert(theToken); 
+	
 	if (!theToken) return FALSE; 
 	
+	sint32 tmp;
 
 	if (!token_ParseKeywordNext(theToken, TOKEN_GOOD_SPRITE)) {
+
+		
 		delete theToken;
 		return k_NOT_GOOD; 
 	}
 
 	printf("Good Processing '%s'\n", scriptName);
-
-	MBCHAR			*imageNames[k_MAX_NAMES];
-	MBCHAR			*shadowNames[k_MAX_NAMES];
-	sint32			i;
 
 	for (i=0; i<k_MAX_NAMES; i++) {
 		imageNames[i] = (char *)malloc(k_MAX_NAME_LENGTH);
@@ -212,18 +321,15 @@ sint32 GoodSpriteGroup::Parse(uint16 id,GROUPTYPE group)
 
 	if (!token_ParseAnOpenBraceNext(theToken)) return FALSE;
 
-	sint32 tmp;
 	if (!token_ParseValNext(theToken, TOKEN_GOOD_SPRITE_IDLE, tmp)) return FALSE;
 	if (tmp) {
 		Sprite *idleSprite = new Sprite;
 		Assert(idleSprite);
 		if(!idleSprite) return FALSE;
-
 		idleSprite->ParseFromTokens(theToken);
 
 		printf(" [Idle");
 		for(i=0; i<idleSprite->GetNumFrames(); i++) {
-			MBCHAR			name[k_MAX_NAME_LENGTH];
 
 			sprintf(name, "%sGG%.2dS.%d.tif", prefixStr, id, i+idleSprite->GetFirstFrame());
 			strcpy(shadowNames[i], name);
@@ -237,6 +343,7 @@ sint32 GoodSpriteGroup::Parse(uint16 id,GROUPTYPE group)
 		printf("]\n");
 
 		Anim *idleAnim = new Anim;
+
 		idleAnim->ParseFromTokens(theToken);
 		m_anims[GOODACTION_IDLE] = idleAnim;
 	}
@@ -255,9 +362,10 @@ sint32 GoodSpriteGroup::Parse(uint16 id,GROUPTYPE group)
 
 void GoodSpriteGroup::ExportScript(MBCHAR *name)
 {
+	FILE				*file;
 	extern TokenData	g_allTokens[];
 
-	FILE * file = fopen(name, "w");
+	file = fopen(name, "w");
 	if (!file) {
 		c3errors_ErrorDialog("Sprite Export", "Could not open '%s' for writing.", name);
 		return;

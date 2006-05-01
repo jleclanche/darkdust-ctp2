@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Matrix of all diplomatic agreements between players
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -60,23 +60,36 @@ AgreementMatrix::AgreementMatrix()
 
 void AgreementMatrix::Resize(const PLAYER_INDEX & newMaxPlayers)
 {
+	
+	AgreementVector old_agreements(m_agreements);
 	// Just make sure that we can rely on testing against m_maxPlayers to have
 	// a valid index in g_player.
 	Assert(newMaxPlayers <= k_MAX_PLAYERS);
 	m_maxPlayers = std::min<sint16>(newMaxPlayers, k_MAX_PLAYERS);
 	
-	AgreementVector	old_agreements;
-	m_agreements.swap(old_agreements);
+	m_agreements.clear();
+	
+	
+	m_agreements.resize( m_maxPlayers * m_maxPlayers * PROPOSAL_MAX, s_badAgreement );
 
-	if (m_maxPlayers > 0)
-      {
-              m_agreements.resize(m_maxPlayers * m_maxPlayers * PROPOSAL_MAX, s_badAgreement);
+#ifdef _DEBUG
+	
+	if (m_agreements.size() == 0)
+	{
+		m_agreements.~vector();
+		return;
+	}
+#endif // _DEBUG
 
-		for (size_t index = 0; index < old_agreements.size(); ++index)
+	
+	
+	
+	
+
+	for (size_t index = 0; index < old_agreements.size(); index++ )
 		{
 			PLAYER_INDEX const	senderId	= old_agreements[index].senderId;
 			PLAYER_INDEX const	receiverId	= old_agreements[index].receiverId;
-
 			if (senderId > -1 && senderId < m_maxPlayers &&
 				receiverId > -1 && receiverId < m_maxPlayers &&
 				g_player[senderId] && !g_player[senderId]->IsDead() &&
@@ -86,7 +99,6 @@ void AgreementMatrix::Resize(const PLAYER_INDEX & newMaxPlayers)
 				SetAgreement( old_agreements[index] );
 			}
 		}
-	}
 }
 
 void AgreementMatrix::Load(CivArchive & archive)
@@ -134,7 +146,7 @@ const ai::Agreement & AgreementMatrix::GetAgreement( const PLAYER_INDEX sender_p
 		type;														  
 
 #ifdef _DEBUG
-	Assert(index < m_agreements.size());
+	Assert((unsigned) index < m_agreements.size());
 	ai::Agreement agreement = m_agreements[ index ];
 	if (agreement != AgreementMatrix::s_badAgreement)
 	{
@@ -145,7 +157,7 @@ const ai::Agreement & AgreementMatrix::GetAgreement( const PLAYER_INDEX sender_p
 			return AgreementMatrix::s_badAgreement;
 		}
 	}
-#endif _DEBUG
+#endif // _DEBUG
 
 	return m_agreements[ index ];
 }
@@ -193,7 +205,7 @@ void AgreementMatrix::SetAgreement( const ai::Agreement & agreement )
 		agreement.proposal.first_type;									   
 
 	
-	Assert(agreementIndex < m_agreements.size());
+	Assert((unsigned) agreementIndex < m_agreements.size());
 	m_agreements[agreementIndex] = agreement;
 
 #ifdef _DEBUG
@@ -219,7 +231,7 @@ void AgreementMatrix::SetAgreement( const ai::Agreement & agreement )
 		reciprocalType ;												   
 	
 	
-	Assert(agreementIndex < m_agreements.size());
+	Assert((unsigned) agreementIndex < m_agreements.size());
 	m_agreements[agreementIndex] = agreement;
 
 #ifdef _DEBUG
@@ -241,7 +253,7 @@ void AgreementMatrix::SetAgreement( const ai::Agreement & agreement )
 			agreement.proposal.second_type;									   
 		
 		
-		Assert(agreementIndex < m_agreements.size());
+		Assert((unsigned) agreementIndex < m_agreements.size());
 		m_agreements[agreementIndex] = agreement;
 
 #ifdef _DEBUG
@@ -267,7 +279,7 @@ void AgreementMatrix::SetAgreement( const ai::Agreement & agreement )
 			reciprocalType ;												   
 		
 		
-		Assert(agreementIndex < m_agreements.size());
+		Assert((unsigned) agreementIndex < m_agreements.size());
 		m_agreements[agreementIndex] = agreement;
 		
 #ifdef _DEBUG
@@ -466,8 +478,8 @@ sint32 AgreementMatrix::TurnsAtWar(const PLAYER_INDEX & player,
 
 void AgreementMatrix::SetAgreementFast(sint32 index, const ai::Agreement &agreement)
 {
-	Assert(index < m_agreements.size());
-	if(index < m_agreements.size()) {
+	Assert((unsigned) index < m_agreements.size());
+	if((unsigned) index < m_agreements.size()) {
 		m_agreements[index] = agreement;
 	}
 }

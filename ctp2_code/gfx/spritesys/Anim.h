@@ -28,50 +28,35 @@
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
 #ifndef __ANIM_H__
 #define __ANIM_H__
 
-//----------------------------------------------------------------------------
-// Library dependencies
-//----------------------------------------------------------------------------
 
-#include <windows.h>    // BOOL, FILE, POINT
+enum ANIMXEROX {
 
-//----------------------------------------------------------------------------
-// Export overview
-//----------------------------------------------------------------------------
+	ANIMXEROX_ORIGINAL,
+	ANIMXEROX_COPY
 
-class Anim;
+};
 
-enum ANIMTYPE 
-{
+enum ANIMTYPE {
 	ANIMTYPE_SEQUENTIAL,
 	ANIMTYPE_LOOPED,
+
 	ANIMTYPE_MAX
 };
 
-//----------------------------------------------------------------------------
-// Project dependencies
-//----------------------------------------------------------------------------
-
-#include "ctp2_inttypes.h"  // uint16, etc.
-#include "Token.h"          // Token
-
-//----------------------------------------------------------------------------
-// Class declarations
-//----------------------------------------------------------------------------
+class Token;
 
 class Anim 
 {
 public:
 	Anim();
-    Anim(Anim const & copy);
-    Anim const & operator = (Anim const & copy);
-	~Anim();
+	virtual ~Anim();
 
 	uint16		GetType(void) { return m_type; }
 	uint16		GetNumFrames(void) { return m_numFrames; }
@@ -82,6 +67,7 @@ public:
 
 	POINT		*GetDeltas(void) { return m_moveDeltas; }
 	uint16		*GetTransparencies(void) { return m_transparencies; }
+	void		SetSpecialCopyDelete(uint16 type) { m_specialCopyDelete = (ANIMXEROX)type; }
 	void		SetType(uint16 type) { m_type = (ANIMTYPE)type; }
 	void		SetNumFrames(uint16 frames) { m_numFrames = frames; }
 	void		SetPlaybackTime(uint16 time) { m_playbackTime = time; }
@@ -112,6 +98,9 @@ public:
 
 	void		SetNoIdleJustDelay(BOOL val) { m_noIdleJustDelay = val; }
 
+
+
+
 protected:
 	uint16		m_type;
 	uint16		m_numFrames;
@@ -130,7 +119,9 @@ protected:
 	BOOL		m_finished;			
 
 	BOOL		m_weAreInDelay;		
+	BOOL		m_specialCopyDelete;
 	BOOL		m_noIdleJustDelay; 
+
 };
 
 #endif

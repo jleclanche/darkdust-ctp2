@@ -32,9 +32,6 @@
 //
 //----------------------------------------------------------------------------
 
-/* Change all yy* symbols to sc* for this parser */
-#include "scyaccdefs.h"
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -43,7 +40,9 @@
 #include <math.h>
 
 /* Avoid silly warnings */
+#ifdef _MSC_VER
 #pragma warning( disable : 4013 )
+#endif
 #define lint
 
 void yyerror(char* err);
@@ -399,7 +398,7 @@ expression: expression '+' expression
 
 int yyparse();
 
-extern char *sctext;
+extern char *yysctext;
 
 int sliccmd_parse(int action, char *cmd, char *output, int outputlen, int useDialogs, char *catString)
 {
@@ -423,8 +422,8 @@ int sliccmd_parse(int action, char *cmd, char *output, int outputlen, int useDia
 		yyparse();
     } while(!sliccmd_done);
 
-	if(sctext)
-		sctext[0] = 0;
+	if(yysctext)
+		yysctext[0] = 0;
 
 	return sliccmd_parse_failed;
 }

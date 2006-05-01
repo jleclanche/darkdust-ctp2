@@ -4,36 +4,6 @@
 #ifndef _NETWORK_H_
 #define _NETWORK_H_
 
-//----------------------------------------------------------------------------
-// Library dependencies
-//----------------------------------------------------------------------------
-
-// None
-
-//----------------------------------------------------------------------------
-// Export overview
-//----------------------------------------------------------------------------
-
-class   Network;
-enum    NETSTATE
-{
-	NETSTATE_READY,
-	NETSTATE_HOSTING,
-	NETSTATE_JOINING,
-	NETSTATE_SHOWSESSIONS,
-};
-
-#define k_GAME_STYLE_UNIT_MOVES 0x01
-#define k_GAME_STYLE_TOTAL_TIME 0x02
-#define k_GAME_STYLE_SPEED  0x04
-#define k_GAME_STYLE_SIMULTANEOUS 0x08
-#define k_GAME_STYLE_CARRYOVER 0x10
-#define k_GAME_STYLE_SPEED_CITIES 0x20
-
-//----------------------------------------------------------------------------
-// Project dependencies
-//----------------------------------------------------------------------------
-
 #include "net_io.h"
 #include "net_const.h"
 #include "gstypes.h"
@@ -68,6 +38,7 @@ class NetGameObj;
 class GAMEOBJ;
 class MapPoint;
 class NetHash;
+typedef sint32 PLAYER_INDEX;
 class UnitDynamicArray;
 class NetOrder;
 class Army;
@@ -78,7 +49,7 @@ struct Response;
 class ChatList;
 class CellUnitList;
 
-#include "player.h" // PLAYER_INDEX
+#include "player.h"
 
 #ifdef _DEBUG
 class aui_Surface;
@@ -86,6 +57,20 @@ class aui_Surface;
 
 
 #define ENQUEUE() { if(g_network.IsActive() && g_network.IsHost()) g_network.Enqueue(this); }
+
+typedef enum {
+	NETSTATE_READY,
+	NETSTATE_HOSTING,
+	NETSTATE_JOINING,
+	NETSTATE_SHOWSESSIONS,
+} NETSTATE;
+
+#define k_GAME_STYLE_UNIT_MOVES 0x01
+#define k_GAME_STYLE_TOTAL_TIME 0x02
+#define k_GAME_STYLE_SPEED  0x04
+#define k_GAME_STYLE_SIMULTANEOUS 0x08
+#define k_GAME_STYLE_CARRYOVER 0x10
+#define k_GAME_STYLE_SPEED_CITIES 0x20
 
 void network_PlayerListCallback(sint32 player, sint32 val, sint32 action);
 
@@ -98,8 +83,7 @@ public:
 		strcpy(m_name, name);
 	}
 
-	~SessionData() 
-    {
+	~SessionData() {
 		delete [] m_name;
 	}
 
@@ -135,9 +119,10 @@ public:
 		m_settlers = settlers;
 	}
 
-	~NSPlayerInfo() 
-    {
-		delete [] m_name;
+	~NSPlayerInfo() {
+		if(m_name) {
+			delete [] m_name;
+		}
 	}
 };
 
@@ -451,7 +436,7 @@ public:
 	uint32 m_sentPacketBytes[k_NUM_PACKET_TYPES];
 	uint32 m_blockedPackets;
 
-#endif // _DEBUG
+#endif
 
 private:
 	void Init();
@@ -563,5 +548,6 @@ private:
 };
 
 extern Network g_network;
-
+#else
+class Network;
 #endif

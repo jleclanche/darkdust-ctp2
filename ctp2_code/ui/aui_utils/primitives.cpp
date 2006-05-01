@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : The primitive rectabgles for painting
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -27,13 +27,10 @@
 // - Initialized local variables. (Sep 9th 2005 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
-
 #include "c3.h"
-#include "primitives.h"
-
 #include "c3math.h"
 
-#include "globals.h"
+#include "Globals.h"
 
 #include "aui.h"
 #include "aui_surface.h"
@@ -46,11 +43,13 @@
 #include "c3ui.h"
 
 #include "pixelutils.h"
+#include "primitives.h"
 #include "textutils.h"
 #include "tileset.h"
-#include "colorset.h"               // g_colorSet
+#include "colorset.h"
 
 extern sint32		g_is565Format;
+extern ColorSet		*g_colorSet;
 extern C3UI			*g_c3ui;
 
 
@@ -134,7 +133,8 @@ PRIMITIVES_ERRCODE primitives_FrameRect16(
 	inc1 = (surfPitch >> 1) - width;
 	inc2 = width - 1;
 
-	for (sint32 i=width;i;i--)
+	sint32 i;
+	for (i=width;i;i--)
 		*pDest++ = color;
 
 	sint32 tempHeight = height - 2;
@@ -193,8 +193,8 @@ PRIMITIVES_ERRCODE primitives_Scale16(
 	Assert(dRect.top <= dRect.bottom);
 	if ((dRect.left >= dRect.right) || (dRect.top >= dRect.bottom)) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
-	sint32 width = ceil(dRect.right) - ceil(dRect.left);
-	sint32 height = ceil(dRect.bottom) - ceil(dRect.top);
+	sint32 width = (sint32) (ceil(dRect.right) - ceil(dRect.left));
+	sint32 height = (sint32) (ceil(dRect.bottom) - ceil(dRect.top));
 	if ((width == 0) || (height == 0))
 		return PRIMITIVES_ERRCODE_OK;
 
@@ -226,8 +226,8 @@ PRIMITIVES_ERRCODE primitives_Scale16(
 
 	
 
-	sint32 dst_y0 = ceil(dRect.top);
-	sint32 dst_x0 = ceil(dRect.left);
+	sint32 dst_y0 = (sint32) ceil(dRect.top);
+	sint32 dst_x0 = (sint32) ceil(dRect.left);
 	uint16 *pDstPixel = pDstBase + dst_y0 * drow + dst_x0;
 
 	double src_dy = (sRect.bottom - sRect.top)/(dRect.bottom - dRect.top);
@@ -444,8 +444,8 @@ PRIMITIVES_ERRCODE primitives_OldBevelRect16(
 
 	if (flag)
 	{
-		
-		for (sint32 j = level;j;j--)
+		sint32 j;
+		for (j = level;j;j--)
 		{
 			for (sint32 i=tempWidth;i;i--)
 			{
@@ -480,7 +480,8 @@ PRIMITIVES_ERRCODE primitives_OldBevelRect16(
 
 		
 		sint32 temp = top+1;
-		for (sint32 i = 0;i < level;i++)
+		sint32 i;
+		for (i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (temp+i) * surfPitch + ((left+i) << 1));
 
@@ -514,8 +515,8 @@ PRIMITIVES_ERRCODE primitives_OldBevelRect16(
 	}
 	else
 	{
-		
-		for (sint32 j = level;j;j--)
+		sint32 j;
+		for (j = level;j;j--)
 		{
 			for (sint32 i=tempWidth;i;i--)
 			{
@@ -550,7 +551,8 @@ PRIMITIVES_ERRCODE primitives_OldBevelRect16(
 
 		
 		sint32 temp = top+1;
-		for (sint32 i = 0;i < level;i++)
+		sint32 i;
+		for (i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (temp+i) * surfPitch + ((left+i) << 1));
 
@@ -677,8 +679,8 @@ PRIMITIVES_ERRCODE primitives_BevelRect16(
 
 	if (flag)
 	{
-		
-		for (sint32 j = level;j;j--)
+		sint32 j;
+		for (j = level;j;j--)
 		{
 			for (sint32 i=tempWidth;i;i--)
 			{
@@ -715,7 +717,8 @@ PRIMITIVES_ERRCODE primitives_BevelRect16(
 
 		
 		sint32 temp = top+1;
-		for (sint32 i = 0;i < level;i++)
+		sint32 i;
+		for (i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (temp+i) * surfPitch + ((left+i) << 1));
 
@@ -751,8 +754,8 @@ PRIMITIVES_ERRCODE primitives_BevelRect16(
 	}
 	else
 	{
-		
-		for (sint32 j = level;j;j--)
+		sint32 j;
+		for (j = level;j;j--)
 		{
 			for (sint32 i=tempWidth;i;i--)
 			{
@@ -789,7 +792,8 @@ PRIMITIVES_ERRCODE primitives_BevelRect16(
 
 		
 		sint32 temp = top+1;
-		for (sint32 i = 0;i < level;i++)
+		sint32 i;
+		for (i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (temp+i) * surfPitch + ((left+i) << 1));
 
@@ -901,8 +905,8 @@ PRIMITIVES_ERRCODE primitives_FrameThickRect16(
 	sint32 tempInc = inc;
 
 	{
-		
-		for (sint32 j = level;j;j--)
+		sint32 j;
+		for (j = level;j;j--)
 		{
 			for (sint32 i=tempWidth;i;i--)
 			{
@@ -939,6 +943,7 @@ PRIMITIVES_ERRCODE primitives_FrameThickRect16(
 
 		
 		sint32 temp = top+1;
+		sint32 i;
 		for (sint32 i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (temp+i) * surfPitch + ((left+i) << 1));
@@ -1261,26 +1266,27 @@ PRIMITIVES_ERRCODE primitives_DrawLine16(
 
 
 PRIMITIVES_ERRCODE primitives_DrawText(
-	aui_Surface *pDirectSurface,	
-	sint32 x,							
-	sint32 y,							
-	const MBCHAR *pString,					
-	COLORREF color,						
-	BOOL bg								
+	aui_Surface *pSurface,	
+	sint32 x,
+	sint32 y,
+	const MBCHAR *pString,
+	COLORREF color,
+	BOOL bg
 	)
 {
-	Assert(pDirectSurface);
-	if (pDirectSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
+	Assert(pSurface);
+	if (pSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
 	Assert(pString);
 	if (pString == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
+#ifdef __AUI_USE_DIRECTX__
 	HDC hdc;
 	HRESULT hr;
 	COLORREF oldColor;
 	sint32 oldMode = 0;
 
-	hr = pDirectSurface->GetDC(&hdc);
+	hr = pSurface->GetDC(&hdc);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_DSGETDCFAILED;
 
 	
@@ -1308,8 +1314,9 @@ PRIMITIVES_ERRCODE primitives_DrawText(
 	if (bg)
 		SetBkMode(hdc,oldMode);
 
-	hr = pDirectSurface->ReleaseDC(hdc);
+	hr = pSurface->ReleaseDC(hdc);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_DSRELEASEDCFAILED;
+#endif
 
 	return PRIMITIVES_ERRCODE_OK;
 }
@@ -1318,24 +1325,27 @@ PRIMITIVES_ERRCODE primitives_DrawText(
 
 
 PRIMITIVES_ERRCODE primitives_DrawBoundedText(
-		aui_Surface *pDirectSurface,	
+		aui_Surface *pSurface,	
 		RECT *bound,						
 		const MBCHAR *pString,				
 		COLORREF color,					
 		BOOL bg							
 		)
 {
+#ifdef __AUI_USE_DIRECTX__
 	HDC hdc;
 	HRESULT hr;
 	COLORREF oldColor;
 	sint32 oldMode = 0;
+#endif
 
-	Assert(pDirectSurface);
-	if (pDirectSurface==NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
+	Assert(pSurface);
+	if (pSurface==NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 	Assert(pString);
 	if (pString==NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
-	hr = pDirectSurface->GetDC(&hdc);
+#ifdef __AUI_USE_DIRECTX__
+	hr = pSurface->GetDC(&hdc);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
 	
@@ -1369,10 +1379,10 @@ PRIMITIVES_ERRCODE primitives_DrawBoundedText(
 	if (bg)
 		SetBkMode(hdc,oldMode);
 
-	hr = pDirectSurface->ReleaseDC(hdc);
+	hr = pSurface->ReleaseDC(hdc);
 	Assert(hr == AUI_ERRCODE_OK);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_DSRELEASEDCFAILED;
-
+#endif
 	return PRIMITIVES_ERRCODE_OK;
 }
 
@@ -1383,7 +1393,7 @@ PRIMITIVES_ERRCODE primitives_DrawBoundedText(
 
 
 PRIMITIVES_ERRCODE primitives_DrawTextBatch(
-	aui_Surface *pDirectSurface,	
+	aui_Surface *pSurface,	
 	sint32 x,							
 	sint32 y,							
 	const MBCHAR **pString,					
@@ -1392,19 +1402,20 @@ PRIMITIVES_ERRCODE primitives_DrawTextBatch(
 	BOOL bg								
 	)
 {
-	Assert(pDirectSurface);
-	if (pDirectSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
+	Assert(pSurface);
+	if (pSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
 	Assert(pString);
 	if (pString == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
+#ifdef __AUI_USE_DIRECTX__
 	HDC hdc;
 	HRESULT hr;
 	COLORREF oldColor;
 	TEXTMETRIC tm;
 	sint32 oldMode = 0;
 
-	hr = pDirectSurface->GetDC(&hdc);
+	hr = pSurface->GetDC(&hdc);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_DSGETDCFAILED;
 
 	
@@ -1438,10 +1449,10 @@ PRIMITIVES_ERRCODE primitives_DrawTextBatch(
 	if (bg)
 		SetBkMode(hdc,oldMode);
 
-	hr = pDirectSurface->ReleaseDC(hdc);
+	hr = pSurface->ReleaseDC(hdc);
 	Assert(hr == AUI_ERRCODE_OK);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_DSRELEASEDCFAILED;
-
+#endif
 	return PRIMITIVES_ERRCODE_OK;
 }
 
@@ -1452,7 +1463,7 @@ PRIMITIVES_ERRCODE primitives_DrawTextBatch(
 
 
 PRIMITIVES_ERRCODE primitives_DropText(
-	aui_Surface *pDirectSurface,	
+	aui_Surface *pSurface,	
 	sint32 x,							
 	sint32 y,							
 	const MBCHAR *pString,					
@@ -1460,18 +1471,19 @@ PRIMITIVES_ERRCODE primitives_DropText(
 	BOOL bg								
 	)
 {
-	Assert(pDirectSurface);
-	if (pDirectSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
+	Assert(pSurface);
+	if (pSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
 	Assert(pString);
 	if (pString==NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
+#ifdef __AUI_USE_DIRECTX__
 	HDC hdc;
 	HRESULT hr;
 	COLORREF oldColor;
 	sint32 oldMode = 0;
 
-	hr = pDirectSurface->GetDC(&hdc);
+	hr = pSurface->GetDC(&hdc);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_DSGETDCFAILED;
 
 	
@@ -1506,10 +1518,10 @@ PRIMITIVES_ERRCODE primitives_DropText(
 	if (bg)
 		SetBkMode(hdc,oldMode);
 
-	hr = pDirectSurface->ReleaseDC(hdc);
+	hr = pSurface->ReleaseDC(hdc);
 	Assert(hr == AUI_ERRCODE_OK);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_SURFACEUNLOCKFAILED;
-
+#endif
 	return PRIMITIVES_ERRCODE_OK;
 }
 
@@ -1520,7 +1532,7 @@ PRIMITIVES_ERRCODE primitives_DropText(
 
 
 PRIMITIVES_ERRCODE primitives_ColoredDropText(
-	aui_Surface *pDirectSurface,	
+	aui_Surface *pSurface,	
 	sint32 x,							
 	sint32 y,							
 	const MBCHAR *pString,					
@@ -1529,18 +1541,19 @@ PRIMITIVES_ERRCODE primitives_ColoredDropText(
 	BOOL bg								
 	)
 {
-	Assert(pDirectSurface);
-	if (pDirectSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
+	Assert(pSurface);
+	if (pSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
 	Assert(pString);
 	if (pString==NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
+#ifdef __AUI_USE_DIRECTX__
 	HDC hdc;
 	HRESULT hr;
 	COLORREF oldColor;
 	sint32 oldMode = 0;
 
-	hr = pDirectSurface->GetDC(&hdc);
+	hr = pSurface->GetDC(&hdc);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_DSGETDCFAILED;
 
 	
@@ -1576,27 +1589,28 @@ PRIMITIVES_ERRCODE primitives_ColoredDropText(
 	if (bg)
 		SetBkMode(hdc,oldMode);
 
-	hr = pDirectSurface->ReleaseDC(hdc);
+	hr = pSurface->ReleaseDC(hdc);
 	Assert(hr == AUI_ERRCODE_OK);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_SURFACEUNLOCKFAILED;
-
+#endif
 	return PRIMITIVES_ERRCODE_OK;
 }
 
 PRIMITIVES_ERRCODE primitives_DropTextCentered(
-	aui_Surface *pDirectSurface,	
+	aui_Surface *pSurface,	
 	RECT *destRect,
 	const MBCHAR *pString,					
 	COLORREF color,						
 	BOOL bg								
 	)
 {
-	Assert(pDirectSurface);
-	if (pDirectSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
+	Assert(pSurface);
+	if (pSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
 	Assert(pString);
 	if (pString==NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
+#ifdef __AUI_USE_DIRECTX__
 	HDC			hdc;
 	HRESULT		hr;
 	COLORREF	oldColor;
@@ -1604,7 +1618,7 @@ PRIMITIVES_ERRCODE primitives_DropTextCentered(
 	SIZE		size;
 	sint32		x,y;
 
-	hr = pDirectSurface->GetDC(&hdc);
+	hr = pSurface->GetDC(&hdc);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_DSGETDCFAILED;
 
 	
@@ -1644,15 +1658,15 @@ PRIMITIVES_ERRCODE primitives_DropTextCentered(
 	if (bg)
 		SetBkMode(hdc,oldMode);
 
-	hr = pDirectSurface->ReleaseDC(hdc);
+	hr = pSurface->ReleaseDC(hdc);
 	Assert(hr == AUI_ERRCODE_OK);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_SURFACEUNLOCKFAILED;
-
+#endif
 	return PRIMITIVES_ERRCODE_OK;
 }
 
 PRIMITIVES_ERRCODE primitives_ColoredDropTextCentered(
-	aui_Surface *pDirectSurface,	
+	aui_Surface *pSurface,	
 	RECT *destRect,
 	const MBCHAR *pString,					
 	COLORREF textColor,						
@@ -1660,12 +1674,13 @@ PRIMITIVES_ERRCODE primitives_ColoredDropTextCentered(
 	BOOL bg								
 	)
 {
-	Assert(pDirectSurface);
-	if (pDirectSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
+	Assert(pSurface);
+	if (pSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
 	Assert(pString);
 	if (pString==NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
+#ifdef __AUI_USE_DIRECTX__
 	HDC			hdc;
 	HRESULT		hr;
 	COLORREF	oldColor;
@@ -1673,7 +1688,7 @@ PRIMITIVES_ERRCODE primitives_ColoredDropTextCentered(
 	SIZE		size;
 	sint32		x,y;
 
-	hr = pDirectSurface->GetDC(&hdc);
+	hr = pSurface->GetDC(&hdc);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_DSGETDCFAILED;
 
 	
@@ -1714,9 +1729,10 @@ PRIMITIVES_ERRCODE primitives_ColoredDropTextCentered(
 	if (bg)
 		SetBkMode(hdc,oldMode);
 
-	hr = pDirectSurface->ReleaseDC(hdc);
+	hr = pSurface->ReleaseDC(hdc);
 	Assert(hr == AUI_ERRCODE_OK);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_SURFACEUNLOCKFAILED;
+#endif
 
 	return PRIMITIVES_ERRCODE_OK;
 }
@@ -1729,7 +1745,7 @@ PRIMITIVES_ERRCODE primitives_ColoredDropTextCentered(
 
 
 PRIMITIVES_ERRCODE primitives_DropTextBatch(
-	aui_Surface *pDirectSurface,	
+	aui_Surface *pSurface,	
 	sint32 x,							
 	sint32 y,							
 	const MBCHAR **pString,					
@@ -1738,12 +1754,13 @@ PRIMITIVES_ERRCODE primitives_DropTextBatch(
 	BOOL bg								
 	)
 {
-	Assert(pDirectSurface);
-	if (pDirectSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
+	Assert(pSurface);
+	if (pSurface == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
 	Assert(pString);
 	if (pString == NULL) return PRIMITIVES_ERRCODE_INVALIDPARAM;
 
+#ifdef __AUI_USE_DIRECTX__
 	HDC hdc;
 	HRESULT hr;
 	COLORREF oldColor;
@@ -1751,7 +1768,7 @@ PRIMITIVES_ERRCODE primitives_DropTextBatch(
 	sint32 oldMode = 0;
 	sint32 saveY = y;
 
-	hr = pDirectSurface->GetDC(&hdc);
+	hr = pSurface->GetDC(&hdc);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_DSGETDCFAILED;
 
 	
@@ -1773,8 +1790,8 @@ PRIMITIVES_ERRCODE primitives_DropTextBatch(
 
 	SetTextColor(hdc, dropTextColor);
 
-	
-	for (sint32 i=0;i < numStrings;i++)
+	sint32 i;	
+	for (i=0;i < numStrings;i++)
 	{
 
 		TextOut(hdc,x+1,y+1,pString[i],strlen(pString[i]));
@@ -1802,10 +1819,10 @@ PRIMITIVES_ERRCODE primitives_DropTextBatch(
 	if (bg)
 		SetBkMode(hdc,oldMode);
 
-	hr = pDirectSurface->ReleaseDC(hdc);
+	hr = pSurface->ReleaseDC(hdc);
 	Assert(hr == AUI_ERRCODE_OK);
 	if (hr != AUI_ERRCODE_OK) return PRIMITIVES_ERRCODE_DSRELEASEDCFAILED;
-
+#endif
 	return PRIMITIVES_ERRCODE_OK;
 }
 
@@ -1897,8 +1914,8 @@ PRIMITIVES_ERRCODE primitives_OldBevelPane16(
 
 		tempInc = (surfPitch >> 1) - 1;
 
-		
-		for (sint32 i = 0;i < level;i++)
+		sint32 i;
+		for (i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (top+i+1) * surfPitch + ((left+i) << 1));
 
@@ -1947,8 +1964,8 @@ PRIMITIVES_ERRCODE primitives_OldBevelPane16(
 
 		tempInc = (surfPitch >> 1) - 1;
 
-		
-		for (sint32 i = 0;i < level;i++)
+		sint32 i;
+		for (i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (top+i+1) * surfPitch + ((left+i) << 1));
 
@@ -2073,8 +2090,8 @@ PRIMITIVES_ERRCODE primitives_OldBevelTabSelected16(
 
 		tempInc = (surfPitch >> 1) - 1;
 
-		
-		for (sint32 i = 0;i < level;i++)
+		sint32 i;
+		for (i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (top+i+1) * surfPitch + ((left+i) << 1));
 
@@ -2117,7 +2134,7 @@ PRIMITIVES_ERRCODE primitives_OldBevelTabSelected16(
 
 		tempInc = (surfPitch >> 1) - 1;
 
-		
+		sint32 i;
 		for (sint32 i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (top+i+1) * surfPitch + ((left+i) << 1));
@@ -2236,8 +2253,8 @@ PRIMITIVES_ERRCODE primitives_OldBevelTabDeselected16(
 
 		tempInc = (surfPitch >> 1) - 1;
 
-		
-		for (sint32 i=0;i < level;i++)
+		sint32 i;
+		for (i=0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (top+i+1) * surfPitch + ((left+i) << 1));
 
@@ -2284,8 +2301,8 @@ PRIMITIVES_ERRCODE primitives_OldBevelTabDeselected16(
 
 		tempInc = (surfPitch >> 1) - 1;
 
-		
-		for (sint32 i=0;i < level;i++)
+		sint32 i;
+		for (i=0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (top+i+1) * surfPitch + ((left+i) << 1));
 
@@ -2595,7 +2612,7 @@ PRIMITIVES_ERRCODE primitives_BevelPane16(
 
 		tempInc = (surfPitch >> 1) - 1;
 
-		
+		sint32 i;
 		for (sint32 i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (top+i+1) * surfPitch + ((left+i) << 1));
@@ -2631,8 +2648,8 @@ PRIMITIVES_ERRCODE primitives_BevelPane16(
 	}
 	else	
 	{
-		
-		for (sint32 j = level;j;j--)
+		sint32 j;
+		for (j = level;j;j--)
 		{
 			for (sint32 i = tempWidth;i;i--)
 			{
@@ -2648,8 +2665,8 @@ PRIMITIVES_ERRCODE primitives_BevelPane16(
 
 		tempInc = (surfPitch >> 1) - 1;
 
-		
-		for (sint32 i = 0;i < level;i++)
+		sint32 i;
+		for (i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (top+i+1) * surfPitch + ((left+i) << 1));
 
@@ -2791,8 +2808,8 @@ PRIMITIVES_ERRCODE primitives_BevelTabSelected16(
 
 		tempInc = (surfPitch >> 1) - 1;
 
-		
-		for (sint32 i = 0;i < level;i++)
+		sint32 i;
+		for (i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (top+i+1) * surfPitch + ((left+i) << 1));
 
@@ -2838,8 +2855,8 @@ PRIMITIVES_ERRCODE primitives_BevelTabSelected16(
 
 		tempInc = (surfPitch >> 1) - 1;
 
-		
-		for (sint32 i = 0;i < level;i++)
+		sint32 i;
+		for (i = 0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (top+i+1) * surfPitch + ((left+i) << 1));
 
@@ -2974,7 +2991,7 @@ PRIMITIVES_ERRCODE primitives_BevelTabDeselected16(
 
 		tempInc = (surfPitch >> 1) - 1;
 
-		
+		sint32 i;
 		for (sint32 i=0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (top+i+1) * surfPitch + ((left+i) << 1));
@@ -3025,8 +3042,8 @@ PRIMITIVES_ERRCODE primitives_BevelTabDeselected16(
 
 		tempInc = (surfPitch >> 1) - 1;
 
-		
-		for (sint32 i=0;i < level;i++)
+		sint32 i;
+		for (i=0;i < level;i++)
 		{
 			pDestPixel = (uint16 *)(pSurfBase + (top+i+1) * surfPitch + ((left+i) << 1));
 
@@ -3727,11 +3744,11 @@ void primitives_DrawAALine16(aui_Surface *pSurface, sint32 x1, sint32 y1, sint32
 
 				if (Bvar < 0) {
 					Bvar += Bainc;
-					mid_addr = (uint8 *)((sint32)mid_addr + addr_ainc);
+					mid_addr = (uint8 *)((size_t)mid_addr + addr_ainc);
 					Pmid += Painc;
 				} else {
 					Bvar += Bdinc;
-					mid_addr = (uint8 *)((sint32)mid_addr + addr_dinc);
+					mid_addr = (uint8 *)((size_t)mid_addr + addr_dinc);
 					Pmid += Pdinc;
 				}
 
@@ -3874,11 +3891,11 @@ void primitives_DrawDashedAALine16(aui_Surface *pSurface, sint32 x1, sint32 y1, 
 
 				if (Bvar < 0) {
 					Bvar += Bainc;
-					mid_addr = (uint8 *)((sint32)mid_addr + addr_ainc);
+					mid_addr = (uint8 *)((size_t)mid_addr + addr_ainc);
 					Pmid += Painc;
 				} else {
 					Bvar += Bdinc;
-					mid_addr = (uint8 *)((sint32)mid_addr + addr_dinc);
+					mid_addr = (uint8 *)((size_t)mid_addr + addr_dinc);
 					Pmid += Pdinc;
 				}
 

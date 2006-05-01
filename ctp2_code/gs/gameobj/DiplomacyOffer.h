@@ -1,19 +1,8 @@
-
-
-
-
-
-
-
-
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
-
 #ifndef __DIPLOMACY_DATA_H__
 #define __DIPLOMACY_DATA_H__
-
-class TradeOfferData;
 
 #include "Unit.h"
 #include "GameObj.h"
@@ -65,3 +54,4 @@ public:
 };
 
 #endif
+

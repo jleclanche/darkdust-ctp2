@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Sprite
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -63,15 +63,17 @@ Sprite::Sprite()
 	m_hotPoint.y = 0;
 
 	m_numFrames = 0;
-	m_frames = NULL;
-	m_miniframes = NULL;
+	m_frames = 0;
+	m_framesSizes = 0;
+	m_miniframes = 0;
+	m_miniframesSizes = 0;
 	m_currentFrame = 0;
 	m_firstFrame = 0;
 
 	m_type = SPRITETYPE_NORMAL;
 
-	m_surface = NULL;
-	m_surfBase = NULL;
+	m_surface = 0;
+	m_surfBase = 0;
 	m_surfWidth = 0;
 	m_surfHeight = 0;
 	m_surfPitch = 0;
@@ -84,14 +86,34 @@ Sprite::Sprite()
 
 Sprite::~Sprite()
 {
-	for (size_t i = 0; i < m_numFrames; ++i) 
-    {
-		delete [] (m_frames[i]);
-		delete [] (m_miniframes[i]);
+	for (sint32 i = 0; i < m_numFrames; i++) {
+		if (m_frames) 
+			if (m_frames[i]) {
+				delete[] m_frames[i];
+				m_frames[i] = 0;
+			}
+		if (m_miniframes)
+			if (m_miniframes[i]) {
+				delete[] m_miniframes[i];
+				m_miniframes[i] = 0;
+			}
 	}
-
-	delete [] m_frames;
-	delete [] m_miniframes;
+	if (m_frames) {
+		delete[] m_frames;
+		m_frames = 0;
+	}
+	if (m_framesSizes) {
+		delete[] m_framesSizes;
+		m_framesSizes = 0;
+	}
+	if (m_miniframes) {
+		delete[] m_miniframes;
+		m_miniframes = 0;
+	}
+	if (m_miniframesSizes) {
+		delete[] m_miniframesSizes;
+		m_miniframesSizes = 0;
+	}
 }
 
 
@@ -246,7 +268,7 @@ void Sprite::Import(uint16 nframes, char **imageFiles, char **shadowFiles)
 	
 	for (uint16 i=0; i<m_numFrames; i++) 
 	{
-		char ext[_MAX_DIR];
+		char ext[_MAX_DIR] = { 0 };
 
 		
 		image		= NULL;      
@@ -254,8 +276,11 @@ void Sprite::Import(uint16 nframes, char **imageFiles, char **shadowFiles)
 		shadow		= NULL;
 		minishadow	= NULL;
 
-		
-		_splitpath(imageFiles[i],NULL,NULL,NULL,ext);
+		char *dot = strrchr(imageFiles[i], '.');
+		if (dot && (*++dot)) {
+			char *end = strncpy(ext, dot, _MAX_DIR - 1);
+			*++end = '\0';
+		}
 
 		if (strstr(strupr(ext),"TIF"))
 			ImportTIFF(i,imageFiles,&image);
@@ -268,8 +293,13 @@ void Sprite::Import(uint16 nframes, char **imageFiles, char **shadowFiles)
 				fcloseall();
 				exit(-1);
 			}
-		
-		_splitpath(shadowFiles[i],NULL,NULL,NULL,ext);
+
+		ext[0] = '\0';
+		dot = strrchr(shadowFiles[i], '.');
+		if (dot && (*++dot)) {
+			char *end = strncpy(ext, dot, _MAX_DIR - 1);
+			*++end = '\0';
+		}
 
 		if (strstr(strupr(ext),"TIF"))
 			ImportTIFF(i,shadowFiles,&shadow);
@@ -388,27 +418,27 @@ void Sprite::InitializeDrawLow()
 {
 	if (g_is565Format)
 	{	
-		_DrawLowClipped        	= &Sprite::DrawLowClipped565;
-		_DrawLow               	= &Sprite::DrawLow565;
-		_DrawLowReversedClipped	= &Sprite::DrawLowReversedClipped565;
-		_DrawLowReversed       	= &Sprite::DrawLowReversed565;
-		_DrawReflectionLow     	= &Sprite::DrawReflectionLow565;
-		_DrawFlashLow          	= &Sprite::DrawFlashLow565;
-		_DrawFlashLowReversed  	= &Sprite::DrawFlashLowReversed565;
-		_DrawScaledLow			= &Sprite::DrawScaledLow565;
-		_DrawFlashScaledLow		= &Sprite::DrawFlashScaledLow565;
+		_DrawLowClipped        	= &DrawLowClipped565		;
+		_DrawLow               	= &DrawLow565			;
+		_DrawLowReversedClipped	= &DrawLowReversedClipped565	;
+		_DrawLowReversed       	= &DrawLowReversed565		;
+		_DrawReflectionLow     	= &DrawReflectionLow565		;
+		_DrawFlashLow          	= &DrawFlashLow565		;
+		_DrawFlashLowReversed  	= &DrawFlashLowReversed565	;
+		_DrawScaledLow		= &DrawScaledLow565		;
+		_DrawFlashScaledLow	= &DrawFlashScaledLow565	;
 	}
 	else
 	{	
-		_DrawLowClipped        	= &Sprite::DrawLowClipped555;
-		_DrawLow               	= &Sprite::DrawLow555;
-		_DrawLowReversedClipped	= &Sprite::DrawLowReversedClipped555;
-		_DrawLowReversed       	= &Sprite::DrawLowReversed555;
-		_DrawReflectionLow     	= &Sprite::DrawReflectionLow555;
-		_DrawFlashLow          	= &Sprite::DrawFlashLow555;
-		_DrawFlashLowReversed  	= &Sprite::DrawFlashLowReversed555;
-		_DrawScaledLow			= &Sprite::DrawScaledLow555;
-		_DrawFlashScaledLow		= &Sprite::DrawFlashScaledLow555;
+		_DrawLowClipped        	= &DrawLowClipped555		;
+		_DrawLow               	= &DrawLow555			;
+		_DrawLowReversedClipped	= &DrawLowReversedClipped555	;
+		_DrawLowReversed       	= &DrawLowReversed555		;
+		_DrawReflectionLow     	= &DrawReflectionLow555		;
+		_DrawFlashLow          	= &DrawFlashLow555		;
+		_DrawFlashLowReversed  	= &DrawFlashLowReversed555	;
+		_DrawScaledLow		= &DrawScaledLow555		;
+		_DrawFlashScaledLow	= &DrawFlashScaledLow555	;
 	}
 }
 
@@ -729,7 +759,16 @@ Pixel16 *Sprite::GetFrameData(uint16 frameNum)
 	return m_frames[frameNum];
 }
 
+size_t Sprite::GetFrameDataSize(uint16 frameNum)
+{
+	Assert(frameNum < m_numFrames);
+	if (frameNum >= m_numFrames) return 0;
 
+	Assert(m_framesSizes != NULL);
+	if (m_framesSizes == NULL) return 0;
+
+	return m_framesSizes[frameNum];
+}
 
 Pixel16 *Sprite::GetMiniFrameData(uint16 frameNum)
 {
@@ -740,6 +779,17 @@ Pixel16 *Sprite::GetMiniFrameData(uint16 frameNum)
 	if (m_miniframes == NULL) return NULL;
 
 	return m_miniframes[frameNum];
+}
+
+size_t Sprite::GetMiniFrameDataSize(uint16 frameNum)
+{
+	Assert(frameNum < m_numFrames);
+	if (frameNum >= m_numFrames) return 0;
+
+	Assert(m_miniframesSizes != NULL);
+	if (m_miniframesSizes == NULL) return 0;
+
+	return m_miniframesSizes[frameNum];
 }
 
 
@@ -829,6 +879,14 @@ void Sprite::AllocateFrameArrays(size_t count)
 }
 
 
+
+void Sprite::AllocateFrameArraysBasic(void)
+{
+	m_frames = new Pixel16*[1];
+	m_miniframes = new Pixel16*[1];
+}
+
+
 void Sprite::Export(FILE *file)
 {
 	extern TokenData	g_allTokens[];
@@ -882,7 +940,7 @@ inline Pixel16 Sprite::average(Pixel16 pixel1, Pixel16 pixel2, Pixel16 pixel3, P
 		g0 = (g1 + g2 + g3 + g4) >> 2;
 		b0 = (b1 + b2 + b3 + b4) >> 2;
 
-		return static_cast<Pixel16>((r0 << 11) | (g0 << 5) | b0);
+		return (r0 << 11) | (g0 << 5) | b0;
 	} else {
 		r1 = (pixel1 & 0x7C00) >> 10;
 		g1 = (pixel1 & 0x03E0) >> 5;
@@ -904,7 +962,7 @@ inline Pixel16 Sprite::average(Pixel16 pixel1, Pixel16 pixel2, Pixel16 pixel3, P
 		g0 = (g1 + g2 + g3 + g4) >> 2;
 		b0 = (b1 + b2 + b3 + b4) >> 2;
 
-		return static_cast<Pixel16>((r0 << 10) | (g0 << 5) | b0);
+		return (r0 << 10) | (g0 << 5) | b0;
 	}
 }
 
@@ -930,7 +988,7 @@ inline Pixel16 Sprite::average(Pixel16 pixel1, Pixel16 pixel2)
 		g0 = (g1 + g2) >> 1;
 		b0 = (b1 + b2) >> 1;
 
-		return static_cast<Pixel16>((r0 << 11) | (g0 << 5) | b0);
+		return (r0 << 11) | (g0 << 5) | b0;
 	} else {
 		r1 = (pixel1 & 0x7C00) >> 10;
 		g1 = (pixel1 & 0x03E0) >> 5;
@@ -944,7 +1002,7 @@ inline Pixel16 Sprite::average(Pixel16 pixel1, Pixel16 pixel2)
 		g0 = (g1 + g2) >> 1;
 		b0 = (b1 + b2) >> 1;
 
-		return static_cast<Pixel16>((r0 << 10) | (g0 << 5) | b0);
+		return (r0 << 10) | (g0 << 5) | b0;
 	}
 }
 

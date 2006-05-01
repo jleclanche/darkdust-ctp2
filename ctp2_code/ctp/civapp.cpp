@@ -63,7 +63,7 @@
 //     inspected by those other database classes.
 //
 //----------------------------------------------------------------------------
-//
+// 
 // - When quitting to New Game, go to main menu rather than SP screen
 // - Removed cleanup code for SP screen (JJB)
 // - Removed some of Martin's library cleanup code, after correcting the 
@@ -86,9 +86,6 @@
 //   database (unused), replaced old risk database by new one. (Aug 29th 2005 Martin Gühmann)
 // - The right color set is now selected afterwards the ProfileDB is available. (Aug 29th 2005 Martin Gühmann)
 // - Added cleanup of gaia controller and info window. (Sep 13th 2005 Martin Gühmann)
-// - Added ArmyData and Network cleanup. (Sep 25th 2005 Martin Gühmann)
-// - Added graphicsresscreen_Cleanup. (Sep 25th 2005 Martin Gühmann)
-// - Replaced old difficulty database by new one. (April 29th 2006 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
 
@@ -114,6 +111,7 @@
 #include "gwdb.h"
 #include "UVDB.h"
 #include "BuildingRecord.h"
+#include "DiffDB.h"
 #include "thronedb.h"
 #include "conceptdb.h"
 
@@ -273,7 +271,6 @@ int g_gameWatchID = -1;
 #include "AdvanceListRecord.h"
 #include "PersonalityRecord.h"
 #include "CivilisationRecord.h"
-#include "DifficultyRecord.h"
 
 #include "UnitDynArr.h"
 
@@ -306,9 +303,10 @@ int g_gameWatchID = -1;
 #include "SlicSegment.h"            // SlicSegment::Cleanup
 #include "infowindow.h"             // Info Window cleanup
 #include "sciencevictorydialog.h"   // Gaja controller window cleanup
-#include "ArmyData.h"               // ArmyData::Cleanup
-#include "graphicsresscreen.h"      // graphicsresscreen_Cleanup
 
+#if defined(USE_SDL) || defined(__AUI_USE_SDL__)
+#include <SDL.h>
+#endif
 #ifdef LINUX
 #include <time.h>
 #endif
@@ -338,6 +336,7 @@ extern OzoneDatabase            *g_theUVDB;
 extern PollutionDatabase        *g_thePollutionDB;
 extern ConstDB                  *g_theConstDB; 
 extern ThroneDB                 *g_theThroneDB;
+extern DifficultyDB             *g_theDifficultyDB; 
 
 extern ProfileDB                *g_theProfileDB;
 extern MovieDB                  *g_theVictoryMovieDB;
@@ -493,6 +492,8 @@ bool g_tempLeakCheck = false;
 sint32 g_allocatedAtStart;
 
 
+extern ColorSet	*			g_colorSet; // TODO: export from ColorSet.h
+
 namespace
 {
 
@@ -547,6 +548,8 @@ void InitDataIncludePath(void)
 	{
 		g_civPaths->InsertExtraDataPath(*p);
 	}
+
+
 }
 
 //----------------------------------------------------------------------------
@@ -558,6 +561,7 @@ void InitDataIncludePath(void)
 // Parameters : -
 //
 // Globals    : g_theProfileDB  : user preferences (read)
+//              g_colorSet      : color set in use during the game (updated)
 //
 // Returns    : -
 //
@@ -567,8 +571,15 @@ void InitDataIncludePath(void)
 //----------------------------------------------------------------------------
 void SelectColorSet(void)
 {
-    Assert(g_theProfileDB);
-	ColorSet::Initialize(g_theProfileDB->GetValueByName("ColorSet"));
+
+	sint32	useColorSet = g_theProfileDB->GetValueByName("ColorSet");
+
+	if ((useColorSet < 0) || (useColorSet >= k_MAX_COLOR_SET))
+	{
+		useColorSet = 0;
+	}
+
+	g_colorSet->Import(useColorSet);
 }
 
 } // namespace
@@ -611,7 +622,7 @@ namespace Os
 
 void check_leak()
 {
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(WIN32)
 	_CrtMemState new_state; 
 
 	if(g_tempLeakCheck) {
@@ -655,7 +666,7 @@ sint32 CivApp::InitializeAppUI(void)
 	
 	NETFunc::GameType = GAMEID;
 	
-	NETFunc::DllPath = "dll\\net";
+	NETFunc::DllPath = "dll" FILE_SEP "net";
 
 	
 	extern BOOL g_useIntroMovie;
@@ -664,8 +675,8 @@ sint32 CivApp::InitializeAppUI(void)
 
 	if (g_useIntroMovie && !g_no_shell) 
 	{
-  		intromoviewin_Initialize();
-    	intromoviewin_DisplayIntroMovie();
+		intromoviewin_Initialize();
+		intromoviewin_DisplayIntroMovie();
 	} else {
 
 		if (g_soundManager) {
@@ -744,7 +755,6 @@ sint32 CivApp::InitializeAppDB(CivArchive &archive)
 	DBLexer *lex = NULL;
 
 	g_theUnitDB = new CTPDatabase<UnitRecord>;
-	g_theDifficultyDB = new CTPDatabase<DifficultyRecord>;
 	g_theIconDB = new CTPDatabase<IconRecord>;
 	g_theAdvanceDB = new CTPDatabase<AdvanceRecord>;
 	g_theSpriteDB = new CTPDatabase<SpriteRecord>;
@@ -800,8 +810,12 @@ sint32 CivApp::InitializeAppDB(CivArchive &archive)
 	Assert(g_theSoundDB);
 	if (g_theSoundDB) {
 		lex = new DBLexer(C3DIR_GAMEDATA, g_sounddb_filename);
-		if (!g_theSoundDB->Parse(lex))
+		if (!lex)
 			return FALSE;
+		if (!g_theSoundDB->Parse(lex)) {
+			delete lex;
+			return FALSE;
+		}
 		delete lex;
 	}
 
@@ -903,11 +917,14 @@ sint32 CivApp::InitializeAppDB(CivArchive &archive)
 
 	g_theProgressWindow->StartCountingTo( 140 );
 
-	if(g_theDifficultyDB) {
-		if (!g_theDifficultyDB->Parse(C3DIR_GAMEDATA, g_difficultydb_filename)) {
-			ExitGame();
+	if (&archive)
+		g_theDifficultyDB = new DifficultyDB(archive);
+	else
+		g_theDifficultyDB = new DifficultyDB;
+	Assert(g_theDifficultyDB); 
+	if (g_theDifficultyDB) {
+		if (!g_theDifficultyDB->Parse(g_difficultydb_filename))
 			return FALSE;
-		}
 	}
 
 	g_theProgressWindow->StartCountingTo( 150 );
@@ -1271,7 +1288,6 @@ sint32 CivApp::InitializeAppDB(CivArchive &archive)
 	if(!g_theFeatDB->ResolveReferences()) return FALSE;
 	if(!g_theEndGameObjectDB->ResolveReferences()) return FALSE;
 	if(!g_theRiskDB->ResolveReferences()) return FALSE;
-	if(!g_theDifficultyDB->ResolveReferences()) return FALSE;
 
 	g_theProgressWindow->StartCountingTo( 510 );
 
@@ -1380,6 +1396,17 @@ sint32 CivApp::InitializeApp(HINSTANCE hInstance, int iCmdShow)
 // COM needed for DirectX/Movies
 #ifdef WIN32
 	CoInitialize(NULL);
+#endif
+#ifdef __AUI_USE_SDL__
+	Uint32 flags = (SDL_INIT_EVERYTHING | SDL_INIT_EVENTTHREAD) & ~SDL_INIT_AUDIO;
+#if defined(_DEBUG) || defined(DEBUG)
+	flags |= SDL_INIT_NOPARACHUTE;
+#endif// _DEBUG || DEBUG
+	int rc = SDL_Init(flags);
+	if (rc != 0) {
+		fprintf(stderr, "Could not initialize SDL:\n%s\n", SDL_GetError());
+		return -1;
+	}
 #endif
 
 	Splash::Initialize();
@@ -1567,9 +1594,12 @@ sint32 CivApp::InitializeApp(HINSTANCE hInstance, int iCmdShow)
 
 	g_theProgressWindow->StartCountingTo( 620 );
 
-	if (g_c3ui->TheMouse()) 
-    {
-		double const sensitivity = 0.25 * (1 + g_theProfileDB->GetMouseSpeed());
+	if (g_c3ui->TheMouse()) {
+		double sensitivity = 0.0;
+
+		
+		sensitivity = 0.25 * (1 + g_theProfileDB->GetMouseSpeed());
+
 		g_c3ui->TheMouse()->Sensitivity() = sensitivity;
 	}
 
@@ -1597,6 +1627,10 @@ sint32 CivApp::QuickInit(HINSTANCE hInstance, int iCmdShow)
 }
 
 
+extern ColorSet	*g_colorSet;
+
+
+
 sint32 CivApp::CleanupAppUI(void)
 {
 	NetShell::Leave( k_NS_FLAGS_DESTROY );
@@ -1613,18 +1647,20 @@ sint32 CivApp::CleanupAppUI(void)
 	gameplayoptions_Cleanup();
 	soundscreen_Cleanup();
 	musicscreen_Cleanup();
+	//Added by Martin Gühmann to clean up the status bar correctly.
 	StatusBar::CleanUp();
-	loadsavescreen_Cleanup();
-	graphicsresscreen_Cleanup();
-	km_screen_Cleanup();
 
-    delete g_c3ui;
-    g_c3ui = NULL;
+	if (g_c3ui)
+	{
+		delete g_c3ui->TheMovieManager();
+		delete g_c3ui->TheKeyboard();
+		delete g_c3ui->TheMouse();
+		delete g_c3ui->TheBlitter();
+		delete g_c3ui->TheMemMap();
+		delete g_c3ui;
+		g_c3ui = NULL;
+	}
 
-#if !defined(__AUI_USE_SDL__)
-	sint32 const cleanBaseRefCount = aui_Base::GetBaseRefCount();
-	Assert(0 == cleanBaseRefCount);
-#endif
 	
 	delete g_GreatLibPF;
 	g_GreatLibPF = NULL;
@@ -1634,6 +1670,10 @@ sint32 CivApp::CleanupAppUI(void)
 
 	delete g_SoundPF;
 	g_SoundPF = NULL;
+
+	
+	delete g_colorSet;
+    g_colorSet = NULL;
 
 	return 0;
 }
@@ -1811,7 +1851,6 @@ sint32 CivApp::CleanupApp(void)
 {
 	if (m_appLoaded)
 	{
-		g_network.Cleanup();
 		GreatLibrary::Shutdown_Great_Library_Data();
 		Splash::Cleanup();
 		messagewin_Cleanup();
@@ -1821,7 +1860,7 @@ sint32 CivApp::CleanupApp(void)
 
 		delete g_theMessagePool;
 		g_theMessagePool = NULL;
-
+		
 		CivScenarios::Cleanup();
 		SoundManager::Cleanup();
 
@@ -1842,7 +1881,6 @@ sint32 CivApp::CleanupApp(void)
 		CleanupAppDB();
 		CivPaths_CleanupCivPaths();
 		SlicSegment::Cleanup();
-		ArmyData::Cleanup();
 
 // COM needed for DirectX Moviestuff
 #ifdef WIN32	
@@ -1892,7 +1930,11 @@ sint32 CivApp::InitializeGameUI(void)
 	g_theProgressWindow->StartCountingTo( 10, s );
 
 	SPLASH_STRING("Creating Main Windows...");
-	g_splash_old = Os::GetTicks();
+#ifdef USE_SDL
+	g_splash_old = SDL_GetTicks();
+#else
+	g_splash_old = GetTickCount();
+#endif
 
 	SPLASH_STRING("Creating Status Window...");
 	errcode = c3windows_MakeStatusWindow(TRUE);
@@ -2130,21 +2172,18 @@ sint32 CivApp::InitializeGame(CivArchive &archive)
 		
 		
 		
-		g_rand->Initialize(static_cast<sint32>(time(0)));
+		g_rand->Initialize(time(0));
 	}
 
 	g_theProgressWindow->StartCountingTo( 630 );
 
-	if (g_isScenario) 
-	{
-		for (size_t p = 0; p < k_MAX_PLAYERS; ++p) 
-		{
-			if (g_player[p]) 
-			{
-				g_player[p]->m_civilisation->ResetCiv
-					(g_player[p]->m_civilisation->GetCivilisation(),
-					 g_player[p]->m_civilisation->GetGender()
-					);
+	if(g_isScenario) {
+		
+		sint32 p;
+		for(p = 0; p < k_MAX_PLAYERS; p++) {
+			if(g_player[p]) {
+				g_player[p]->m_civilisation->ResetCiv(g_player[p]->m_civilisation->GetCivilisation(),
+													  g_player[p]->m_civilisation->GetGender());
 			}
 		}
 	}
@@ -2325,6 +2364,11 @@ sint32 InitializeSpriteEditorUI(void)
 	g_theProgressWindow->StartCountingTo( 10, s );
 
 	SPLASH_STRING("Creating Main Windows...");
+#ifdef USE_SDL
+	g_splash_old = SDL_GetTicks();
+#else
+	g_splash_old = GetTickCount();
+#endif
 
 	g_splash_old = Os::GetTicks();
 
@@ -2484,7 +2528,7 @@ sint32 CivApp::InitializeSpriteEditor(CivArchive &archive)
 			g_slicEngine->Link();
 		}
 	}
-	g_slicEngine->RunTrigger(TRIGGER_LIST_GAME_LOADED, ST_END);
+	g_slicEngine->RunTrigger(TRIGGER_LIST_GAME_LOADED);
 
 	g_theProgressWindow->StartCountingTo( 730 );
 
@@ -2635,6 +2679,7 @@ sint32 CivApp::CleanupGameUI(void)
 	tutorialwin_Cleanup();
 
 	
+	km_screen_Cleanup();
 	workwin_Cleanup();
 
 	
@@ -2658,6 +2703,7 @@ sint32 CivApp::CleanupGameUI(void)
 	initialplayscreen_Cleanup();
 	
 	DiplomacyDetails::Cleanup();
+	loadsavescreen_Cleanup();
 
 	return 0;
 }
@@ -2878,14 +2924,26 @@ void CivApp::ProcessGraphicsCallback(void)
 
 sint32 CivApp::ProcessUI(const uint32 target_milliseconds, uint32 &used_milliseconds)
 {
-	uint32          start_time_ms   = Os::GetTicks();
-	uint32          curTicks        = Os::GetTicks();
-	static uint32	lastTicks       = curTicks;
+#ifdef USE_SDL
+	uint32 start_time_ms = SDL_GetTicks();
+	uint32 curTicks = SDL_GetTicks();
+#else
+	uint32 start_time_ms = GetTickCount();
+	uint32 curTicks = GetTickCount();
+#endif
+	static uint32	lastTicks = curTicks;
+
+	if (m_appLoaded) {
+		g_c3ui->Process();
+	}
 
 	if (g_c3ui->TheMouse()) {
-		if (g_c3ui->TheMouse()->IsSuspended() ) 
-		{
-			used_milliseconds = Os::GetTicks() - start_time_ms;
+		if (g_c3ui->TheMouse()->IsSuspended() ) {
+#ifdef USE_SDL
+			used_milliseconds = SDL_GetTicks() - start_time_ms;
+#else
+			used_milliseconds = GetTickCount() - start_time_ms;
+#endif
 
 			if (g_runInBackground) {
 				if (m_gameLoaded) {
@@ -2915,11 +2973,6 @@ sint32 CivApp::ProcessUI(const uint32 target_milliseconds, uint32 &used_millisec
 					g_tiledMap->CopyMixDirtyRects(g_background->GetDirtyList());
 
 					
-					
-					
-					
-					
-
 					g_c3ui->Process();
 
 					
@@ -2928,6 +2981,15 @@ sint32 CivApp::ProcessUI(const uint32 target_milliseconds, uint32 &used_millisec
 					uint32 used_milliseconds;
 
 					ProcessNet(target_milliseconds, used_milliseconds);
+#ifdef __AUI_USE_SDL__
+					// Because of the way keyboard events are handled in SDL, we
+					// need to escape this loop if there are any SDL_KeyEvents pending
+					
+					if (0 != SDL_PeepEvents(NULL, 1, SDL_PEEKEVENT,
+							SDL_EVENTMASK(SDL_KEYUP) | SDL_EVENTMASK(SDL_KEYDOWN))) {
+						break;
+					}
+#endif
 				} while (ui_CheckForScroll());
 
 				
@@ -2953,10 +3015,6 @@ sint32 CivApp::ProcessUI(const uint32 target_milliseconds, uint32 &used_millisec
 		}
 	}
 
-	if (m_appLoaded) {
-		g_c3ui->Process();
-	}
-
 	if (m_gameLoaded && !g_modalWindow && g_tiledMap) {
 		
 		
@@ -2977,6 +3035,12 @@ sint32 CivApp::ProcessAI()
 	if(victorywin_IsOnScreen())
 		return 0;
 
+#ifdef USE_SDL
+	uint32 start_time_ms = SDL_GetTicks();
+#else
+	uint32 start_time_ms = GetTickCount();
+#endif
+
 	if (g_c3ui->TheMouse()) {
 		if (g_c3ui->TheMouse()->IsSuspended() && !g_runInBackground) {
 			return 0;
@@ -2995,13 +3059,20 @@ sint32 CivApp::ProcessRobot(const uint32 target_milliseconds, uint32 &used_milli
 	if(victorywin_IsOnScreen())
 		return 0;
 
-	uint32 const    start_time_ms = Os::GetTicks();
+#ifdef USE_SDL
+	uint32 start_time_ms = SDL_GetTicks();
+#else
+	uint32 start_time_ms = GetTickCount();
+#endif
 	
-	if (g_c3ui->TheMouse()) 
-	{
-		if (g_c3ui->TheMouse()->IsSuspended() && !g_runInBackground) 
-		{
-			// Probably there was something here.
+	if (g_c3ui->TheMouse()) {
+		if (g_c3ui->TheMouse()->IsSuspended() && !g_runInBackground) {
+#ifdef USE_SDL
+			used_milliseconds = SDL_GetTicks() - start_time_ms;
+#else
+			used_milliseconds = GetTickCount() - start_time_ms;
+#endif
+			return 0;
 		}
 	}
 
@@ -3012,14 +3083,18 @@ sint32 CivApp::ProcessRobot(const uint32 target_milliseconds, uint32 &used_milli
 
 sint32 CivApp::ProcessNet(const uint32 target_milliseconds, uint32 &used_milliseconds)
 {
-	uint32 const        start_time = Os::GetTicks();
+#ifdef USE_SDL
+	uint32 start_time_ms = SDL_GetTicks();
+#else
+	uint32 start_time_ms = GetTickCount();
+#endif
 
 	if (m_gameLoaded) 
 	{
 		g_network.Process();
 	}
 
-	used_milliseconds   = Os::GetTicks() - start_time;
+	used_milliseconds   = Os::GetTicks() - start_time_ms;
 	return 0;
 }
 
@@ -3099,7 +3174,7 @@ frame++;
 sint32 CivApp::Process(void)
 {
 	
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(WIN32)
 	if(g_tempLeakCheck) {
 		_CrtMemState new_state; 
 		_CrtMemCheckpoint(&new_state);
@@ -3112,19 +3187,33 @@ sint32 CivApp::Process(void)
 	
 	if(g_netConsole) {
 		static uint32 last_tick = 0;
-
-		if (Os::GetTicks() > last_tick + 250) 
-		{
+#ifdef USE_SDL
+		if(SDL_GetTicks() > last_tick + 250) {
+#else
+		if(GetTickCount() > last_tick + 250) {
+#endif
 			g_netConsole->Idle();
-			last_tick = Os::GetTicks();
+#ifdef USE_SDL
+			last_tick = SDL_GetTicks();
+#else
+			last_tick = GetTickCount();
+#endif
 		}
 	}
 
 	
 	
-	if (m_inBackground) 
-	{
-		Os::Sleep(50);
+	if (m_inBackground) {
+#ifdef HAVE_UNISTD_H
+		usleep(50);
+#elif defined(WIN32)
+		Sleep(50);
+#elif defined(LINUX)
+		struct timespec backgroundSleepTime;
+		backgroundSleepTime.tv_sec=0;
+		backgroundSleepTime.tv_nsec=50000000;
+		nanosleep(&backgroundSleepTime, NULL);
+#endif
 		return 0;
 	}
 
@@ -3492,7 +3581,7 @@ void CivApp::AutoSave(PLAYER_INDEX player, bool isQuickSave)
 	g_civPaths->GetSavePath(dir, path);
 
 	
-	sprintf(fullpath, "%s\\%s", path, leaderName);
+	sprintf(fullpath, "%s%s%s", path, FILE_SEP, leaderName);
 
 	
 	if (!c3files_PathIsValid(fullpath)) {
@@ -3503,7 +3592,7 @@ void CivApp::AutoSave(PLAYER_INDEX player, bool isQuickSave)
 	}
 
 	
-	strcat(fullpath, "\\");
+	strcat(fullpath, FILE_SEP);
 	strcat(fullpath, filename);
 
 	GameFile	*file = new GameFile();
@@ -3529,19 +3618,28 @@ void CivApp::RestoreAutoSave(PLAYER_INDEX player)
 
 void CivApp::PostStartGameAction(void)
 {
-	g_c3ui->AddAction(new StartGameAction());
+	StartGameAction		*startGameAction = new StartGameAction();
+
+	if (startGameAction)
+		g_c3ui->AddAction(startGameAction);
 }
 
 
 void CivApp::PostSpriteTestAction(void)
 {
-	g_c3ui->AddAction(new SpriteTestAction());
+	SpriteTestAction		*spriteTestAction = new SpriteTestAction();
+
+	if (spriteTestAction)
+		g_c3ui->AddAction(spriteTestAction);
 }
 
 
 void CivApp::PostLoadSaveGameAction(MBCHAR *name)
 {
-	g_c3ui->AddAction(new LoadSaveGameAction(name));
+	LoadSaveGameAction		*loadsaveGameAction = new LoadSaveGameAction(name);
+
+	if (loadsaveGameAction)
+		g_c3ui->AddAction(loadsaveGameAction);
 }
 
 void CivApp::PostLoadQuickSaveAction(PLAYER_INDEX player)
@@ -3583,7 +3681,7 @@ void CivApp::PostLoadQuickSaveAction(PLAYER_INDEX player)
 	g_civPaths->GetSavePath(dir, path);
 
 	
-	sprintf(fullpath, "%s\\%s", path, leaderName);
+	sprintf(fullpath, "%s%s%s", path, FILE_SEP, leaderName);
 
 	
 	if (!c3files_PathIsValid(fullpath)) {
@@ -3594,7 +3692,7 @@ void CivApp::PostLoadQuickSaveAction(PLAYER_INDEX player)
 	}
 
 	
-	strcat(fullpath, "\\");
+	strcat(fullpath, FILE_SEP);
 	strcat(fullpath, filename);
 
 	FILE *f = fopen(fullpath, "r");
@@ -3608,16 +3706,26 @@ void CivApp::PostLoadQuickSaveAction(PLAYER_INDEX player)
 
 void CivApp::PostLoadSaveGameMapAction(MBCHAR *name)
 {
-    g_c3ui->AddAction(new LoadSaveGameMapAction(name));
+	LoadSaveGameMapAction		*loadsaveGameMapAction = new LoadSaveGameMapAction(name);
+
+	if (loadsaveGameMapAction)
+		g_c3ui->AddAction(loadsaveGameMapAction);
 }
 
 void CivApp::PostRestartGameAction(void)
 {
-	g_c3ui->AddAction(new RestartGameAction());
+	RestartGameAction		*restartGameAction = new RestartGameAction();
+
+	if (restartGameAction)
+		g_c3ui->AddAction(restartGameAction);
 }
 
 void CivApp::PostRestartGameSameMapAction(void)
 {
+	
+	
+	
+
 	Player *p = g_player[g_selected_item->GetVisiblePlayer()];
 
 	if(p && g_theProfileDB) {
@@ -3625,28 +3733,46 @@ void CivApp::PostRestartGameSameMapAction(void)
 		g_theProfileDB->SetCivIndex(p->m_civilisation->GetCivilisation());
 	}
 
-	g_c3ui->AddAction(new RestartGameSameMapAction());
+	RestartGameSameMapAction *restartGameSameMapAction =
+		new RestartGameSameMapAction();
+
+	if (restartGameSameMapAction)
+		g_c3ui->AddAction(restartGameSameMapAction);
 }
 
 void CivApp::PostQuitToSPShellAction(void)
 {
-	g_c3ui->AddAction(new QuitToSPShellAction());
+	QuitToSPShellAction *quitToSPShellAction =
+		new QuitToSPShellAction();
+
+	if (quitToSPShellAction)
+		g_c3ui->AddAction(quitToSPShellAction);
 }
 
 void CivApp::PostQuitToLobbyAction(void)
 {
-	g_c3ui->AddAction(new QuitToLobbyAction());
+	QuitToLobbyAction *quitToLobbyAction =
+		new QuitToLobbyAction();
+
+	if (quitToLobbyAction)
+		g_c3ui->AddAction(quitToLobbyAction);
 }
 
 void CivApp::PostEndGameAction(void)
 {
-	g_c3ui->AddAction(new EndGameAction());
+	EndGameAction *endGameAction = new EndGameAction();
+	if (endGameAction)
+		g_c3ui->AddAction(endGameAction);
 }
 
 void CivApp::PostLoadScenarioGameAction(MBCHAR *filename)
 {
-	g_c3ui->AddAction(new LoadScenarioGameAction(filename));
+	LoadScenarioGameAction *loadScenarioGameAction = new LoadScenarioGameAction(filename);
+	if (loadScenarioGameAction)
+		g_c3ui->AddAction(loadScenarioGameAction);
 }
+
+
 
 void StartGameAction::Execute(aui_Control *control, uint32 action, uint32 data )
 {
@@ -3705,7 +3831,8 @@ int InitializeGreatLibrary()
     while(g_civPaths->FindPath(C3DIR_GL, i++, path)) {
         if (path[0]) {
             g_GreatLibPF->addPath(path);
-            strcat(path, "\\gl.zfs");
+	    strcat(path, FILE_SEP);
+            strcat(path, "gl.zfs");
             g_GreatLibPF->addPath(path);
         }
     }
@@ -3723,7 +3850,8 @@ int InitializeSoundPF()
     while(g_civPaths->FindPath(C3DIR_SOUNDS, i++, path)) {
         if (path[0]) {
             g_SoundPF->addPath(path);
-            strcat(path, "\\sound.zfs");
+	    strcat(path, FILE_SEP);
+            strcat(path, "sound.zfs");
             g_SoundPF->addPath(path);
         }
     }
@@ -3734,19 +3862,25 @@ int InitializeSoundPF()
 
 int InitializeImageMaps()
 {
-    MBCHAR path[_MAX_PATH];
+    MBCHAR path[_MAX_PATH] = { 0 };
     int i=0;
     char *patname;
     char *picname;
 
-	if (g_c3ui->Primary()->PixelFormat() == AUI_SURFACE_PIXELFORMAT_555) {
-        patname = "\\pat555.zfs";
-        picname = "\\pic555.zfs";
-    } else {
-        patname = "\\pat565.zfs";
-        picname = "\\pic565.zfs";
+    Assert(g_c3ui);
+    if (g_c3ui->Primary()) 
+        if (g_c3ui->Primary()->PixelFormat() == AUI_SURFACE_PIXELFORMAT_555) {
+            patname = FILE_SEP "pat555.zfs";
+            picname = FILE_SEP "pic555.zfs";
+        } else {
+            patname = FILE_SEP "pat565.zfs";
+            picname = FILE_SEP "pic565.zfs";
+        }
+    else {
+        patname = FILE_SEP "pat565.zfs";
+        picname = FILE_SEP "pic565.zfs";
     }
-
+        
     g_ImageMapPF = new ProjectFile();
 
     while(g_civPaths->FindPath(C3DIR_PATTERNS, i++, path)) {

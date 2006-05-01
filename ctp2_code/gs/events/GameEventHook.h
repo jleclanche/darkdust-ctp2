@@ -17,6 +17,9 @@
 //
 // Compiler flags
 // 
+// _MSC_VER		
+// - Compiler version (for the Microsoft C++ compiler only)
+//
 // _DEBUG
 // Generate extra debugging output.
 //
@@ -28,7 +31,7 @@
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -63,21 +66,18 @@ class GameEventHookCallback;
 class GameEventHookCallback 
 {
 public:
-    virtual GAME_EVENT_HOOK_DISPOSITION GEVHookCallback
-    (
-        GAME_EVENT         type, 
-        GameEventArgList * args
-    ) 
-    { 
-        return GEV_HD_Continue;
-    };
+	virtual ~GameEventHookCallback() { }
 
-    virtual void GetDescription(char * str, sint32 maxsize) 
-    { 
-        strncpy(str, DESCRIPTION_MISSING, maxsize);
-    };
+	virtual GAME_EVENT_HOOK_DISPOSITION 
+	GEVHookCallback(GAME_EVENT type, GameEventArgList *args) 
+	{ 
+		return GEV_HD_Continue;
+	}
 
-    static char const DESCRIPTION_MISSING[];
+	virtual void GetDescription(char * str, sint32 maxsize) 
+	{ 
+		strncpy(str, "An undescribed callback", maxsize);
+	}
 };
 
 	
@@ -102,6 +102,11 @@ public:
 	void RemoveCallback(GameEventHookCallback * cb);
 
 	GAME_EVENT_ERR      Activate
+    (
+        GameEventArgList *  args, 
+        sint32 &            resumeIndex
+    );
+	GAME_EVENT_ERR      Resume
     (
         GameEventArgList *  args, 
         sint32              startIndex, 

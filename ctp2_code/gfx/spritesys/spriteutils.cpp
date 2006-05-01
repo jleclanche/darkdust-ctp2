@@ -25,7 +25,6 @@
 // Modifications from the original Activision code:
 //
 // - Removed unused local variables. (Sep 9th 2005 Martin Gühmann)
-// - Repaired memory leaks.
 //
 //----------------------------------------------------------------------------
 
@@ -432,7 +431,7 @@ void spriteutils_MergeShadowMap(Pixel32 *buf, Pixel32 *shadowBuf, uint16 width, 
 }
 
 
-Pixel16 * spriteutils_RGB32ToEncoded(Pixel32 *buf, Pixel32 *shadowBuf, uint16 width, uint16 height, size_t *size)
+Pixel16 *spriteutils_RGB32ToEncoded(Pixel32 *buf, Pixel32 *shadowBuf, uint16 width, uint16 height, size_t *size)
 {
 	Pixel32             *srcPixel = buf;
 
@@ -489,7 +488,7 @@ Pixel16 * spriteutils_RGB32ToEncoded(Pixel32 *buf, Pixel32 *shadowBuf, uint16 wi
 }
 
 
-Pixel16 * spriteutils_RGB32ToEncoded(Pixel32 *buf, uint16 width, uint16 height, size_t *size)
+Pixel16 *spriteutils_RGB32ToEncoded(Pixel32 *buf, uint16 width, uint16 height, size_t *size)
 {
 	Pixel32             *srcPixel = buf;
 
@@ -535,7 +534,7 @@ Pixel16 * spriteutils_RGB32ToEncoded(Pixel32 *buf, uint16 width, uint16 height, 
 	if (size)
 		*size = resultSize * sizeof(Pixel16);
 
-	return returnBuf;
+	return (Pixel16 *)returnBuf;
 }
 
 void spriteutils_DecodeToBuffer(Pixel16 *data, sint32 width, sint32 height)

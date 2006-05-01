@@ -32,9 +32,16 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
+
+
 #include "DomesticControlPanel.h"
 
+#ifndef WIN32
+#include <sstream>
+#else
 #include <strstream>
+#endif
+
 #include "AdvanceRecord.h"
 #include "aui_ldl.h"
 #include "ctp2_button.h"
@@ -43,14 +50,17 @@
 #include "player.h"
 #include "sci_advancescreen.h"
 #include "SelItem.h"
+
 #include "pixelutils.h"
 #include "primitives.h"
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 #include "pollution.h"
 #include "GovernmentRecord.h"
-#include "aui_bitmapfont.h"
-#include "c3math.h"             // AsPercentage
 
+#include "aui_bitmapfont.h"
+#include "c3math.h"         // AsPercentage
+
+extern ColorSet             *g_colorSet;
 extern Pollution            *g_thePollution;
 
 AUI_ERRCODE domesticcontrolpanel_HappinessDrawCallback(ctp2_Static *control, 
@@ -177,10 +187,10 @@ m_scienceValue(static_cast<ctp2_Static*>(
 m_pollutionValue(static_cast<ctp2_Static*>(
                  aui_Ldl::GetObject(ldlBlock,
                  "DomesticTab.TabPanel.PollutionValue"))),
-m_menuPublicWorksValue(static_cast<ctp2_Static*>(
-                       aui_Ldl::GetObject("MainMenu.PWStatic"))),
 m_menuGoldValue(static_cast<ctp2_Static*>(
                 aui_Ldl::GetObject("MainMenu.GoldStatic"))),
+m_menuPublicWorksValue(static_cast<ctp2_Static*>(
+	                   aui_Ldl::GetObject("MainMenu.PWStatic"))),
 m_menuHappinessValue(static_cast<ctp2_Static*>(
                      aui_Ldl::GetObject("MainMenu.HappinessBar"))),
 m_menuPollutionValue(static_cast<ctp2_Static*>(

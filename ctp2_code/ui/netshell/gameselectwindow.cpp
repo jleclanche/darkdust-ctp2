@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Game type selection UI
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -238,10 +238,7 @@ AUI_ERRCODE GameSelectWindow::CreateControls( void )
 
 GameSelectWindow::~GameSelectWindow()
 {
-	if (this == g_gameSelectWindow)
-	{
-		g_gameSelectWindow = NULL;
-	}
+	g_gameSelectWindow = NULL;
 }
 
 
@@ -507,12 +504,15 @@ void GameSelectWindow::PasswordScreenDone( MBCHAR *password )
 	
 	if ( mode != w->JOIN )
 	{
+		
+		
 		MBCHAR temp[ dp_PASSWORDLEN + 1 ] = "";
 		if ( password )
 		{
 			strncpy( temp, password, dp_PASSWORDLEN );
-			for ( size_t i = 0; i < strlen( temp ); i++ )
+			for ( sint32 i = 0; (unsigned) i < strlen( temp ); i++ )
 			{
+				
 				temp[ i ] = tolower( temp[ i ] );
 			}
 		}
@@ -522,6 +522,7 @@ void GameSelectWindow::PasswordScreenDone( MBCHAR *password )
 		g_gamesetup.SetClosed( false );
 		g_gamesetup.SetSyncLaunch( true );
 
+		
 		PlayerSelectWindow *psw = (PlayerSelectWindow *)g_netshell->
 			FindWindow(NetShell::WINDOW_PLAYERSELECT);
 		psw->GetPlayerSetup(g_netfunc->GetPlayer())->Reset();
@@ -560,12 +561,16 @@ StartSelectingWindow::StartSelectingWindow(
 		0,
 		AUI_WINDOW_TYPE_STANDARD )
 {
+	Assert( AUI_SUCCESS(*retval) );
 	if ( !AUI_SUCCESS(*retval) ) return;
 
 	*retval = InitCommon();
+	Assert( AUI_SUCCESS(*retval) );
 	if ( !AUI_SUCCESS(*retval) ) return;
 
 	*retval = CreateControls();
+	Assert( AUI_SUCCESS(*retval) );
+	if ( !AUI_SUCCESS(*retval) ) return;
 }
 
 
@@ -709,10 +714,8 @@ StartSelectingWindow::~StartSelectingWindow()
 {
 	loadsavescreen_Cleanup();
 
-	if (this == g_startSelectingWindow)
-	{
-		g_startSelectingWindow = NULL;
-	}
+
+	g_startSelectingWindow = NULL;
 }
 
 

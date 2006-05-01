@@ -1,40 +1,7 @@
-//----------------------------------------------------------------------------
-//
-// Project      : Call To Power 2
-// File type    : C++ source
-// Description  : Building data handling
-// Id           : $Id$
-//
-//----------------------------------------------------------------------------
-//
-// Disclaimer
-//
-// THIS FILE IS NOT GENERATED OR SUPPORTED BY ACTIVISION.
-//
-// This material has been developed at apolyton.net by the Apolyton CtP2
-// Source Code Project. Contact the authors at ctp2source@apolyton.net.
-//
-//----------------------------------------------------------------------------
-//
-// Compiler flags
-//
-// _DEBUG
-// - Generate debug version when set.
-//
-//----------------------------------------------------------------------------
-//
-// Modifications from the original Activision code:
-//
-// - Fixed buildingutil_GetOffenseBonusAir and buildingutil_GetOffenseBonusWater
-// - Fix by NelsonAndBronte on 04-11-2003
-// - EMOD GetGoldPerCity added to work like GoldPerPop  2-15-2006
-// - EMOD GetGoldPerUnit added to work like GoldPerPop  2-24-2006
-// - EMOD GetGoldPerUnitReadiness added to work like GoldPerPop 2-24-2006
-// - buildingutil_IsObsolete added by E so buildings can be obsolete ike wonders 4-28-2006
-// - buildingutil_GetEmbassiesEverywhereEvenAtWar
-// - buildingutil_GetIncreaseHP
-//
-//----------------------------------------------------------------------------
+
+//building.cpp
+//Fixed buildingutil_GetOffenseBonusAir and buildingutil_GetOffenseBonusWater
+//Fix by NelsonAndBronte on 04-11-2003
 
 
 #include "c3.h"
@@ -102,23 +69,15 @@ sint32 buildingutil_GetProductionCost(const sint32 building_type)
 sint32 buildingutil_GetTotalUpkeep(const uint64 built_improvements,
 										   sint32 wonderLevel)
 {
-    //sint32 owner = 0;
 	sint32 upkeep = 0;
 	for(sint32 i = 0; i < g_theBuildingDB->NumRecords(); i++) {
 		if(built_improvements & shiftbit(i)) {
 			if(g_theBuildingDB->Get(i)->GetUpkeep() > wonderLevel) {
 				upkeep += g_theBuildingDB->Get(i)->GetUpkeep();
-
-//EMOD added new Upkeep calculations (3-13-2006) out commented because AI wouldnt do science????
-//				upkeep += g_theBuildingDB->Get(i)->GetUpkeepPerUnitWagesReadiness * g_player[m_owner]->GetNumUnits() * g_player[owner]->m_readiness->GetSupportModifier(g_player[owner]->GetGovernmentType()) * g_player[owner]->GetWagesPerPerson();
-//				upkeep += g_theBuildingDB->Get(i)->GetUpkeepPerCity * g_player[m_owner]->GetNumCities();
-//				upkeep += g_theBuildingDB->Get(i)->GetUpkeepPerCitySq * g_player[owner]->GetNumCities() *  g_player[owner]->GetNumCities();
-//				upkeep += g_theBuildingDB->Get(i)->GetUpkeepPerUnit * g_player[owner]->GetNumUnits();
-//end EMOD
 			}
 		}
 	}
-		return upkeep;
+	return upkeep;
 }
 
 sint32 buildingutil_GetBlgUpkeep(const sint32 building_type)
@@ -137,8 +96,6 @@ sint32 buildingutil_GetCheapestBuilding(const uint64 built_improvements,
 			if(g_theBuildingDB->Get(i)->GetUpkeep() > wonderLevel && g_theBuildingDB->Get(i)->GetUpkeep() < lowcost) {
 				lowcost = g_theBuildingDB->Get(i)->GetUpkeep();
 				low = i;
-// EMOD add new upkeep calucations?
-
 			}
 		}
 	}
@@ -267,83 +224,6 @@ sint32 buildingutil_GetGoldPerCitizen(const uint64 built_improvements)
 	FOREACH_BUILT(GetGoldPerCitizen) {
 		sint32 mod;
 		rec->GetGoldPerCitizen(mod);
-		goldMod += mod;
-	}
-	return goldMod;
-}
-
-sint32 buildingutil_GetGoldPerCity(const uint64 built_improvements) //EMOD
-{
-	sint32 goldMod = 0;
-	FOREACH_BUILT(GetGoldPerCity) {
-		sint32 mod;
-		rec->GetGoldPerCity(mod);
-		goldMod += mod;
-	}
-	return goldMod;
-}
-
-sint32 buildingutil_GetGoldPerUnit(const uint64 built_improvements) //EMOD
-{
-	sint32 goldMod = 0;
-	FOREACH_BUILT(GetGoldPerUnit) {
-		sint32 mod;
-		rec->GetGoldPerUnit(mod);
-		goldMod += mod;
-	}
-	return goldMod;
-}
-
-sint32 buildingutil_GetGoldPerUnitReadiness(const uint64 built_improvements) //EMOD
-{
-	sint32 goldMod = 0;
-	FOREACH_BUILT(GetGoldPerUnitReadiness) {
-		sint32 mod;
-		rec->GetGoldPerUnitReadiness(mod);
-		goldMod += mod;
-	}
-	return goldMod;
-}
-
-sint32 buildingutil_GetGoldPerUnitSupport(const uint64 built_improvements) //EMOD
-{
-	sint32 goldMod = 0;
-	FOREACH_BUILT(GetGoldPerUnitSupport) {
-		sint32 mod;
-		rec->GetGoldPerUnitSupport(mod);
-		goldMod += mod;
-	}
-	return goldMod;
-}
-
-sint32 buildingutil_GetUpkeepPerCity(const uint64 built_improvements) //EMOD
-{
-	sint32 goldMod = 0;
-	FOREACH_BUILT(GetUpkeepPerCity) {
-		sint32 mod;
-		rec->GetUpkeepPerCity(mod);
-		goldMod += mod;
-	}
-	return goldMod;
-}
-
-sint32 buildingutil_GetUpkeepPerUnit(const uint64 built_improvements) //EMOD
-{
-	sint32 goldMod = 0;
-	FOREACH_BUILT(GetUpkeepPerUnit) {
-		sint32 mod;
-		rec->GetUpkeepPerUnit(mod);
-		goldMod += mod;
-	}
-	return goldMod;
-}
-
-sint32 buildingutil_GetUpkeepPerUnitWagesReadiness(const uint64 built_improvements) //EMOD
-{
-	sint32 goldMod = 0;
-	FOREACH_BUILT(GetUpkeepPerUnitWagesReadiness) {
-		sint32 mod;
-		rec->GetUpkeepPerUnitWagesReadiness(mod);
 		goldMod += mod;
 	}
 	return goldMod;
@@ -618,40 +498,4 @@ double buildingutil_GetOffenseBonusAir(const uint64 built_improvements)
 			best = cur;
 	}
 	return best;
-}
-
-BOOL buildingutil_IsObsolete(sint32 building_type)
-{
-    const BuildingRecord* rec = g_theBuildingDB->Get(building_type);
-	sint32 nObsolete = rec->GetNumObsoleteAdvance();
-	if(nObsolete <= 0)
-		return FALSE;
-
-	for(sint32 p = 0; p < k_MAX_PLAYERS; p++) {
-		if(!g_player[p]) continue;
-
-		for(sint32 o = 0; o < nObsolete; o++) {
-			if(g_player[p]->HasAdvance(rec->GetObsoleteAdvanceIndex(o)))
-				return TRUE;
-		}
-	}
-	return FALSE;
-}
-
-BOOL buildingutil_GetEmbassiesEverywhereEvenAtWar(const uint64 built_improvements)
-{
-	FOREACH_BUILT(GetEmbassiesEverywhereEvenAtWar) {
-		return TRUE;
-	}
-	return FALSE;
-}
-
-sint32 buildingutil_GetIncreaseHP(const sint32 building_type)
-{
-    const BuildingRecord* rec = g_theBuildingDB->Get(building_type);
-	Assert(rec);
-	if(rec == NULL)
-		return 0;
-
-    return rec->GetIncreaseHP();
 }

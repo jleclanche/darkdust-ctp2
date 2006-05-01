@@ -31,7 +31,6 @@
 // - Replaced old civilisation database by new one. (Aug 20th 2005 Martin Gühmann)
 // - Made progress bar more fluently. (Aug 22nd 2005 Martin Gühmann)
 // - Removed old sprite state databases. (Aug 29th 2005 Martin Gühmann)
-// - Replaced old difficulty database by new one. (April 29th 2006 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
 
@@ -46,6 +45,7 @@
 #include "AdvanceRecord.h"
 #include "BuildingRecord.h"
 #include "Diffcly.h"
+#include "DiffDB.h"
 #include "TerrainRecord.h"
 #include "CivPaths.h"
 #include "XY_Coordinates.h"
@@ -55,6 +55,7 @@
 #include "civarchive.h"
 #include "gamefile.h"
 #include "citydata.h"
+#include "Diffcly.h"
 #include "UnitData.h"
 #include "RandGen.h"
 #include "TradePool.h"
@@ -204,6 +205,7 @@ extern  StringDB                    *g_theStringDB;
 extern  ConceptDB                   *g_theConceptDB;
 extern  ConstDB                     *g_theConstDB;
 extern  ThroneDB                    *g_theThroneDB;
+extern  DifficultyDB                *g_theDifficultyDB;
 extern  RandomGenerator             *g_rand;
 extern  TurnCount                   *g_turn; 
 extern  SelectedItem                *g_selected_item; 
@@ -369,7 +371,7 @@ uint32 GameFile::SaveDB(CivArchive &archive)
 
 	g_theProgressWindow->StartCountingTo( 170 );
 
-//	g_theDifficultyDB->Serialize(archive);
+	g_theDifficultyDB->Serialize(archive);
 
 	g_theProgressWindow->StartCountingTo( 180 );
 
@@ -443,17 +445,35 @@ uint32 GameFile::SaveDB(CivArchive &archive)
 
 uint32 GameFile::Save(const MBCHAR *filepath, SaveInfo *info)
 {
-	clock_t start = clock();
+
+
+	FILE	*fpSave = NULL;
+
+	size_t ulLen;
+	uint32 n ;
+
+	sint32	i;
+
+	clock_t	start, finish;
 
 	CivArchive	archive;
+
+	MBCHAR	sHeader[_MAX_PATH];
+
+	size_t compressedSize = 0;
+	uint8	*compressedData = NULL;
+
+	start = clock();
+
 	archive.SetStore();
 
-	Assert(k_MAX_PLAYERS > 0);
+	Assert(k_MAX_PLAYERS!=0);
 	if (k_MAX_PLAYERS <= 0) {
 		c3errors_FatalDialogFromDB("SAVE_ERROR", "SAVE_INCORRECT_NUM_PLAYERS");
-		return GAMEFILE_ERR_STORE_FAILED;
+		return (GAMEFILE_ERR_STORE_FAILED);
 	}
 
+	
 	bool showProgress = !strstr(filepath, "AUTOSAVE");
 
 #define PROGRESS(i) if(showProgress) { g_theProgressWindow->StartCountingTo(i); }
@@ -507,8 +527,14 @@ uint32 GameFile::Save(const MBCHAR *filepath, SaveInfo *info)
 
 	PROGRESS( 120 );
 
-	bool const  saveEverything = 
-        !g_isScenario || (g_startInfoType == STARTINFOTYPE_NOLOCS);
+	BOOL saveEverything = TRUE;
+
+	
+	
+
+	if (g_isScenario && g_startInfoType != STARTINFOTYPE_NOLOCS) {
+		saveEverything = FALSE;
+	}
 
 #if 0
 	
@@ -648,7 +674,7 @@ uint32 GameFile::Save(const MBCHAR *filepath, SaveInfo *info)
 
 	
 
-	for (sint32 i=0; i<k_MAX_PLAYERS; i++) {
+	for (i=0; i<k_MAX_PLAYERS; i++) {
 		sint32 playerAlive = g_player[i] != NULL;
 
 
@@ -693,8 +719,8 @@ uint32 GameFile::Save(const MBCHAR *filepath, SaveInfo *info)
 	PROGRESS( 360 );
 
 	
-	FILE *  fpSave = c3files_fopen(C3DIR_DIRECT, filepath, "wb");
-	if (!fpSave)
+	fpSave=c3files_fopen(C3DIR_DIRECT, (MBCHAR *)filepath, "wb");
+	if (fpSave == NULL)
 	{
 		c3errors_ErrorDialogFromDB("SAVE_ERROR", "SAVE_FAILED_TO_SAVE");
 
@@ -706,9 +732,9 @@ uint32 GameFile::Save(const MBCHAR *filepath, SaveInfo *info)
 
 	PROGRESS( 370 );
 
-	MBCHAR	sHeader[_MAX_PATH];
+	
 	strcpy(sHeader, k_GAME_MAGIC_VALUE);
-	uint32 n = c3files_fwrite(sHeader, sizeof(uint8), sizeof(k_GAME_MAGIC_VALUE), fpSave);
+	n = c3files_fwrite(sHeader, sizeof(uint8), sizeof(k_GAME_MAGIC_VALUE), fpSave);
 	if (n!=sizeof(k_GAME_MAGIC_VALUE))
 	{
 		c3files_fclose(fpSave);
@@ -717,6 +743,16 @@ uint32 GameFile::Save(const MBCHAR *filepath, SaveInfo *info)
 		return (GAMEFILE_ERR_STORE_FAILED);
 	}
 
+	
+	
+	
+	
+
+	
+	
+	
+	
+	
 	
 	BOOL createdInfo = FALSE;
 	if (info == NULL) {
@@ -735,7 +771,7 @@ uint32 GameFile::Save(const MBCHAR *filepath, SaveInfo *info)
 	if (createdInfo)
 		delete info;
 	
-	size_t ulLen = archive.StreamLen();
+	ulLen = archive.StreamLen();
 	n = c3files_fwrite(&ulLen, sizeof(ulLen), 1, fpSave);
 	if (n!=1)
 	{
@@ -747,8 +783,6 @@ uint32 GameFile::Save(const MBCHAR *filepath, SaveInfo *info)
 
 	PROGRESS( 500 );
 
-	size_t      compressedSize = 0;
-	uint8	*   compressedData = NULL;
 
 	if (!CompressData(archive.GetStream(), ulLen, 
 					  &compressedData, &compressedSize))
@@ -798,14 +832,14 @@ uint32 GameFile::Save(const MBCHAR *filepath, SaveInfo *info)
 	gameWatch.SaveGame(g_gameWatchID, gameWatchFilename);
 #endif
 
-	clock_t	finish = clock();
+	finish = clock();
 	DPRINTF(k_DBG_FILE, ("Time to save game data = %4.2f seconds\n", (double)(finish - start) / CLOCKS_PER_SEC));
 	
 	if(showProgress) { 
 		ProgressWindow::EndProgress( g_theProgressWindow );
 	}
 
-	return GAMEFILE_ERR_STORE_OK;
+	return (GAMEFILE_ERR_STORE_OK);
 }
 
 
@@ -822,19 +856,23 @@ uint32 GameFile::Save(const MBCHAR *filepath, SaveInfo *info)
 
 
 uint32 GameFile::Restore(const MBCHAR *filepath)
-{
-	size_t ulLen;
+	{
+	FILE	*fpLoad;
 
-	clock_t	finish;
+	uint32	ver, n;
+	uLong ulLen;
+
+	clock_t	start, finish;
 
 	MBCHAR sHeader[_MAX_PATH];
 
 	CivArchive	archive;
 
-	size_t	compressedSize = 0;
+	uLong	tlen = 0;
+	uLong	compressedSize = 0;
 	uint8	*compressedData = NULL;
 
-	clock_t start = clock();
+	start = clock();
 
 	
 	ProgressWindow::BeginProgress(
@@ -848,16 +886,15 @@ uint32 GameFile::Restore(const MBCHAR *filepath)
 
 	g_theProgressWindow->StartCountingTo( 10, s );
 
-	FILE *  fpLoad = c3files_fopen(C3DIR_DIRECT, filepath, "rb");
-	if (!fpLoad) 
-    {
+	fpLoad=c3files_fopen(C3DIR_DIRECT, (MBCHAR *)filepath, "rb");
+	if (fpLoad == NULL) {
 		c3errors_ErrorDialog("LOAD_ERROR", "LOAD_FAILED_TO_LOAD_GAME");
 		return (GAMEFILE_ERR_LOAD_FAILED);
 	}
 
 	g_theProgressWindow->StartCountingTo( 20 );
 
-	uint32 n = c3files_fread(sHeader, sizeof(uint8), sizeof(k_GAME_MAGIC_VALUE), fpLoad);
+	n = c3files_fread(sHeader, sizeof(uint8), sizeof(k_GAME_MAGIC_VALUE), fpLoad);
 	Assert(n==sizeof(k_GAME_MAGIC_VALUE));
 	if (n!=sizeof(k_GAME_MAGIC_VALUE))
 		{
@@ -946,7 +983,7 @@ uint32 GameFile::Restore(const MBCHAR *filepath)
 
 	g_theProgressWindow->StartCountingTo( 120 );
 
-	unsigned long tlen = ulLen;
+	tlen = ulLen;
 	int q;
 	if (((q = uncompress(archive.GetStream(), &tlen, compressedData, compressedSize)) != Z_OK) || 
 		(tlen != ulLen)) {
@@ -958,8 +995,7 @@ uint32 GameFile::Restore(const MBCHAR *filepath)
 
 	g_theProgressWindow->StartCountingTo( 130 );
 
-	uint32	ver;
-	archive >> ver;
+	archive>>ver;
 	if (ver!=World_World_GetVersion())
 	{
 		c3errors_FatalDialogFromDB("LOAD_ERROR", "LOAD_INCORRECT_VERSION_INFO");
@@ -2056,7 +2092,7 @@ BOOL GameFile::ValidateGameFile(MBCHAR *path, SaveInfo *info)
 
 	sprintf(filepath, "%s%s%s", path, FILE_SEP, info->fileName);
 
-	saveFile = c3files_fopen(C3DIR_DIRECT, filepath, "rb");
+	saveFile = c3files_fopen(C3DIR_DIRECT, (MBCHAR *)filepath, "rb");
 	if (saveFile == NULL) 
 		return FALSE;
 
@@ -2108,7 +2144,7 @@ BOOL GameFile::FetchExtendedSaveInfo(MBCHAR *fullPath, SaveInfo *info)
 	MBCHAR		header[_MAX_PATH];
 	sint32		n;
 
-	saveFile = c3files_fopen(C3DIR_DIRECT, fullPath, "rb");
+	saveFile = c3files_fopen(C3DIR_DIRECT, (MBCHAR *)fullPath, "rb");
 	if (saveFile == NULL) 
 		return FALSE;
 
@@ -2159,14 +2195,14 @@ PointerList<GameInfo> *GameFile::BuildSaveList(C3SAVEDIR dir)
 	struct dirent		*dent = 0;
 #endif
 	MBCHAR				dirPath[_MAX_PATH],
-						path[_MAX_PATH];
+					path[_MAX_PATH];
 
 	
 	if (!g_civPaths->GetSavePath(dir, dirPath)) return list;
 
 	
 #ifdef WIN32
-	sprintf(path, "%s%s*.*", dirPath, FILE_SEP);
+	sprintf(path, "%s%s*.*", dirPath);
 	lpDirList = FindFirstFile(path, &fileData);
 
 	
@@ -2222,7 +2258,7 @@ PointerList<GameInfo> *GameFile::BuildSaveList(C3SAVEDIR dir)
 #else
 			DIR *dir2 = opendir(path);
 			struct dirent *dent2 = 0;
-
+			
 			if (!dir2) continue;
 #endif
 			do {
@@ -2253,7 +2289,7 @@ PointerList<GameInfo> *GameFile::BuildSaveList(C3SAVEDIR dir)
 						delete saveInfo;
 						continue;
 					}
-
+					
 					gameInfo->files->AddTail(saveInfo);
 				}
 #ifdef WIN32
@@ -2509,7 +2545,7 @@ uint32 GameMapFile::Save(const MBCHAR *filepath, SaveMapInfo *info)
 
 
 	
-	fpSave=c3files_fopen(C3DIR_DIRECT, filepath, "wb");	
+	fpSave=c3files_fopen(C3DIR_DIRECT, (MBCHAR *)filepath, "wb");	
 	if (fpSave == NULL)												
 		{
 		c3errors_ErrorDialogFromDB("SAVE_ERROR", "SAVE_FAILED_TO_SAVE");	
@@ -2597,7 +2633,7 @@ uint32 GameMapFile::Restore(const MBCHAR *filepath)
 
 	start = clock();
 
-	fpLoad=c3files_fopen(C3DIR_DIRECT, filepath, "rb");			
+	fpLoad=c3files_fopen(C3DIR_DIRECT, (MBCHAR *)filepath, "rb");			
 	if (fpLoad == NULL) {
 		c3errors_ErrorDialog("LOAD_ERROR", "LOAD_FAILED_TO_LOAD_GAME");	
 		return (GAMEFILE_ERR_LOAD_FAILED);
@@ -2814,7 +2850,7 @@ BOOL GameMapFile::ValidateGameMapFile(MBCHAR *path, SaveMapInfo *info)
 
 	sprintf(filepath, "%s%s%s", path, FILE_SEP, info->fileName);
 
-	saveFile = c3files_fopen(C3DIR_DIRECT, filepath, "rb");
+	saveFile = c3files_fopen(C3DIR_DIRECT, (MBCHAR *)filepath, "rb");
 	if (saveFile == NULL) 
 		return FALSE;
 
@@ -2899,7 +2935,7 @@ PointerList<GameMapInfo> *GameMapFile::BuildSaveMapList(C3SAVEDIR dir)
 			strcpy(gameInfo->name, name);
 			sprintf(gameInfo->path, "%s%s%s", dirPath, FILE_SEP, name);
 			gameInfo->files = new PointerList<SaveMapInfo>;
-
+			
 			list->AddTail(gameInfo);
 
 #ifdef WIN32			
@@ -2914,7 +2950,7 @@ PointerList<GameMapInfo> *GameMapFile::BuildSaveMapList(C3SAVEDIR dir)
 #else
 			DIR *dir2 = opendir(path);
 			struct dirent *dent2 = 0;
-
+			
 			if (!dir2) continue;
 #endif
 			do {

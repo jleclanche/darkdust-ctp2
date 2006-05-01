@@ -133,7 +133,9 @@ aui_Movie *aui_MovieButton::SetMovie( const MBCHAR *movie )
 
 	if ( movie )
 	{
-		m_movie = g_ui->LoadMovie(movie);
+		MBCHAR stupidNonConstFilename[1024];
+		strcpy(stupidNonConstFilename, movie);
+		m_movie = g_ui->LoadMovie( stupidNonConstFilename );
 		Assert( m_movie != NULL );
 		if ( !m_movie )
 		{

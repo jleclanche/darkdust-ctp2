@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : New proposal event handling
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -29,6 +29,7 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
+
 #include "NProposalEvent.h"
 
 #include "Events.h"
@@ -36,24 +37,28 @@
 #include "Unit.h"
 #include "StrDB.h"
 #include "GameEventManager.h"
+
 #include "player.h"
 #include "Strengths.h"
+
 #include "Diplomat.h"
 #include "mapanalysis.h" 
 #include "AdvanceRecord.h"
 #include "AgreementMatrix.h"
 #include "newturncount.h"
-#include "SelItem.h"			// g_selected_item
+#include "SelItem.h"
 #include "ctpai.h"
 #include "ProposalAnalysis.h"
 #include "c3math.h"
 #include "UnitData.h"
-#include "UnitPool.h"			// g_theUnitPool
+#include "UnitPool.h"
 #include "network.h"
 #include "pollution.h"
 #include "director.h"
-#include "gold.h"
+#include "Gold.h"
 
+extern SelectedItem *g_selected_item;
+extern UnitPool *g_theUnitPool;
 
 
 STDEHANDLER(NewProposalEvent)
@@ -175,7 +180,7 @@ STDEHANDLER(Scenario_NewProposalEvent) {
 	NewProposal new_proposal;
 	
 	
-	new_proposal.priority = static_cast<sint16>(priority);				  
+	new_proposal.priority = priority;				  
 	
 	
 	new_proposal.detail.first_type = PROPOSAL_TREATY_PEACE; 
@@ -244,7 +249,7 @@ STDEHANDLER(LeaveOurBorders_NewProposalEvent) {
 	NewProposal new_proposal;
 	
 	
-	new_proposal.priority = static_cast<sint16>(priority);
+	new_proposal.priority = priority;				
 	
 	
 	new_proposal.detail.first_type = PROPOSAL_REQUEST_WITHDRAW_TROOPS;	
@@ -357,33 +362,36 @@ STDEHANDLER(ExchangeMaps_NewProposalEvent) {
 	
 	
 	if (sender_saw_map == -1 ||	sender_saw_map > want_map_turns)
-	{
-		NewProposal new_proposal;
-
-		
-		new_proposal.priority = static_cast<sint16>((offer_priority + request_priority) / 2);		
-
-		
-		new_proposal.detail.first_type = PROPOSAL_REQUEST_MAP;	
-		new_proposal.detail.second_type = PROPOSAL_OFFER_MAP;	
-		new_proposal.detail.tone = DIPLOMATIC_TONE_EQUAL;	    
-		
-		new_proposal.receiverId = receiver;
-		new_proposal.senderId = sender;
-
-		
-
-		g_theStringDB->GetStringID("EXPLAIN_EXCHANGE_MAPS_0001",new_proposal.explainStrId);
-		g_theStringDB->GetStringID("ADVICE_EXCHANGE_MAPS_0001",new_proposal.adviceStrId);
-		g_theStringDB->GetStringID("NEWS_EXCHANGE_MAPS_0001",new_proposal.newsStrId);
-
-		if (!sender_diplomat.GetNewProposalTimeout
-				(new_proposal, static_cast<sint16>(want_map_turns))
-		   )
 		{
+			NewProposal new_proposal;
+
+			
+			new_proposal.priority = (offer_priority + request_priority)/2;		
+
+			
+			new_proposal.detail.first_type = PROPOSAL_REQUEST_MAP;	
+			new_proposal.detail.second_type = PROPOSAL_OFFER_MAP;	
+			new_proposal.detail.tone = DIPLOMATIC_TONE_EQUAL;	    
+			
+			new_proposal.receiverId = receiver;
+			new_proposal.senderId = sender;
+
+			
+
+			g_theStringDB->GetStringID("EXPLAIN_EXCHANGE_MAPS_0001",new_proposal.explainStrId);
+			g_theStringDB->GetStringID("ADVICE_EXCHANGE_MAPS_0001",new_proposal.adviceStrId);
+			g_theStringDB->GetStringID("NEWS_EXCHANGE_MAPS_0001",new_proposal.newsStrId);
+
+			
+			if (sender_diplomat.GetNewProposalTimeout( new_proposal, want_map_turns ) )
+				{
+					
+					return GEV_HD_Continue;
+				}
+
+			
 			sender_diplomat.ConsiderNewProposal(receiver, new_proposal);
 		}
-	}
 	
 	return GEV_HD_Continue;
 }
@@ -449,7 +457,7 @@ STDEHANDLER(MakePeace_NewProposalEvent)
 	NewProposal new_proposal;
 	
 	
-	new_proposal.priority = static_cast<sint16>(priority);	
+	new_proposal.priority = priority;	
 	new_proposal.senderId = sender;		
 	new_proposal.receiverId = receiver;	
 	new_proposal.detail.first_type = PROPOSAL_TREATY_PEACE; 
@@ -535,7 +543,7 @@ STDEHANDLER(CeaseFire_NewProposalEvent)
 	NewProposal new_proposal;
 	
 	
-	new_proposal.priority = static_cast<sint16>(priority);
+	new_proposal.priority = priority;	
 	new_proposal.senderId = sender;		
 	new_proposal.receiverId = receiver;	
 	new_proposal.detail.first_type = PROPOSAL_TREATY_CEASEFIRE; 
@@ -657,24 +665,30 @@ STDEHANDLER(ReducePollution_NewProposalEvent)
 
 	
 	reduce_percent = ProposalAnalysis::RoundPercentReduction(reduce_percent);
-	sint32 target_pollution = static_cast<sint16>((1.0 - reduce_percent) * receiver_pollution);
+	sint32 target_pollution = sint32((1.0 - reduce_percent) * receiver_pollution);
 	target_pollution = ProposalAnalysis::RoundGold(target_pollution);
-	if (target_pollution > 0)
+	if (target_pollution <= 0)
+		return GEV_HD_Continue;
+
+	NewProposal new_proposal;
+	
+	
+	new_proposal.priority = priority;	
+	new_proposal.senderId = sender;		
+	new_proposal.receiverId = receiver;	
+	new_proposal.detail.first_type = PROPOSAL_REQUEST_REDUCE_POLLUTION; 
+	new_proposal.detail.first_arg.pollution = target_pollution;
+	new_proposal.detail.tone = DIPLOMATIC_TONE_EQUAL;	   
+	
+	
+	if (sender_diplomat.GetNewProposalTimeout( new_proposal, 20 ) )
 	{
-		NewProposal new_proposal;
 		
-		new_proposal.priority = static_cast<sint16>(priority);
-		new_proposal.senderId = sender;		
-		new_proposal.receiverId = receiver;	
-		new_proposal.detail.first_type = PROPOSAL_REQUEST_REDUCE_POLLUTION; 
-		new_proposal.detail.first_arg.pollution = target_pollution;
-		new_proposal.detail.tone = DIPLOMATIC_TONE_EQUAL;	   
-		
-		if (!sender_diplomat.GetNewProposalTimeout(new_proposal, 20))
-		{
-			sender_diplomat.ConsiderNewProposal(receiver, new_proposal);
-		}
+		return GEV_HD_Continue;
 	}
+	
+	
+	sender_diplomat.ConsiderNewProposal( receiver, new_proposal);
 
 	return GEV_HD_Continue;
 }
@@ -750,7 +764,7 @@ STDEHANDLER(HonorPollutionAgreement_NewProposalEvent)
 		
 		
 		if (turns_since_start > 20 && turns_since_start < 50 &&
-			receiver_pollution <= half_promised_pollution)
+			receiver_pollution <= (unsigned) half_promised_pollution)
 			return GEV_HD_Continue;
 	}
 
@@ -759,7 +773,7 @@ STDEHANDLER(HonorPollutionAgreement_NewProposalEvent)
 	NewProposal new_proposal;
 	
 	
-	new_proposal.priority = static_cast<sint16>(priority);	
+	new_proposal.priority = priority;	
 	new_proposal.senderId = sender;		
 	new_proposal.receiverId = receiver;	
 	new_proposal.detail.first_type = PROPOSAL_REQUEST_HONOR_POLLUTION_AGREEMENT; 
@@ -854,16 +868,21 @@ STDEHANDLER(TradePact_NewProposalEvent)
 	NewProposal new_proposal;
 	
 	
-	new_proposal.priority = static_cast<sint16>(priority);
+	new_proposal.priority = priority;	
 	new_proposal.senderId = sender;		
 	new_proposal.receiverId = receiver;	
 	new_proposal.detail.first_type = PROPOSAL_TREATY_TRADE_PACT; 
 	new_proposal.detail.tone = DIPLOMATIC_TONE_EQUAL;   
 	
-	if (!sender_diplomat.GetNewProposalTimeout( new_proposal, 22 ) )
+	
+	if (sender_diplomat.GetNewProposalTimeout( new_proposal, 22 ) )
 	{
-		sender_diplomat.ConsiderNewProposal( receiver, new_proposal);
+		
+		return GEV_HD_Continue;
 	}
+	
+	
+	sender_diplomat.ConsiderNewProposal( receiver, new_proposal);
 
 	return GEV_HD_Continue;
 }
@@ -942,17 +961,26 @@ STDEHANDLER(ResearchPact_NewProposalEvent)
 	NewProposal new_proposal;
 	
 	
-	new_proposal.priority = static_cast<sint16>(priority);	
+	new_proposal.priority = priority;	
 	new_proposal.senderId = sender;		
 	new_proposal.receiverId = receiver;	
 	new_proposal.detail.first_type = PROPOSAL_TREATY_RESEARCH_PACT; 
-	new_proposal.detail.tone = 
-		(sender_science < receiver_science) ? DIPLOMATIC_TONE_MEEK : DIPLOMATIC_TONE_EQUAL;
+
+    
+	if (sender_science < receiver_science)
+		new_proposal.detail.tone = DIPLOMATIC_TONE_MEEK; 
+	else
+		new_proposal.detail.tone = DIPLOMATIC_TONE_EQUAL;
 	
-	if (!sender_diplomat.GetNewProposalTimeout( new_proposal, 20 ) )
+	
+	if (sender_diplomat.GetNewProposalTimeout( new_proposal, 20 ) )
 	{
-		sender_diplomat.ConsiderNewProposal( receiver, new_proposal);
+		
+		return GEV_HD_Continue;
 	}
+	
+	
+	sender_diplomat.ConsiderNewProposal( receiver, new_proposal);
 
 	return GEV_HD_Continue;
 }
@@ -1032,18 +1060,22 @@ STDEHANDLER(MilitaryPact_NewProposalEvent)
 	NewProposal new_proposal;
 	
 	
-	new_proposal.priority = static_cast<sint16>(priority);
+	new_proposal.priority = priority;	
 	new_proposal.senderId = sender;		
 	new_proposal.receiverId = receiver;	
 	new_proposal.detail.first_type = PROPOSAL_TREATY_MILITARY_PACT; 
 	new_proposal.detail.tone = DIPLOMATIC_TONE_EQUAL;   
 	
 	
-	if (!sender_diplomat.GetNewProposalTimeout( new_proposal, 20 ) )
+	if (sender_diplomat.GetNewProposalTimeout( new_proposal, 20 ) )
 	{
-		sender_diplomat.ConsiderNewProposal( receiver, new_proposal);
+		
+		return GEV_HD_Continue;
 	}
 	
+	
+	sender_diplomat.ConsiderNewProposal( receiver, new_proposal);
+
 	return GEV_HD_Continue;
 }
 
@@ -1131,7 +1163,7 @@ STDEHANDLER(PollutionPact_NewProposalEvent)
 
 	
 	reduce_percent = ProposalAnalysis::RoundPercentReduction(reduce_percent);
-	sint32 target_pollution = static_cast<sint32>(reduce_percent * receiver_pollution);
+	sint32 target_pollution = sint32(reduce_percent * receiver_pollution);
 	target_pollution = ProposalAnalysis::RoundGold(target_pollution);
 	if (target_pollution <= 0)
 		return GEV_HD_Continue;
@@ -1139,12 +1171,11 @@ STDEHANDLER(PollutionPact_NewProposalEvent)
 	NewProposal new_proposal;
 	
 	
-	new_proposal.priority = static_cast<sint16>(priority);
+	new_proposal.priority = priority;	
 	new_proposal.senderId = sender;		
 	new_proposal.receiverId = receiver;	
 	new_proposal.detail.first_type = PROPOSAL_TREATY_POLLUTION_PACT; 
-	new_proposal.detail.first_arg.pollution = 
-		static_cast<sint32>((1.0 - reduce_percent) * receiver_pollution);
+	new_proposal.detail.first_arg.pollution = sint32((1.0 - reduce_percent) * receiver_pollution);
 	new_proposal.detail.tone = DIPLOMATIC_TONE_EQUAL;   
 	
 	
@@ -1225,7 +1256,7 @@ STDEHANDLER(Alliance_NewProposalEvent)
 	NewProposal new_proposal;
 	
 	
-	new_proposal.priority = static_cast<sint16>(priority);
+	new_proposal.priority = priority;	
 	new_proposal.senderId = sender;		
 	new_proposal.receiverId = receiver;	
 	new_proposal.detail.first_type = PROPOSAL_TREATY_ALLIANCE; 
@@ -1311,7 +1342,7 @@ STDEHANDLER(RequestAdvance_NewProposalEvent)
 		sint32 priority =
 			sender_diplomat.GetNewProposalPriority(receiver, PROPOSAL_REQUEST_GIVE_ADVANCE);
 
-		new_proposal.priority = static_cast<sint16>(priority);
+		new_proposal.priority = priority;				
 		new_proposal.senderId = sender;			
 		new_proposal.receiverId = receiver;		
 		new_proposal.detail.first_type = PROPOSAL_REQUEST_GIVE_ADVANCE;	
@@ -1383,7 +1414,7 @@ STDEHANDLER(StopPiracy_NewProposalEvent)
 		NewProposal new_proposal;
 
 		
-		new_proposal.priority = static_cast<sint16>(priority);
+		new_proposal.priority = priority;	
 		new_proposal.senderId = sender;		
 		new_proposal.receiverId = receiver;	
 		new_proposal.detail.first_type = PROPOSAL_REQUEST_STOP_PIRACY; 
@@ -1475,7 +1506,7 @@ STDEHANDLER(BegForGold_NewProposalEvent)
 		sender_diplomat.GetNewProposalPriority(receiver, PROPOSAL_REQUEST_GIVE_GOLD);
 	
 	
-	new_proposal.priority = static_cast<sint16>(priority);
+	new_proposal.priority = priority;				
 	
 	
 	new_proposal.detail.first_type = PROPOSAL_REQUEST_GIVE_GOLD;	
@@ -1579,7 +1610,7 @@ STDEHANDLER(BlackmailGold_NewProposalEvent)
 	NewProposal new_proposal;
 	
 	
-	new_proposal.priority = static_cast<sint16>(priority);
+	new_proposal.priority = priority;				
 	
 	
 	new_proposal.detail.first_type = PROPOSAL_REQUEST_GIVE_GOLD;	
@@ -1969,8 +2000,8 @@ STDEHANDLER(RequestTribute_NewProposalEvent)
 		{
 			return GEV_HD_Continue;
 		}
-		sint32 at_risk_value = ((double)at_risk_value_percent / 100.0) *
-			MapAnalysis::GetMapAnalysis().TotalValue(receiver);
+		sint32 at_risk_value = sint32(((double)at_risk_value_percent / 100.0) *
+			MapAnalysis::GetMapAnalysis().TotalValue(receiver));
 		
 		type = PROPOSAL_REQUEST_GIVE_GOLD;
 		tone = DIPLOMATIC_TONE_ANGRY;
@@ -2103,8 +2134,8 @@ STDEHANDLER(RequestCity_NewProposalEvent)
 	sint32 at_risk_value_percent = 
 		MapAnalysis::GetMapAnalysis().AtRiskCitiesValue(receiver,sender);
 
-	sint32 at_risk_value = ((double)at_risk_value_percent / 100.0) *
-		MapAnalysis::GetMapAnalysis().TotalValue(receiver);
+	sint32 at_risk_value = sint32(((double)at_risk_value_percent / 100.0) *
+		MapAnalysis::GetMapAnalysis().TotalValue(receiver));
 
 	
 	
@@ -2190,6 +2221,7 @@ STDEHANDLER(RequestHonorMilitaryAgeement_NewProposalEvent)
 	Assert(g_player[receiver]);
 	if (g_player[receiver] == NULL)
 		return GEV_HD_Continue;
+
 
 	PLAYER_INDEX hot_war_enemy;
 	for (hot_war_enemy = 1; hot_war_enemy < CtpAi::s_maxPlayers; hot_war_enemy++)

@@ -31,7 +31,7 @@
 #include "c3.h"
 #include "aui.h"
 
-#include "aui_ui.h"                 // g_ui
+#include "aui_ui.h"
 #include "aui_ldl.h"
 #include "aui_uniqueid.h"
 #include "aui_ranger.h"
@@ -49,10 +49,16 @@
 
 #include "pattern.h"
 #include "primitives.h"
-#include "colorset.h"               // g_colorSet
+#include "colorset.h"
 
 #include "ctp2_MenuButton.h"
 #include "aui_dragdropwindow.h"
+
+
+
+extern aui_UI		*g_ui;
+extern ColorSet		*g_colorSet;
+
 
 
 

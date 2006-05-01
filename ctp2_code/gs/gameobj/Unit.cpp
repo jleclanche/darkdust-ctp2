@@ -37,12 +37,11 @@
 // - Removed some unsused method to removed some unused in methods in
 //   CityData.. - Aug 6th 2005 Martin Gühmann
 // - Removed another unused and unecessary function. (Aug 12th 2005 Martin Gühmann)
-// - Added GetAllTerrainAsImp by E 2-24-2006
 //
 //----------------------------------------------------------------------------
 
 #include "c3.h"
-#include "Unit.h" 
+ 
 
 
 #include "Globals.h"
@@ -56,6 +55,7 @@
 #include "UnitRec.h"
 
 #include "dynarr.h"
+#include "Unit.h"
 #include "UnitDynArr.h"
 
 #include "citydata.h"
@@ -65,6 +65,7 @@
 #include "player.h"
 #include "pollution.h"
 
+#include "XY_Coordinates.h"
 #include "World.h"
 
 #include "UnitData.h"
@@ -341,12 +342,6 @@ BOOL Unit::IsValid() const
 	return g_theUnitPool->IsValid(*this);
 }
 
-sint32 Unit::GetGoldHunger() const  //EMOD
-
-{
-	return GetDBRec()->GetGoldHunger();
-}
-
 sint32 Unit::GetShieldHunger() const
 
 {
@@ -360,17 +355,15 @@ sint32 Unit::GetFoodHunger() const
 }
 
 const UnitRecord * Unit::GetDBRec(void) const
-{
-    Player *    player  = g_player[GetOwner()];
 
-    if (player)
-    {
-        return g_theUnitDB->Get(GetType(), player->GetGovernmentType());
-    }
-    else
-    {
-        return g_theUnitDB->Get(GetType());
-    }
+{
+	UnitData *ptr = g_theUnitPool->GetUnit(m_id);
+	return g_theUnitDB->Get(ptr->GetType(), g_player[ptr->GetOwner()]->GetGovernmentType());
+}
+
+const UnitRecord * Unit::GetDBRec(UnitData *u) const
+{
+	return g_theUnitDB->Get(u->GetType(), g_player[u->GetOwner()]->GetGovernmentType());
 }
 
 const UnitData * Unit::GetData() const
@@ -794,12 +787,6 @@ sint32 Unit::GetMovementTypeAir() const
 	return GetDBRec()->GetMovementTypeAir();
 }
 
-//sint32 Unit::GetAllTerrainAsImprovement() const  //EMOD
-
-//{
-//	return GetDBRec()->GetAllTerrainAsImprovementIndex();  //EMOD
-//}
-
 sint32 Unit::GetMovementTypeSpace() const
 
 {
@@ -862,7 +849,8 @@ BOOL Unit::CanAtLeastOneCargoUnloadAt(const MapPoint & old_pos, const MapPoint &
 }
 
 BOOL Unit::UnloadCargo(const MapPoint &new_pos, Army &debark,
-					   BOOL justOneUnit, const Unit &theUnit)
+                       BOOL justOneUnit, const Unit &theUnit)
+
 {
 	return AccessData()->UnloadCargo(new_pos, debark, justOneUnit, theUnit); 
 }
@@ -899,11 +887,6 @@ BOOL Unit::CanBeachAssault() const
 bool Unit::IsImmobile()const
 {
 	return AccessData()->IsImmobile();
-}
-
-bool Unit::CantGroup()const
-{
-	return AccessData()->CantGroup();
 }
 
 sint32 Unit::ResetMovement()
@@ -1317,7 +1300,7 @@ void Unit::SetSpriteState(SpriteState *s)
 	AccessData()->SetSpriteState(s);
 }
 
-SpriteState * Unit::GetSpriteState() const
+SpriteState * Unit::GetSpriteState()
 
 {
 	return GetData()->GetSpriteState();
@@ -1442,7 +1425,10 @@ void Unit::GetTurnsToNextPop(sint32 &p)const
 }
 
 void Unit::DrawCityStats(aui_Surface *surf, sint32 x, sint32 y)
+
 {
+
+	
 }
 
 void Unit::AddTradeRoute(TradeRoute &route, BOOL fromNetwork)
@@ -1817,7 +1803,7 @@ ORDER_RESULT Unit::InvestigateCity(Unit &c)
 	return AccessData()->InvestigateCity(c);
 }
 
-ORDER_RESULT Unit::StealTechnology(Unit &c, sint32 whichAdvance)
+ORDER_RESULT Unit::StealTechnology(const Unit &c, sint32 whichAdvance)
 {
 	return AccessData()->StealTechnology(c, whichAdvance);
 }
@@ -2433,7 +2419,7 @@ void Unit::AddEndGameObject(sint32 type)
 	AccessData()->AddEndGameObject(type);
 }
 
-BOOL Unit::SendSlaveTo(Unit &dest)
+BOOL Unit::SendSlaveTo(const Unit &dest)
 {
 	return AccessData()->SendSlaveTo(dest);
 }
@@ -2550,14 +2536,14 @@ void Unit::UpdateZOCForRemoval()
 
 		if(updateZoc) {
 			g_theWorld->RemoveZOC(pos, GetOwner());
-			g_theWorld->AddOtherArmyZOC(pos, GetOwner(), Army(), Unit());
+			g_theWorld->AddOtherArmyZOC(pos, GetOwner(), Army(0), Unit(0));
 			
 			sint32 dd;
 			for(dd = 0; dd < (sint32)NOWHERE; dd++) {
 				MapPoint npos;
 				if(pos.GetNeighborPosition((WORLD_DIRECTION)dd, npos)) {
 					g_theWorld->RemoveZOC(npos, GetOwner());
-					g_theWorld->AddOtherArmyZOC(npos, GetOwner(), Army(), Unit());
+					g_theWorld->AddOtherArmyZOC(npos, GetOwner(), Army(0), Unit(0));
 				}
 			}
 		}

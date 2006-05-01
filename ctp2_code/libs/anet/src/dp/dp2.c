@@ -17,22 +17,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 */
 
-/*----------------------------------------------------------------------------
- *
- * Disclaimer
- *
- * THIS FILE IS NOT GENERATED OR SUPPORTED BY ACTIVISION.
- *
- * This material has been modified by the Apolyton CtP2 Source Code Project. 
- * Contact the authors at ctp2source@apolyton.net.
- *
- * Modifications from the Activision Anet 0.10 code:
- *
- * - 2005/03/11: Added return statements to prevent compiler complaints.
- *
- *----------------------------------------------------------------------------
- */
-
 #define SEMIRELIABLE_SESSIONS
 /* #define DONT_RETAIN_SESSFLAGS */
 /* #define USE_dp_enableNewPlayers */
@@ -1107,7 +1091,7 @@ DP_API int dp_unpack_session(dp_t *dp, const char *subkey, int subkeylen, const 
 	if (len > 0)
 		memcpy(p->szUserField, userbuf+4, len);	
 
-	len = buflen - ((int)q - (int)buf);
+	len = buflen - ((size_t)q - (size_t)buf);
 	if (len > 0) {
 		/* session has migrated.  Receive new master address. */
 		assert(len >= dp->dpio->myAdrLen);
@@ -1120,7 +1104,7 @@ DP_API int dp_unpack_session(dp_t *dp, const char *subkey, int subkeylen, const 
 
 	dprint_sess(dp, p, "dp_unpack_session (new)");
 	dp_assertValid(dp);
-	return ((int)q - (int)buf);
+	return ((size_t)q - (size_t)buf);
 }
 #else
 
@@ -1291,14 +1275,14 @@ dp_sessions_cb(
  21 instead of 12 of these into one packet.
  Returns number of bytes used, or -1 on error.
 ----------------------------------------------------------------------*/
-static int dp_unpack_host(dpid_t firstId, int myAdrLen, const char *buf, dp_host_t *p, int length)
+static int dp_unpack_host(dpid_t firstId, int myAdrLen, const char *buf, dp_host_t *p, unsigned int length)
 {
 	const unsigned char *q = (const unsigned char *)buf;
 
 	/*
 	 * Make sure that the package is of a valid size
 	 */
-	assert((length == 2 + myAdrLen) || (length == 2 + myAdrLen + myAdrLen));
+	assert((length == (unsigned)(2 + myAdrLen)) || (length == (unsigned)(2 + myAdrLen + myAdrLen)));
 
 	p->joinKarma = (dp_karma_t) dpMAKESHORT(q[0], q[1]);
 	q += 2;
@@ -1311,7 +1295,7 @@ static int dp_unpack_host(dpid_t firstId, int myAdrLen, const char *buf, dp_host
 	printAdr(myAdrLen, p->iadr);
 
 	/* Depending upon the size of this host a second address could be embeded */
-	if (length > ((int)q - (int)buf)) {
+	if (length > ((size_t)q - (size_t)buf)) {
 		memcpy(p->iadr2, q, myAdrLen);
 		q += myAdrLen;
 
@@ -1324,7 +1308,7 @@ static int dp_unpack_host(dpid_t firstId, int myAdrLen, const char *buf, dp_host
 	p->firstId = firstId;
 	DPRINT(("\n"));
 
-	return ((int)q - (int)buf);
+	return ((size_t)q - (size_t)buf);
 }
 
 /*----------------------------------------------------------------------
@@ -1354,7 +1338,7 @@ static int dp_pack_host(int myAdrLen, const dp_host_t *p, char *buf)
 		printAdr(myAdrLen, p->iadr2);
 	}
 	DPRINT(("\n"));
-	return ((int)q - (int)buf);
+	return ((size_t)q - (size_t)buf);
 }
 
 /*----------------------------------------------------------------------
@@ -1437,7 +1421,7 @@ int dp_unpack_playerId(dpid_t id, const char *buf, dp_playerId_t *p)
 	DPRINT(("dp_unpack_playerId(id %d): name %s\n", id, p->name));
 #endif
 
-  return ((int)q - (int)buf);
+  return ((size_t)q - (size_t)buf);
 }
 
 /*--------------------------------------------------------------------------
@@ -1648,8 +1632,9 @@ dp_playervars_cb(
 		/* the following is currently invalid since buf is a local variable */
 		pkt.body.data = buf;
 		err = dpio_put_reliable(dp->dpio, &me, 1, &pkt, sizeof(pkt.tag)+sizeof(pkt.body), NULL);
-		if (err != dp_RES_OK)
+		if (err != dp_RES_OK) {
 			DPRINT(("dp_playervars_cb: can't send local msg, err:%d\n", err));
+		}
 	}
 
 	(void) dptab;
@@ -2025,13 +2010,11 @@ dp_myplayers_cb(
 		}
 	} else if (status == dp_RES_DELETED) {
 		err = dptab_delete(dp->dt, pSess->players, subkey, subkeylen);
-		if (err != dp_RES_OK)
+		if (err != dp_RES_OK) {
 			DPRINT(("dp_myplayers_cb: dptab_delete returns err:%d\n", err));
+		}
 	}
-
-#if !defined(ANET_ORIGINAL)
-	return dp_RES_OK;
-#endif
+	return 0;
 }
 
 /*----------------------------------------------------------------------
@@ -3561,7 +3544,7 @@ DP_API dp_result_t dpCommThaw(dp_t **pdp, FILE *thawfp, dpCommThawCallback_t cb,
 			openFinished = dp_RES_BUSY;
 			if (params.Adr[0]) {
 				memset(&sess, 0, sizeof(sess));
-				err = dpResolveHostname(dp, params.Adr, sess.adrMaster);
+				err = dpResolveHostname(dp, params.Adr, (char*) sess.adrMaster);
 				if (err != dp_RES_OK)
 					return err;
 				sess.sessionType = app.sessionType;
@@ -4023,7 +4006,7 @@ DP_API dp_result_t dpResolveHostname(
 		int i;
 		dp_serverInfo_t *server;
 		char subkey[dptab_KEY_MAXLEN];
-		int serverlen;
+		size_t serverlen;
 		int subkeylen;
 		for (i = 0; i < dptab_tableSize(dp->serverpings); i++) {
 			if (dptab_get_byindex(dp->serverpings, i, (void **)&server,
@@ -4170,7 +4153,7 @@ DP_API dp_result_t DP_APIX dpSetGameServerEx(
 #endif
 {
 	dp_result_t err;
-	char newHostAdr[dp_MAX_ADR_LEN];
+	unsigned char newHostAdr[dp_MAX_ADR_LEN];
 	char pktbuf[10];
 	size_t pktlen;
 
@@ -4190,7 +4173,7 @@ DP_API dp_result_t DP_APIX dpSetGameServerEx(
 		/* Let them log in even if they didn't finish shutting down */
 		dp->quitState = 0;
 
-		err = dpResolveHostname(dp, masterHostName, newHostAdr);
+		err = dpResolveHostname(dp, masterHostName, (char*) newHostAdr);
 		if (err != dp_RES_OK) {
 			DPRINT(("Unable to get address, err:%d\n", err));
 			/*dpCloseGameServer(dp);*/
@@ -4861,9 +4844,7 @@ dp_result_t DP_APIX dp_addClient(dp_t *dp, playerHdl_t src,
 		DPRINT(("dp_addClient: can't subscribeExceptions, err:%d\n", err));
 		return err;
 	}
-#if !defined(ANET_ORIGINAL)
 	return err;
-#endif
 }
 
 /*----------------------------------------------------------------------
@@ -4886,6 +4867,8 @@ static dp_result_t dp_selectSessionForHost
 		dp_packetType_t tag;
 		dp_select_sess_packet_t body;
 	} *pkt = (void *)pktbuf;
+	sessSelect.currentPlayers = 0;
+	sessSelect.karma = 0;
 
 	if ((nsess = dptab_tableSize(dp->mysessions)) == 0)
 		return dp_RES_EMPTY;
@@ -5015,7 +4998,7 @@ dpHandleJoinSession(
 	char hostbuf[dpio_MAXLEN_RELIABLE];
 	size_t hostlen;
 	dp_sessionContext_t **spp;
-	dp_sessionContext_t *sp;
+	dp_sessionContext_t *sp = NULL;
 	dp_session_t sess;
 	int hops;
 
@@ -5171,10 +5154,12 @@ dpHandleJoinSession(
 			dp_uid_t uid = tserv_hdl2uid(dp->tserv, h);
 			if (uid != dp_UID_NONE) {
 				err = dp_sessid4uid(dp, uid, sess.reserved2, dp->dpio->myAdrLen+2, sess.sessionType);
-				if (err != dp_RES_OK)
+				if (err != dp_RES_OK) {
 					DPRINT(("dpHandleJoinSession: dp_sessid4uid(uid:%d, sesstype:%d) returns err:%d\n", uid, sess.sessionType, err));
-			} else 
+				}
+			} else {
 				DPRINT(("dpHandleJoinSession: handle h:%x has no uid\n", h));
+			}
 		}
 
 		err = dp_subscribe_client(dp, h, sp);
@@ -5196,9 +5181,9 @@ dpHandleJoinSession(
 	/* Find first available non-reserved dpId for player */
 	do {
 		char subkey[dp_KEY_MAXLEN];
-		int subkeylen = 2;
+		size_t subkeylen = 2;
 		char *buf;
-		int buflen;
+		size_t buflen;
 
 		host.firstId = (dpid_t) (dp_PLAYERS_PER_HOST * sp->hostid++);
 		/* Wrap dpids around at dp_MAXDPIDS back to dp_FIRST_DPID 
@@ -5319,7 +5304,7 @@ static dp_result_t dpSendIndirectJoin(dp_t *dp, dp_session_t *session, int joini
 	memset(&pkt, 0, sizeof(pkt));
 	pkt.tag = dp_INDIRECT_JOIN_PACKET_ID;
 	pkt.body.chunk1 = joining ? dp_INDIRECT_JOIN_CHUNK_SESSIONID : dp_INDIRECT_JOIN_CHUNK_SESSIONID_OPENONLY;
-	res = dpGetSessionId(dp, session, (unsigned char *) &pkt.body.sessionId, &len);
+	res = dpGetSessionId(dp, session, (char *) &pkt.body.sessionId, &len);
 
 	if (res != dp_RES_OK) {
 		DPRINT(("dpSendIndirectJoin: can't convert session into sessionId\n"));
@@ -6111,10 +6096,12 @@ static dp_result_t initOpenSession(dp_t *dp, dp_session_t *s, dp_session_t *sess
 ------------------------------------------------------------------------*/
 static int dp_PASCAL dpOpen_dummy_cb(dp_session_t *sDesc, long *timeout, long flags, void *context)
 {
+	/*
 	(dp_session_t *)sDesc;
 	(long *)timeout;
 	(long)flags;
 	(void *)context;
+	*/
 	return FALSE;
 }
 
@@ -6168,8 +6155,9 @@ DP_API dp_result_t dpOpen(
 	dp_assertValid(dp);
 	bJoinAny = ((s == NULL) ||
 			((s->karma == 0) && !(s->flags & dp_SESSION_FLAGS_CREATESESSION)));
-	if (!bJoinAny)
+	if (!bJoinAny) {
 		dprint_sess(dp, s, "dpOpen");
+	}
 
 	/* Sanity checks */
 	if (dp->players != NULL) {
@@ -6490,7 +6478,7 @@ DP_API dp_result_t dpClose(
 		for (i=0; i<dp->players->subscribers->n_used; i++) {
 			assoctab_item_t *pe;
 			assoctab_item_t *mype;
-			playerHdl_t h;
+			playerHdl_t h = 0;
 			pe = assoctab_getkey(dp->players->subscribers, i);
 			if (!pe) {
 				DPRINT(("dpClose: bug: couldn't find all subs for h:%x\n", h));
@@ -8251,7 +8239,7 @@ static dp_result_t dp_election_become_master(dp_t *dp, dpid_t winner_id)
 	 */
 	sp->hostid = (highest_id / dp_PLAYERS_PER_HOST) + 2;
 	DPRINT(("dp_election_become_master: new players will start at id:%d\n", sp->hostid * dp_PLAYERS_PER_HOST));
-	{	int i; int len; int subkeylen;
+	{	int i; size_t len; int subkeylen;
 		char subkey[dptab_KEY_MAXLEN];
 		char *buf;
 		subkeylen = 2;
@@ -8605,7 +8593,7 @@ static dp_result_t dpSendVote(dp_t *dp, dpid_t candidate, playerHdl_t dest)
 		char body[2] PACK;
 	} pkt;
 
-	dp_result_t		err;
+	dp_result_t		err = 0;
 	playerHdl_t dests[MY_MAX_HOSTS];		/* FIXME */
 	int ndests;
 	int i;
@@ -9184,7 +9172,7 @@ dp_result_t dp_uid2sessid(dp_t *dp, dp_uid_t uid, char *sessidbuf, int *sessidle
 	char subkey[dptab_KEY_MAXLEN];
 	char *pbuf;
 	dp_result_t err;
-	int len;
+	size_t len;
 
 	subkey[0] = dpGETLONG_FIRSTBYTE(uid);
 	subkey[1] = dpGETLONG_SECONDBYTE(uid);
@@ -9211,7 +9199,7 @@ dp_result_t dp_uid2sessid(dp_t *dp, dp_uid_t uid, char *sessidbuf, int *sessidle
  recently tried to join.
  Silently ignores calls with uid == dp_UID_NONE
 ----------------------------------------------------------------------*/
-dp_result_t dp_sessid4uid(dp_t *dp, dp_uid_t uid, const char *sessid, int sessidlen, dp_species_t sessType)
+dp_result_t dp_sessid4uid(dp_t *dp, dp_uid_t uid, const unsigned char *sessid, int sessidlen, dp_species_t sessType)
 {
 	dp_result_t err;
 	char subkey[dptab_KEY_MAXLEN];
@@ -9668,7 +9656,7 @@ static dp_result_t dp_receive(
 			char subkey[dptab_KEY_MAXLEN];
 			int subkeylen = 0;
 			char *buf;
-			int buflen;
+			size_t buflen;
 			int idoffset = (dpid_t)pkt->body.pData.id - firstId;
 			subkey[subkeylen++] = (char) dpGETSHORT_FIRSTBYTE(idoffset);
 			subkey[subkeylen++] = (char) dpGETSHORT_FIRSTBYTE(pkt->body.pData.key);
@@ -9799,7 +9787,7 @@ static dp_result_t dp_receive(
 		 * Find the session in the session table
 		 */
 		len = sizeof (dp_session_t);
-		if (dpGetSessionDescById(dp, pkt->body.indirectJoin.sessionId, &sess, &len) != dp_RES_OK) {
+		if (dpGetSessionDescById(dp, (char*) pkt->body.indirectJoin.sessionId, &sess, &len) != dp_RES_OK) {
 			DPRINT(("dpReceive: did not find session !\n"));
 			dp_assertValid(dp);
 			return err;

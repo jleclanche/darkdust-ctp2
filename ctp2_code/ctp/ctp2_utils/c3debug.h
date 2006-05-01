@@ -1,8 +1,8 @@
 //----------------------------------------------------------------------------
 //
 // Project      : Call To Power 2
-// File type    : C++ header
-// Description  : 
+// File type    : C++ header file
+// Description  :
 // Id           : $Id$
 //
 //----------------------------------------------------------------------------
@@ -17,26 +17,21 @@
 //----------------------------------------------------------------------------
 //
 // Compiler flags
-// _MSC_VER		
-// - Compiler version (for the Microsoft C++ compiler only)
 //
 //----------------------------------------------------------------------------
 //
 // Modifications from the original Activision code:
-//
-// - Marked MS specific pragma
-// - Corrected include dependency.
+// - Report for !WIN32 on stderr
 //
 //----------------------------------------------------------------------------
-#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
 #ifndef __C3DEBUG_H__
 #define __C3DEBUG_H__
 
-#include "c3.h"	
-#undef Assert	
+#include "ctp2_config.h"
 
 #ifdef _DEBUG
 
@@ -48,7 +43,7 @@
 #endif
 
 #else
-#define Assert(x)				
+	#define Assert(x)				;
 #endif
 
 #if defined(WIN32)

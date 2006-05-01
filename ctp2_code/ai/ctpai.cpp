@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Main Ai File
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -245,7 +245,12 @@ void CtpAi::AddOwnerGoalsForCity(const Unit &city, const PLAYER_INDEX ownerId)
 	CTPGoal_ptr goal_ptr;
 	GOAL_TYPE goal_type;
 
-	Assert(city.IsValid());
+	Assert(city != ID(0));
+	Assert(g_theUnitPool->IsValid(city) == TRUE);
+
+	
+	
+
 	
 	for (goal_type = 0; goal_type < g_theGoalDB->NumRecords(); goal_type++)
 	{
@@ -276,7 +281,12 @@ void CtpAi::AddForeignerGoalsForCity(const Unit &city, const PLAYER_INDEX foreig
 	CTPGoal_ptr goal_ptr;
 	GOAL_TYPE goal_type;
 
-	Assert(city.IsValid());
+	Assert(city != ID(0));
+	Assert(g_theUnitPool->IsValid(city) == TRUE);
+
+	
+	
+
 	
 	for (goal_type = 0; goal_type < g_theGoalDB->NumRecords(); goal_type++)
 	{
@@ -486,10 +496,15 @@ STDEHANDLER(CtpAi_AddUnitToArmyEvent)
 
 STDEHANDLER(CtpAi_CreatedArmyEvent)
 {
+	MapPoint pos;
 	Army army;
 
+	
 	if (!args->GetArmy(0, army))
 		return GEV_HD_Continue;
+	Assert(army != ID(0));
+	Assert(g_theArmyPool->IsValid(army) == TRUE);
+
 	
 	if (army->CanSettle() && 
 		Diplomat::GetDiplomat(army.GetOwner()).ShouldEscortSettlers())
@@ -497,6 +512,7 @@ STDEHANDLER(CtpAi_CreatedArmyEvent)
 		CtpAi::GroupWithEscort(army);
 	}
 
+	
 	CtpAi::AddGoalsForArmy(army);
 
 	return GEV_HD_Continue;
@@ -540,13 +556,10 @@ void CtpAi::GroupWithEscort(const Army & army)
 				continue;
 
 			unit_rec = g_theUnitDB->Get(tmp_army[0].GetType());
-			tmp_strength = static_cast<sint32>
-				(unit_rec->GetAttack() * 
-				 unit_rec->GetDefense() *
-				 unit_rec->GetFirepower() *
-				 unit_rec->GetArmor()
-				);
-
+			tmp_strength = sint32(unit_rec->GetAttack() * 
+				unit_rec->GetDefense() *
+				unit_rec->GetFirepower() *
+				unit_rec->GetArmor());
 			if (min_strength < 0 || tmp_strength < min_strength)
 				{
 					min_strength = tmp_strength;
@@ -911,7 +924,7 @@ STDEHANDLER(CtpAi_ProcessMatchesEvent)
 		if(player_ptr->m_playerType == PLAYER_TYPE_ROBOT &&
 		   (!g_network.IsClient() || g_network.IsLocalPlayer(playerId))) {
 			for(i = 0; i < player_ptr->m_all_armies->Num(); i++) {
-//				g_director->IncrementPendingGameActions();
+				g_director->IncrementPendingGameActions();
 
 				g_gevManager->AddEvent(GEV_INSERT_Tail, GEV_BeginTurnExecute,
 									   GEA_Army, player_ptr->m_all_armies->Access(i).m_id,
@@ -1818,7 +1831,7 @@ void CtpAi::MakeRoomForNewUnits(const PLAYER_INDEX playerId)
 							GEA_End);
 
 #ifdef _DEBUG
-	uint8 magnitude = 255.0;
+	uint8 magnitude = 255;
 	g_graphicsOptions->AddTextToArmy(move_army, "MakeRoom", magnitude);
 #endif
 
@@ -2133,8 +2146,8 @@ void CtpAi::AddSettleTargets(const PLAYER_INDEX playerId)
 				 !g_theGoalDB->Get(goal_type)->GetTargetTypeSettleSea() )
 				continue;
 
-			max_desired_goals = goal_element_ptr->GetMaxEval() -
-				scheduler.CountGoalsOfType(goal_type);
+			max_desired_goals = sint32(goal_element_ptr->GetMaxEval() -
+				scheduler.CountGoalsOfType(goal_type));
 
 			desired_goals = max_desired_goals;
 
@@ -2346,7 +2359,7 @@ void CtpAi::ComputeCityGarrisons(const PLAYER_INDEX playerId )
 			total_value);
 		
 		
-		defense_strength += city->GetCityData()->GetDefendersBonus() * defense_count;
+		defense_strength += sint32(city->GetCityData()->GetDefendersBonus() * defense_count);
 
 		
 		prev_city_defense = city->GetCityData()->GetCurrentGarrisonStrength();
@@ -2457,7 +2470,7 @@ bool CtpAi::GetNearestAircraftCarrier(const Army & army, MapPoint & carrier_pos,
 		tmp_squared_distance = MapPoint::GetSquaredDistance(tmp_army->RetPos(), army->RetPos());
 		if (tmp_squared_distance < squared_distance)
 		{
-			squared_distance = tmp_squared_distance;
+			squared_distance = sint32(tmp_squared_distance);
 			carrier_pos = tmp_army->RetPos();
 		}
 	}
@@ -2476,8 +2489,8 @@ bool CtpAi::GetNearestRefuel(const Army & army, const MapPoint & start_pos, MapP
 	army->CalcRemainingFuel(num_tiles_to_half, num_tiles_to_empty);
 
 	
-	num_tiles_to_empty /= k_MOVE_AIR_COST;
-	num_tiles_to_half /= k_MOVE_AIR_COST;
+	num_tiles_to_empty /= sint32(k_MOVE_AIR_COST);
+	num_tiles_to_half /= sint32(k_MOVE_AIR_COST);
 
 	
 	refueling_distance = -1;
@@ -2491,7 +2504,7 @@ bool CtpAi::GetNearestRefuel(const Army & army, const MapPoint & start_pos, MapP
 	Unit city;
 	if (player->GetNearestCity(start_pos, city, distance))
 	{
-		refueling_distance = distance;
+		refueling_distance = sint32(distance);
 		refueling_pos = city.RetPos();
 		found = (refueling_distance < num_tiles_to_empty);
 	}
@@ -2503,7 +2516,7 @@ bool CtpAi::GetNearestRefuel(const Army & army, const MapPoint & start_pos, MapP
 		
 		if (refueling_distance < 0 || distance < refueling_distance)
 		{
-			refueling_distance = distance;
+			refueling_distance = sint32(distance);
 			refueling_pos = tmp_pos;
 			found = (refueling_distance < num_tiles_to_empty);
 		}
@@ -2516,7 +2529,7 @@ bool CtpAi::GetNearestRefuel(const Army & army, const MapPoint & start_pos, MapP
 		distance = sqrt(distance);
 		if (refueling_distance < 0 || distance < refueling_distance)
 		{
-			refueling_distance = distance;
+			refueling_distance = sint32(distance);
 			refueling_pos = tmp_pos;
 		}
 	}
@@ -2540,8 +2553,8 @@ void CtpAi::RefuelAirplane(const Army & army)
 	MapPoint pos;
 
 	
-	num_tiles_to_empty /= k_MOVE_AIR_COST;
-	num_tiles_to_half /= k_MOVE_AIR_COST;
+	num_tiles_to_empty /= sint32(k_MOVE_AIR_COST);
+	num_tiles_to_half /= sint32(k_MOVE_AIR_COST);
 
 	
 	if (num_tiles_to_half > 0 && army->GetNextPathPoint(pos))
@@ -2595,7 +2608,7 @@ void CtpAi::RefuelAirplane(const Army & army)
 		GEA_End);
 	
 #ifdef _DEBUG
-	uint8 magnitude = 255.0;
+	uint8 magnitude = 255;
 	g_graphicsOptions->AddTextToArmy(army, "Refuel", magnitude);
 #endif
 	
@@ -2790,10 +2803,13 @@ void CtpAi::SpendGoldToRushBuy(const PLAYER_INDEX player)
 
 	
 	sint32 threat_bonus = 0;
-	(void) strategy.GetRushBuyThreatBonus(threat_bonus);
+	if (strategy.GetRushBuyThreatBonus())
+		strategy.GetRushBuyThreatBonus(threat_bonus);
 
+	
 	double reserve_percent = 0.0;
-	(void) strategy.GetRushBuyReservePercent(reserve_percent);
+	if (strategy.GetRushBuyReservePercent())
+		strategy.GetRushBuyReservePercent(reserve_percent);
 
     sint32 lost_to_cleric;
 	sint32 lost_to_crime;

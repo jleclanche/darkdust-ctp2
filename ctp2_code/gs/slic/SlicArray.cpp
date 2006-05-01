@@ -75,7 +75,7 @@ SlicArray::~SlicArray()
 {
 	if (SS_TYPE_SYM == m_type) 
     {
-        for (size_t i = 0; i < m_allocatedSize; ++i)
+        for (size_t i = 0; i < (unsigned) m_allocatedSize; ++i)
         {
 		    delete m_array[i].m_sym;
         }
@@ -87,18 +87,17 @@ void SlicArray::FixSize(sint32 size)
 {
 	if (SS_TYPE_SYM == m_type) 
     {
-        for (size_t i = 0; i < m_allocatedSize; ++i)
+        for (size_t i = 0; i < (unsigned) m_allocatedSize; ++i)
         {
 		    delete m_array[i].m_sym;
         }
 	}
     delete [] m_array;
 
-	m_allocatedSize = static_cast<uint32>(size);
-    m_arraySize     = size; 
-	m_array         = new SlicStackValue[m_allocatedSize];
+	m_allocatedSize = m_arraySize = size; 
+	m_array = new SlicStackValue[m_allocatedSize];
 	memset(m_array, 0, m_allocatedSize * sizeof(SlicStackValue));
-	m_sizeIsFixed   = true;
+	m_sizeIsFixed = true;
 }
 
 void SlicArray::SetType(SS_TYPE type, SLIC_SYM varType)
@@ -205,7 +204,7 @@ BOOL SlicArray::Lookup(sint32 index, SS_TYPE &type, SlicStackValue &value)
 	return TRUE;
 }
 
-BOOL SlicArray::Insert(sint32 untestedIndex, SS_TYPE type, SlicStackValue value)
+BOOL SlicArray::Insert(sint32 index, SS_TYPE type, SlicStackValue value)
 {
 	switch(m_type) {
 		case SS_TYPE_VAR:
@@ -249,20 +248,20 @@ BOOL SlicArray::Insert(sint32 untestedIndex, SS_TYPE type, SlicStackValue value)
 			return FALSE;
 	}
 
-	if (untestedIndex < 0)
+	if(index < 0)
 		return FALSE;
 
-	size_t const    index = static_cast<size_t>(untestedIndex);
+	
+	if(index >= m_allocatedSize) {
 
-	if (index >= m_allocatedSize) 
-    {
-		uint32 const oldAllocated = m_allocatedSize;
-		while (index >= m_allocatedSize) 
-        {
+		
+		sint32 oldAllocated = m_allocatedSize;
+		SlicStackValue *newArray;
+		while(index >= m_allocatedSize) {
 			m_allocatedSize *= 2;
 		}
 
-		SlicStackValue * newArray = new SlicStackValue[m_allocatedSize];
+		newArray = new SlicStackValue[m_allocatedSize];
 		memset(&newArray[oldAllocated], 0, 
 			   (m_allocatedSize - oldAllocated) * sizeof(SlicStackValue));
 
@@ -272,16 +271,16 @@ BOOL SlicArray::Insert(sint32 untestedIndex, SS_TYPE type, SlicStackValue value)
 	}
 
 	
-	if (index >= static_cast<size_t>(m_arraySize)) 
-	{
-		if (m_sizeIsFixed) 
-		{
+	if(index >= m_arraySize) {
+		if(m_sizeIsFixed) {
 			
 			return FALSE;
 		}
 
-		if (index > static_cast<size_t>(m_arraySize)) 
-		{
+		
+		
+		if(index > m_arraySize) {
+			
 			memset(&m_array[m_arraySize], 0, (index - m_arraySize) * sizeof(SlicStackValue));
 		}
 		m_arraySize = index + 1;

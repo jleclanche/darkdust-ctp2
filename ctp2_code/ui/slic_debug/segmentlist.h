@@ -1,19 +1,10 @@
-
-
-
-
-
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
-
 #ifndef __SEGMENT_LIST_H__
 #define __SEGMENT_LIST_H__
 
 #ifdef CTP2_ENABLE_SLICDEBUG
-
-class SegmentListItem;
-class SegmentList;
 
 #include "c3_listitem.h"
 #include "aui_action.h"
@@ -49,26 +40,27 @@ class SegmentList : public KeyboardHandler
 {
 public:
 	SegmentList(SegmentListCallback* callback = 0, MBCHAR *ldlBlock = 0);
-	virtual ~SegmentList(void);
-
-	void DisplayWindow();
-	void RemoveWindow();
-
-	c3_ListBox *GetList() const { return m_list; }
-	virtual void kh_Close();
-
-private:
-	sint32 Initialize(MBCHAR *ldlBlock);
-	sint32 UpdateData();
+	virtual ~SegmentList();
 
 	c3_PopupWindow *m_window;
 	c3_ListBox     *m_list;
 	c3_Button      *m_watchButton;
 	c3_Button      *m_exitButton;
 
-	SegmentListCallback *           m_callback;
+	SegmentListCallback *m_callback;
+	SegmentListItem **m_items;
 
-    friend void SegmentListButtonCallback(aui_Control *control, uint32 action, uint32 data, void *cookie);
+public:
+	sint32 Initialize(MBCHAR *ldlBlock);
+	sint32 Cleanup();
+	sint32 UpdateData();
+
+	void RemoveWindow();
+	void DisplayWindow();
+	
+	virtual void kh_Close();
+
+	c3_ListBox *GetList() { return m_list; }
 };
   
 

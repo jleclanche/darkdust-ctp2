@@ -39,7 +39,7 @@
 #include "aui_mouse.h"
 #include "pointerlist.h"
 
-//class aui_UI;
+class aui_UI;
 class aui_Mouse;
 class aui_Control;
 class aui_Surface;
@@ -101,22 +101,7 @@ public:
 	static uint32 m_windowClassId;
 
 protected:
-	aui_Window()
-    :   aui_Region          (),  
-	    m_surface           (NULL),
-        m_opaqueControls    (FALSE),		
-        m_bpp               (0),
-        m_type              (AUI_WINDOW_TYPE_STANDARD),
-    	m_dirtyList         (NULL),
-        m_isDragging        (FALSE),
-        m_grabRegion        (NULL),
-        m_ogX               (0),
-	    m_ogY               (0),
-        m_stencil           (NULL),
-        m_focusControl      (NULL),
-        m_focusList         (NULL)
-    { ; };
-
+	aui_Window() : aui_Region() {}
 	AUI_ERRCODE InitCommon( sint32 bpp, AUI_WINDOW_TYPE type );
 #if defined(_MSC_VER)
 	friend class aui_UI;
@@ -227,8 +212,6 @@ public:
 protected:
 	virtual AUI_ERRCODE CreateSurface( void );
 
-
-
 	void MakeSureSurfaceIsValid( void );
 	void DeleteSurfaceIfDynamic( void );
 
@@ -254,7 +237,7 @@ protected:
 	aui_Control *m_focusControl;
 	tech_WLList<aui_Region *> *m_focusList;
 
-#if defined(_MSC_VER) && 0
+#if defined(_MSC_VER)
 	virtual MouseEventCallback PostChildrenCallback;
 
 	
@@ -279,6 +262,8 @@ protected:
 	virtual void	MouseLDropInside(aui_MouseEvent * mouseData);	
 	virtual void	MouseLDropOutside(aui_MouseEvent * mouseData);	
 #endif
+
+	friend class aui_UI;
 };
 
 

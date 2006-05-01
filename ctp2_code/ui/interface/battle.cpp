@@ -29,16 +29,16 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
-#include "battle.h"
 
 #include "Army.h"
-#include "World.h"                  // g_theWorld
+#include "World.h"
 #include "Cell.h"
 #include "cellunitlist.h"
-#include "player.h"                 // g_player
-#include "colorset.h"               // g_colorSet
+#include "player.h"
+#include "colorset.h"
 
 #include "battleevent.h"
+#include "battle.h"
 #include "battleviewactor.h"
 #include "EffectActor.h"
 #include "soundmanager.h"
@@ -51,6 +51,9 @@
 #include "unitutil.h"
 #include "ArmyData.h"
 
+extern World		*g_theWorld;
+extern ColorSet		*g_colorSet;
+extern Player		**g_player;
 
 
 Battle::Battle() :
@@ -76,7 +79,13 @@ m_fortifiedBonus(0.0)
 
 Battle::~Battle()
 {
-    delete m_eventQueue;
+	
+	
+	
+	
+	
+	if(m_eventQueue)
+		delete m_eventQueue;
 }
 
 
@@ -97,7 +106,7 @@ PointerList<BattleEvent> *Battle::GrabEventQueue()
 }
 
 
-void Battle::Initialize(Army const & attackers, CellUnitList const & defenders)
+void Battle::Initialize(const Army &attackers, CellUnitList &defenders)
 {
 	m_numAttackers = attackers.Num();
 	m_numDefenders = defenders.Num();
@@ -252,7 +261,7 @@ void Battle::Initialize(Army const & attackers, CellUnitList const & defenders)
 
 
 
-void Battle::MakeAttackers(sint32 numAttackers, Army const &attackers)
+void Battle::MakeAttackers(sint32 numAttackers, const Army &attackers)
 {
 	sint32			i;
 	MapPoint		pos;
@@ -260,17 +269,17 @@ void Battle::MakeAttackers(sint32 numAttackers, Army const &attackers)
 	pos.x = pos.y = 0;
 
 	for (i=0; i<numAttackers; i++) {
-		m_attackers[i] = new BattleViewActor(attackers[i].GetSpriteState(), attackers[i],
+		m_attackers[i] = new BattleViewActor(const_cast<Unit &>(attackers[i]).GetSpriteState(), attackers[i],
 										attackers[i].GetType(), pos,  attackers[i].GetOwner());
 		m_attackers[i]->SetFacing(k_BATTLEVIEW_DEFAULT_ATTACKER_FACING);
 
-		DPRINTF(k_DBG_FIX, ("MakeAttackers: Actor with Unit id: %.8lx\n", m_attackers[i]->GetUnitID()));
+		DPRINTF(k_DBG_FIX, ("MakeAttackers: Actor with Unit id: %.8lx\n", m_attackers[i]->GetUnitID().m_id));
 	}
 }
 
 
 
-void Battle::MakeDefenders(sint32 numDefenders, CellUnitList const & defenders)
+void Battle::MakeDefenders(sint32 numDefenders, CellUnitList &defenders)
 {
 	sint32			i;
 	MapPoint		pos;
@@ -282,7 +291,7 @@ void Battle::MakeDefenders(sint32 numDefenders, CellUnitList const & defenders)
 										defenders[i].GetType(), pos,  defenders[i].GetOwner());
 		m_defenders[i]->SetFacing(k_BATTLEVIEW_DEFAULT_DEFENDER_FACING);
 		m_defenders[i]->SetFortified(defenders[i].IsEntrenched());
-		DPRINTF(k_DBG_FIX, ("MakeDefenders: Actor with Unit id: %.8lx\n", m_defenders[i]->GetUnitID()));
+		DPRINTF(k_DBG_FIX, ("MakeDefenders: Actor with Unit id: %.8lx\n", m_defenders[i]->GetUnitID().m_id));
 	}
 }
 
@@ -312,14 +321,14 @@ BattleViewActor *Battle::ActorFromUnit(BOOL isDefender, Unit theUnit)
 	Assert(actor);
 
 	if (!actor) {
-		DPRINTF(k_DBG_FIX, ("ActorFromUnit: Unit %.8lx not found in Actor lists\n", theUnit));
+		DPRINTF(k_DBG_FIX, ("ActorFromUnit: Unit %.8lx not found in Actor lists\n", theUnit.m_id));
 		for (i=0; i<m_numAttackers; i++) {
 			DPRINTF(k_DBG_FIX, ("ActorFromUnit: Attacker Actor with id: %.8lx\n", 
-								m_attackers[i] ? m_attackers[i]->GetUnitID() : 0xabcdef12));
+			        m_attackers[i] ? m_attackers[i]->GetUnitID().m_id : 0xabcdef12));
 		}
 		for (i=0; i<m_numDefenders; i++) {
 			DPRINTF(k_DBG_FIX, ("ActorFromUnit: Defender Actor with id: %.8lx\n", 
-								m_defenders[i] ? m_defenders[i]->GetUnitID() : 0xfedcba21));
+			        m_defenders[i] ? m_defenders[i]->GetUnitID().m_id : 0xfedcba21));
 		}
 	}
 

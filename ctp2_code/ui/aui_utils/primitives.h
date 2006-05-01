@@ -1,28 +1,16 @@
-
-
-
-
-
-
-
-
-
-
-
- 
-
 #ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 #ifndef __PRIMITIVES_H__
 #define __PRIMITIVES_H__
 
+#include "ctp2_enums.h"
 #include "pixelutils.h"
+#include "aui_tabgroup.h"
 
 class aui_Surface;
 class aui_Image;
 class Pattern;
-enum AUI_TABGROUP_ALIGNMENT;
 
 enum PRIMITIVES_ERRCODE
 {
@@ -50,32 +38,32 @@ PRIMITIVES_ERRCODE	primitives_DrawLine16(aui_Surface *pSurface,
 
 
 
-PRIMITIVES_ERRCODE	primitives_DrawText(aui_Surface *pDirectSurface,
-				sint32 x,sint32 y, const MBCHAR *pString,COLORREF color,BOOL bg);
-PRIMITIVES_ERRCODE	primitives_DrawBoundedText(aui_Surface *pDirectSurface,
-				RECT *bound, const MBCHAR *pString,COLORREF color,BOOL bg);
-PRIMITIVES_ERRCODE	primitives_DrawTextBatch(aui_Surface *pDirectSurface,sint32 x,sint32 y,
-				const MBCHAR **pString,sint32 numStrings,COLORREF color,BOOL bg);
-PRIMITIVES_ERRCODE	primitives_DropText(aui_Surface *pDirectSurface,
+PRIMITIVES_ERRCODE	primitives_DrawText(aui_Surface *pSurface,
 				sint32 x,sint32 y,const MBCHAR *pString,COLORREF color,BOOL bg);
-PRIMITIVES_ERRCODE	primitives_ColoredDropText(aui_Surface *pDirectSurface,
+PRIMITIVES_ERRCODE	primitives_DrawBoundedText(aui_Surface *pSurface,
+				RECT *bound,const MBCHAR *pString,COLORREF color,BOOL bg);
+PRIMITIVES_ERRCODE	primitives_DrawTextBatch(aui_Surface *pSurface,sint32 x,sint32 y,
+				const MBCHAR **pString,sint32 numStrings,COLORREF color,BOOL bg);
+PRIMITIVES_ERRCODE	primitives_DropText(aui_Surface *pSurface,
+				sint32 x,sint32 y,const MBCHAR *pString,COLORREF color,BOOL bg);
+PRIMITIVES_ERRCODE	primitives_ColoredDropText(aui_Surface *pSurface,
 				sint32 x,sint32 y,const MBCHAR *pString,COLORREF textColor,COLORREF dropColor,BOOL bg);
 PRIMITIVES_ERRCODE primitives_DropTextCentered(
-	aui_Surface *pDirectSurface,	
+	aui_Surface *pSurface,	
 	RECT *destRect,
 	const MBCHAR *pString,					
 	COLORREF color,						
 	BOOL bg								
 	);
 PRIMITIVES_ERRCODE primitives_ColoredDropTextCentered(
-	aui_Surface *pDirectSurface,	
+	aui_Surface *pSurface,	
 	RECT *destRect,
 	const MBCHAR *pString,					
 	COLORREF textColor,						
 	COLORREF dropColor,						
 	BOOL bg								
 	);
-PRIMITIVES_ERRCODE	primitives_DropTextBatch(aui_Surface *pDirectSurface,sint32 x,sint32 y,
+PRIMITIVES_ERRCODE	primitives_DropTextBatch(aui_Surface *pSurface,sint32 x,sint32 y,
 				const MBCHAR **pString,sint32 numStrings,COLORREF color,BOOL bg);
 
 PRIMITIVES_ERRCODE	primitives_OldBevelPane16(aui_Surface *pSurface, RECT *pRect,sint32 level,BOOL flag);

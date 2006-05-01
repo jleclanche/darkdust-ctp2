@@ -49,7 +49,7 @@
 #include "SlicContext.h"
 
 
-const sint16 k_maxStategicState = 10;
+const uint16 k_maxStategicState = 10;
 
 class Diplomat 
 {

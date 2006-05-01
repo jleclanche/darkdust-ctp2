@@ -151,7 +151,7 @@ messagebox: KW_MESSAGEBOX IDENTIFIER { slicif_start_segment($2.name); } body
 	{ 
 		struct PSlicObject *obj = malloc(sizeof(struct PSlicObject));
 #ifdef _DEBUG
-		fprintf(debuglog, "Parsed MessageBox %s\n", $2); 
+		fprintf(debuglog, "Parsed MessageBox %s\n", $2.text); 
 #endif
 		obj->m_type = SLIC_OBJECT_MESSAGEBOX;
 		obj->m_id = $2.name;
@@ -163,7 +163,7 @@ messagebox: KW_MESSAGEBOX IDENTIFIER { slicif_start_segment($2.name); } body
 	{
 		struct PSlicObject *obj = malloc(sizeof(struct PSlicObject));
 #ifdef _DEBUG
-		fprintf(debuglog, "Parsed AlertBox %s\n", $2);
+		fprintf(debuglog, "Parsed AlertBox %s\n", $2.text);
 #endif
 		obj->m_type = SLIC_OBJECT_MESSAGEBOX;
 		obj->m_id = $2.name;
@@ -175,7 +175,7 @@ messagebox: KW_MESSAGEBOX IDENTIFIER { slicif_start_segment($2.name); } body
 	{
 		struct PSlicObject *obj = malloc(sizeof(struct PSlicObject));
 #ifdef _DEBUG
-		fprintf(debuglog, "Parsed HelpBox %s\n", $2);
+		fprintf(debuglog, "Parsed HelpBox %s\n", $2.text);
 #endif
 		obj->m_type = SLIC_OBJECT_MESSAGEBOX;
 		obj->m_id = $2.name;
@@ -189,7 +189,7 @@ trigger: KW_TRIGGER IDENTIFIER { slicif_start_segment($2.name); } KW_WHEN trigge
 	{
 		struct PSlicObject *obj = malloc(sizeof(struct PSlicObject));
 #ifdef _DEBUG
-		fprintf(debuglog, "Parsed Trigger %s\n", $2);
+		fprintf(debuglog, "Parsed Trigger %s\n", $2.text);
 #endif
 
 		obj->m_is_alert = 0;
@@ -203,7 +203,7 @@ trigger: KW_TRIGGER IDENTIFIER { slicif_start_segment($2.name); } KW_WHEN trigge
 	{
 		struct PSlicObject *obj = malloc(sizeof(struct PSlicObject));
 #ifdef _DEBUG
-		fprintf(debuglog, "Parsed Trigger %s\n", $2);
+		fprintf(debuglog, "Parsed Trigger %s\n", $2.text);
 #endif
 		obj->m_is_alert = 0;
 		obj->m_is_help = 0;
@@ -447,7 +447,7 @@ arrayref: NAME { $$.name = $1.name; slicif_add_op(SOP_PUSHA, $1.name); } '[' exp
 	;
 %%
 
-extern FILE *yyin;
+extern FILE *yyslin;
 int yyparse();
 
 SLIC_ERROR slicif_run_parser(char* filename, int symStart)
@@ -477,14 +477,14 @@ SLIC_ERROR slicif_run_parser(char* filename, int symStart)
 
     do {
 		yyparse();
-    } while(!feof(yyin) && slic_parse_error == SLIC_ERROR_OK && !slic_parser_done);
+    } while(!feof(yyslin) && slic_parse_error == SLIC_ERROR_OK && !slic_parser_done);
 
 #ifdef _DEBUG
 	fclose(debuglog);
 	debuglog = NULL;
 #endif
-	fclose(yyin);
-	yyin = NULL;
+	fclose(yyslin);
+	yyslin = NULL;
 	return slic_parse_error;
 }
 

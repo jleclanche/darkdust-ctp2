@@ -42,33 +42,26 @@
 #include "civarchive.h"
 
 
-#ifdef _DEBUG
 
-#endif
-
+#ifndef USE_COM_REPLACEMENT
 STDMETHODIMP CivArchive::QueryInterface(REFIID riid, void **obj)
 {
-	
-
-
-
-
-
-
-
-
-
-
-
     return E_NOINTERFACE;
 }
 
 STDMETHODIMP_(ULONG) CivArchive::AddRef()
+#else
+uint32 CivArchive::AddRef()
+#endif
 {
 	return ++m_refCount;
 }
 
+#ifndef USE_COM_REPLACEMENT
 STDMETHODIMP_(ULONG) CivArchive::Release()
+#else
+uint32 CivArchive::Release()
+#endif
 {
     --m_refCount;
 	if(m_refCount)
@@ -79,16 +72,6 @@ STDMETHODIMP_(ULONG) CivArchive::Release()
 
 
 #define k_ALLOC_SIZE		((uint32)8096)	
-
-
-
-
-
-
-
-
-
-
 
 
 CivArchive::CivArchive()
@@ -105,21 +88,6 @@ CivArchive::CivArchive()
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 CivArchive::CivArchive(uint32 ulSize)
 {
     Assert(0<ulSize); 
@@ -133,63 +101,11 @@ CivArchive::CivArchive(uint32 ulSize)
 
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 CivArchive::~CivArchive()
-	{
+{
 	delete m_pbBaseMemory ;
-    m_pbBaseMemory = NULL; 
-
-
-
-	}
+	m_pbBaseMemory = NULL; 
+}
 
 
 
@@ -282,7 +198,7 @@ void CivArchive::Store(uint8 *pbData, uint32 ulLen)
 
 #ifdef ARCHIVE_TYPE_CHECK
 TypeCheck(TYPE_CHECK_ARRAY); 
-#endif ARCHIVE_TYPE_CHECK
+#endif // ARCHIVE_TYPE_CHECK
 
     Assert(m_bIsStoring);
 
@@ -321,7 +237,7 @@ void CivArchive::Load(uint8 *pbData, uint32 ulLen)
 
 #ifdef ARCHIVE_TYPE_CHECK
 TypeCheck(TYPE_CHECK_ARRAY); 
-#endif ARCHIVE_TYPE_CHECK
+#endif // ARCHIVE_TYPE_CHECK
 
 #ifdef _DEBUG
     Assert(!m_bIsStoring);
@@ -469,13 +385,13 @@ void CivArchive::PutDoubleString(const double &val)
 	sprintf(buf, "%8.8le", val);
 
 
-#ifndef linux
+//#ifndef LINUX
 	if(buf[0] != '-') {
 		memmove(&buf[12], &buf[13], 3);
 	} else {
 		memmove(&buf[13], &buf[14], 3);
 	}
-#endif
+//#endif
 	Store((uint8*)buf, strlen(buf));
 }
 

@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Lobby window for multiplayer games.
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -724,7 +724,7 @@ void LobbyWindow::PasswordScreenDone( MBCHAR *password )
 			if ( password )
 			{
 				strncpy( temp, password, dp_PASSWORDLEN );
-				for ( sint32 i = 0; i < strlen( temp ); i++ )
+				for ( sint32 i = 0; (unsigned) i < strlen( temp ); i++ )
 				{
 					
 					temp[ i ] = tolower( temp[ i ] );

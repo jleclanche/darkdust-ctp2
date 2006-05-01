@@ -303,7 +303,7 @@ BOOL SlicArgList::GetPlayer(sint32 arg, sint32 &value)
 	if (m_argType[arg] == SA_TYPE_INT)
 	{
 		value = m_argValue[arg].m_int;
-		return (value >= 0) && (value < k_MAX_PLAYERS);
+		return TRUE;
 	}
 	else if ((m_argType[arg] == SA_TYPE_INT_VAR) ||
 	         (m_argType[arg] == SA_TYPE_BUILTIN)
@@ -436,7 +436,7 @@ GameEventArgList *SlicArgList::CreateGameEventArgs(GAME_EVENT ev)
 	return newArgs;
 }
 
-SlicFunc::SlicFunc(char const * name, SLIC_FUNC_RET_TYPE type)
+SlicFunc::SlicFunc(char *name, SLIC_FUNC_RET_TYPE type)
 {
 	m_type = type;
 	m_name = new char[strlen(name) + 2];
@@ -447,7 +447,8 @@ SlicFunc::SlicFunc(char const * name, SLIC_FUNC_RET_TYPE type)
 
 SlicFunc::~SlicFunc()
 {
-	delete [] m_name;
+	if(m_name)
+		delete [] m_name;
 }
 
 //----------------------------------------------------------------------------
@@ -1220,7 +1221,7 @@ SFN_ERROR Slic_Kill::Call(SlicArgList *args)
 	Message message;
 	g_slicEngine->GetCurrentMessage(message);
 
-	if(message == Message())
+	if(message == Message(0))
 		return SFN_ERROR_NOT_IN_BUTTON;
 
 	g_slicEngine->KillCurrentMessage();
@@ -1235,7 +1236,7 @@ SFN_ERROR Slic_MinimizeAction::Call(SlicArgList *args)
 	Message message;
 	g_slicEngine->GetCurrentMessage(message);
 
-	if(message == Message())
+	if(message == Message(0))
 		return SFN_ERROR_NOT_IN_BUTTON;
 
 	g_slicEngine->AddCurrentMessage();
@@ -1434,7 +1435,7 @@ SFN_ERROR Slic_Accept::Call(SlicArgList *args)
 	Message message;
 	g_slicEngine->GetCurrentMessage(message);
 
-	if(message == Message())
+	if(message == Message(0))
 		return SFN_ERROR_NOT_IN_BUTTON;
 
 	
@@ -1455,7 +1456,7 @@ SFN_ERROR Slic_Reject::Call(SlicArgList *args)
 	Message message;
 	g_slicEngine->GetCurrentMessage(message);
 
-	if(message == Message())
+	if(message == Message(0))
 		return SFN_ERROR_NOT_IN_BUTTON;
 
 	
@@ -1601,7 +1602,7 @@ SFN_ERROR Slic_Research::Call(SlicArgList *args)
 	Message message;
 	g_slicEngine->GetCurrentMessage(message);
 
-	if(message == Message())
+	if(message == Message(0))
 		return SFN_ERROR_NOT_IN_BUTTON;
 
 	sint32 player = message.GetOwner();
@@ -1762,7 +1763,7 @@ SFN_ERROR Slic_SetGovernment::Call(SlicArgList *args)
 	Message message;
 	g_slicEngine->GetCurrentMessage(message);
 
-	if(message == Message())
+	if(message == Message(0))
 		return SFN_ERROR_NOT_IN_BUTTON;
 
 	sint32 player = message.GetOwner();
@@ -1821,7 +1822,7 @@ SFN_ERROR Slic_StealSpecificAdvance::Call(SlicArgList *args)
 	Message message;
 	g_slicEngine->GetCurrentMessage(message);
 
-	if(message == Message())
+	if(message == Message(0))
 		return SFN_ERROR_NOT_IN_BUTTON;
 
 	AdvanceType adv = message.GetSelectedAdvance();
@@ -2014,7 +2015,7 @@ SFN_ERROR Slic_SendTradeBid::Call(SlicArgList *args)
 								   15);
 	Message message;
 	g_slicEngine->GetCurrentMessage(message);
-	if(message != Message()) {
+	if(message != Message(0)) {
 		g_slicEngine->KillCurrentMessage();
 	}
 	return SFN_ERROR_OK;
@@ -2049,7 +2050,7 @@ SFN_ERROR Slic_AcceptTradeBid::Call(SlicArgList *args)
 									 context->GetGold(0));
 	Message message;
 	g_slicEngine->GetCurrentMessage(message);
-	if(message != Message()) {
+	if(message != Message(0)) {
 		g_slicEngine->KillCurrentMessage();
 	}
 	return SFN_ERROR_OK;
@@ -2084,7 +2085,7 @@ SFN_ERROR Slic_RejectTradeBid::Call(SlicArgList *args)
 									 context->GetGold(0));
 	Message message;
 	g_slicEngine->GetCurrentMessage(message);
-	if(message != Message()) {
+	if(message != Message(0)) {
 		g_slicEngine->KillCurrentMessage();
 	}
 
@@ -2977,7 +2978,7 @@ SFN_ERROR Slic_PlayerWagesLevel::Call(SlicArgList *args)
 	if(!args->GetPlayer(0, player))
 		return SFN_ERROR_TYPE_ARGS;
 
-	m_result.m_int = (sint32) (g_player[player]->GetWagesExpectation() - (sint32) g_player[player]->GetUnitlessWages());
+	m_result.m_int = ((sint32) g_player[player]->GetWagesExpectation() - (sint32) g_player[player]->GetUnitlessWages());
 
 	return SFN_ERROR_OK;
 }
@@ -3311,11 +3312,11 @@ SFN_ERROR Slic_CreateUnit::Call(SlicArgList *args)
 		Unit unit;
 		if(g_player[owner]) {
 			unit = g_player[owner]->CreateUnit(type, upos,
-													Unit(),
+													Unit(0),
 													FALSE,
 													CAUSE_NEW_ARMY_SCENARIO);
 		}
-		if(unit.m_id == 0) {
+		if(unit.m_id == (0)) {
 			m_result.m_int = 0;
 		} else {
 			m_result.m_int = 1;
@@ -3992,7 +3993,15 @@ SFN_ERROR Slic_GrantAdvance::Call(SlicArgList *args)
 	}
 
 	PLAYER_INDEX	player;
-	if (!args->GetPlayer(0, player))
+	if (args->GetPlayer(0, player))
+	{
+		if ((player < 0) || (player >= k_MAX_PLAYERS))
+		{
+			return SFN_ERROR_OUT_OF_RANGE;
+		}
+
+	}
+	else
 	{
 		return SFN_ERROR_TYPE_ARGS;
 	}
@@ -4250,12 +4259,16 @@ SFN_ERROR Slic_GameOver::Call(SlicArgList *args)
 		return SFN_ERROR_NUM_ARGS;
 
 	sint32 player;
-	if(!args->GetPlayer(0, player))
+	if(!args->GetInt(0, player))
 		return SFN_ERROR_TYPE_ARGS;
 
 	sint32 reason;
 	if(!args->GetInt(1, reason))
 		return SFN_ERROR_TYPE_ARGS;
+
+	if(!g_player[player]) {
+		return SFN_ERROR_DEAD_PLAYER;
+	}
 
 	if(reason == 0) {
 		g_player[player]->GameOver(GAME_OVER_LOST_OUT_OF_TIME, -1);

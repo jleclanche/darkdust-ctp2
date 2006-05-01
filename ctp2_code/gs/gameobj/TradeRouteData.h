@@ -34,8 +34,7 @@
 #ifndef _TRADEROUTEDATA_H_
 #define _TRADEROUTEDATA_H_
 
-class TradeRouteData;
-
+#include "ctp2_enums.h"
 #include "GameObj.h"
 #include "Unit.h"
 #include "TradeRoute.h"
@@ -161,6 +160,7 @@ public:
 	
 	void ClearPath();
 	void AddWayPoint(MapPoint pos);
+	BOOL GeneratePath(const PLAYER_INDEX owner);
 	void ReturnPath(const PLAYER_INDEX owner, DynamicArray<MapPoint> &waypoints,
 					DynamicArray<MapPoint> &fullpath,
 					double &cost);
@@ -177,7 +177,7 @@ public:
 	BOOL IsPosInSelectedPath(const MapPoint &pos);
 	BOOL IsPosInPath(const MapPoint &pos);
 	void UpdateSelectedCellData(TradeRoute &route);
-	void ClearSelectedCellData(TradeRoute &route);
+	void ClearSelectedCellData(const TradeRoute &route);
 	sint32 GetPathSelectionState() const { return m_path_selection_state; }
 	void SetPathSelectionState(sint32 state) { m_path_selection_state = state; }
 
@@ -200,9 +200,9 @@ public:
 	void SetPiratingArmy(Army &a);
 	Army GetPiratingArmy();
 	bool IsBeingPirated();
-
-private:
-	bool GeneratePath();
 };
 
+#else
+class TradeRouteData;
+enum ROUTE_TYPE;
 #endif

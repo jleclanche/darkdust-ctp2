@@ -48,43 +48,56 @@ public:
 protected:
 	struct Block
 	{
-		Block(size_t blockSize)
-		:
-			pNext       (0),
-            usedSize    (blockSize / k_TECH_MEMORY_BITSPERDWORD),
-            used        (0),
-			dataSize    (blockSize),
-            data        (0)
+		Block(size_t blockSize )
+			:
+			pNext( 0 ),
+			dataSize( blockSize )
 		{
-			size_t const remainder  = dataSize % k_TECH_MEMORY_BITSPERDWORD;
 			
-            if (remainder) 
-            {
-                ++usedSize;
-            }
+			usedSize = dataSize / k_TECH_MEMORY_BITSPERDWORD;
+			size_t remainder = dataSize % k_TECH_MEMORY_BITSPERDWORD;
+			if ( remainder ) usedSize++;
 
-			used = new unsigned[usedSize];
-			memset( used, 0, usedSize * sizeof( unsigned ) );
-			
-			if (remainder)
-            {
-				used[usedSize - 1] = ~((1 << remainder) - 1);
+			if ((used = new unsigned[ usedSize ]))
+			{
+				
+				memset( used, 0, usedSize * sizeof( unsigned ) );
+
+				
+				if ( remainder )
+					used[ usedSize - 1 ] = ~( ( 1 << remainder ) - 1 );
 			}
 			
-			data = new T[dataSize];
-		};
-
+			data = new T[ dataSize ];
+		}
 		virtual ~Block()
 		{
-            delete [] used;
-            delete [] data;
-		};
+			if ( used )
+			{
+#if defined(_MSC_VER) && 0
+				delete[ usedSize ] used;
+#else
+            delete[] used;
+#endif
+				used = 0;
+			}
 
-		Block *     pNext;			
-		size_t      usedSize; 
-		unsigned *  used;			
-		size_t      dataSize; 
-		T *         data;				
+			if ( data )
+			{
+#if defined(_MSC_VER)
+				delete[ dataSize ] data;
+#else
+            delete[] data;
+#endif
+				data = 0;
+			}
+		}
+
+		Block *pNext;			
+		size_t usedSize; 
+		unsigned *used;			
+		size_t dataSize; 
+		T *data;				
 	};
 
 	
@@ -137,7 +150,7 @@ T *tech_Memory< T >::New( void )
 	{
 		if ( !(t = UseFreeElement()) )
 		{
-			if ( m_pLast->pNext = new Block( m_blockSize ) )
+			if ((m_pLast->pNext = new Block( m_blockSize )))
 			{
 				m_pLast = m_pLast->pNext;
 
@@ -148,7 +161,7 @@ T *tech_Memory< T >::New( void )
 	}
 	else
 	{
-		if ( m_pLast = m_pFirst = new Block( m_blockSize ) )
+		if ((m_pLast = m_pFirst = new Block( m_blockSize )))
 		{
 			*(m_pLast->used) |= 1;
 			t = m_pLast->data;

@@ -172,7 +172,7 @@ bool IsGetSelectionIndex(TribeSelector const & a_List, size_t & index)
         ++p, ++index
     )
     {
-        if (index == s_skipIndex)
+        if (index == (unsigned) s_skipIndex)
         {
             ++index;
         }
@@ -429,7 +429,7 @@ sint32 spnewgametribescreen_removeMyWindow(uint32 action,MBCHAR *lname)
             ++p, ++alpha
         )
         {
-            if (alpha == s_skipIndex)
+            if (alpha == (unsigned) s_skipIndex)
             { 
                 ++alpha;
             }

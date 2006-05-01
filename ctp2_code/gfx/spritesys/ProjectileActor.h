@@ -1,15 +1,4 @@
-
-
-
-
-
-
-
-
-
-
-
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -46,7 +35,7 @@ public:
 	void			AddAction(Action *actionObj);
 	void			GetNextAction(BOOL isVisible = TRUE);
 
-	Anim *          CreateAnim(PROJECTILEACTION action);
+	Anim			*GetAnim(PROJECTILEACTION action);
 
 	void			Draw(void);
 

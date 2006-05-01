@@ -25,8 +25,7 @@
 // - #pragma once commented out.
 //
 //----------------------------------------------------------------------------
-
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 #ifndef __GAME_OBJ_H__

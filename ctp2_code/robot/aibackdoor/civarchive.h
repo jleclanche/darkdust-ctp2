@@ -2,8 +2,7 @@
 //
 // Project      : Call To Power 2
 // File type    : C++ header
-// Description  : Civilization archive for storing and loading the information 
-//                to/from savegames
+// Description  : Civilization archive for storing and loading the information to/from savegames
 // Id           : $Id$
 //
 //----------------------------------------------------------------------------
@@ -23,9 +22,8 @@
 // - Generate debug version when set.
 //
 // USE_COM_REPLACEMENT
-// - Use COM replacement (for Linux)
-//
 // HUNT_SERIALIZE
+// _MSC_VER
 //
 //----------------------------------------------------------------------------
 //
@@ -35,39 +33,32 @@
 // - Removed DoubleUp method. (Sep 9th 2005 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
-
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
 #ifndef __CIVARCHIVE_H__
 #define __CIVARCHIVE_H__
 
-class CivArchive;
-
 #include "Ic3CivArchive.h"
-#include "ctp2_inttypes.h"
+
+#include "Globals.h"
 #include <SDL_endian.h>
 
-#define k_ARCHIVE_MAGIC_VALUE_1	'OTAK'
-#define k_ARCHIVE_MAGIC_VALUE_2	'U-98'
+#define k_ARCHIVE_MAGIC_VALUE_1 0x4F54414B //'OTAK'
+#define k_ARCHIVE_MAGIC_VALUE_2 0x552D3938 //'U-98'
 
 class GameFile ;
 class DataCheck ;
 
-#if defined(USE_COM_REPLACEMENT)
-  #define   REFCOUNT_TYPE                 uint32
-  #define   INTERFACE_RESULT_TYPE(a_Type) virtual a_Type
-#else
-  // Windows COM interface (original CTP2 code)
-  #define   REFCOUNT_TYPE                 ULONG
-  #define   INTERFACE_RESULT_TYPE(a_Type) STDMETHODIMP_(a_Type)
-#endif
-
 class CivArchive : public IC3CivArchive
 {
-private:
-      REFCOUNT_TYPE m_refCount;
+	private:
+#if !defined(USE_COM_REPLACEMENT)
+      ULONG m_refCount;
+#else
+      uint32 m_refCount;
+#endif
 
 		bool	m_bIsStoring ;										
 
@@ -79,7 +70,7 @@ private:
 
 		void DoubleExpand(uint32 ulAmount) ;						
 
-public:
+	public:
 		void SetSize(uint32 ulSize) ;								
 		void SetStore(void) { m_bIsStoring = true ; }				
 		void SetLoad(void) { m_bIsStoring = false ; }				
@@ -94,22 +85,25 @@ public:
 		friend class BuildQueue ;									
 		friend class NetCRC;  
 		friend class MapFile;
-
+	public:
 		CivArchive() ;												
 		CivArchive(uint32 ulSize) ;									
 		virtual ~CivArchive() ;												
 
 #if !defined(USE_COM_REPLACEMENT)
-    STDMETHODIMP QueryInterface(REFIID, void **obj);
+      STDMETHODIMP QueryInterface(REFIID, void **obj);
+      STDMETHODIMP_(ULONG) AddRef();
+      STDMETHODIMP_(ULONG) Release();
+
+      STDMETHODIMP_ (void) Store(uint8 *pbData, uint32 ulLen);
+#else
+      virtual uint32 AddRef();
+      virtual uint32 Release();
+      virtual void Store(uint8 *pbData, uint32 ulLen);
 #endif
 
-    INTERFACE_RESULT_TYPE(REFCOUNT_TYPE) AddRef();
-    INTERFACE_RESULT_TYPE(REFCOUNT_TYPE) Release();
-    INTERFACE_RESULT_TYPE(void) Load(uint8 *pbData, uint32 ulLen);
-    INTERFACE_RESULT_TYPE(void) Store(uint8 *pbData, uint32 ulLen);
-
 #ifndef HUNT_SERIALIZE
-    void StoreChunk(uint8 *start, uint8 *end);
+		void StoreChunk(uint8 *start, uint8 *end);
 #endif
 
         void TypeCheck(const uint8 tc);
@@ -192,6 +186,11 @@ public:
 			}
 		}
 
+#if !defined(USE_COM_REPLACEMENT)
+      STDMETHODIMP_ (void) Load(uint8 *pbData, uint32 ulLen);
+#else
+      virtual void Load(uint8 *pbData, uint32 ulLen);
+#endif
 #ifndef HUNT_SERIALIZE
 		  void LoadChunk(uint8 *start, uint8 *end);
 #endif
@@ -286,7 +285,12 @@ public:
 		void PerformMagic(uint32 id) ;
 		void TestMagic(uint32 id) ;
 
-      INTERFACE_RESULT_TYPE(BOOL) IsStoring(void) { return m_bIsStoring; };
+#if !defined(USE_COM_REPLACEMENT)
+      STDMETHODIMP_ (BOOL) IsStoring(void) { return (m_bIsStoring) ; }
+#else
+      virtual BOOL IsStoring(void) { return (m_bIsStoring); }
+#endif
+
 		
 		void StoreArray( sint8 * dataarray, size_t size ) {
 			Store((uint8 *)dataarray, size);
@@ -372,7 +376,7 @@ public:
     char archive_filename_here[100]= {0}; \
     char archive_filename_tmp[100]= {0}; \
     sint32 archive_filename_len=0; \
-	char *partialname = strrchr(__FILE__, '\\') + 1; \
+	char *partialname = strrchr(__FILE__, FILE_SEPC) + 1; \
 	if(!partialname) \
 		partialname = __FILE__; \
     sprintf(archive_filename_here, "%s%d", partialname, __LINE__);\

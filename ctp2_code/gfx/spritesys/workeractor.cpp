@@ -96,8 +96,9 @@ void WorkerActor::Initialize(sint32 index, const MapPoint &pos)
 
 void WorkerActor::AddIdle(void)
 {
+
 	m_curAction = new Action(UNITACTION_IDLE, ACTIONEND_ANIMEND);
-	m_curAction->SetAnim(CreateAnim(UNITACTION_IDLE));
+	m_curAction->SetAnim(GetAnim(UNITACTION_IDLE));
 	m_curUnitAction = UNITACTION_IDLE;
 }
 
@@ -181,18 +182,14 @@ void WorkerActor::AddAction(Action *actionObj)
 
 	m_actionQueue.Enqueue(actionObj);
 
-	if (m_curAction)
-    {
-        if (!m_curAction->GetAnim() || 
-       	(m_curAction->GetAnim()->GetType() == ANIMTYPE_LOOPED) 
-       )
-        {
-		m_curAction->SetFinished(TRUE);
-        }
-    }
+	if (m_curAction) {
+		if (m_curAction->GetAnim()->GetType() == ANIMTYPE_LOOPED) {
+			m_curAction->SetFinished(TRUE);
+		}
+	}
 }
 
-Anim *WorkerActor::CreateAnim(UNITACTION action)
+Anim *WorkerActor::GetAnim(UNITACTION action)
 {
 	Assert(m_unitSpriteGroup != NULL);
 	if (m_unitSpriteGroup == NULL) return NULL;
@@ -206,8 +203,12 @@ Anim *WorkerActor::CreateAnim(UNITACTION action)
 		Assert(origAnim != NULL);
 		return NULL;
 	}
+	Anim	*anim = new Anim();
+	*anim = *origAnim;
+	anim->SetSpecialCopyDelete(ANIMXEROX_COPY);
 
-	return new Anim(*origAnim);
+	return anim;
+
 }
 
 void WorkerActor::Draw(void)
@@ -222,7 +223,7 @@ void WorkerActor::Draw(void)
 
 
 	m_unitSpriteGroup->Draw(m_curUnitAction, m_frame, m_x+k_ACTOR_CENTER_OFFSET_X, m_y+k_ACTOR_CENTER_OFFSET_Y, m_facing, 
-							1, m_transparency, color, flags, NULL, NULL);
+							1, m_transparency, color, flags, 0, 0);
 }
 
 void WorkerActor::DrawDirect(aui_Surface *surf, sint32 x, sint32 y, double scale)
@@ -237,7 +238,7 @@ void WorkerActor::DrawDirect(aui_Surface *surf, sint32 x, sint32 y, double scale
 
 
 	m_unitSpriteGroup->DrawDirect(surf, m_curUnitAction, m_frame, sint32(x+(k_ACTOR_CENTER_OFFSET_X*scale)), sint32(y+(k_ACTOR_CENTER_OFFSET_Y*scale)), m_facing, 
-							scale, m_transparency, color, flags, NULL, NULL);
+							scale, m_transparency, color, flags, 0, 0);
 }
 
 void WorkerActor::DrawText(sint32 x, sint32 y, MBCHAR *unitText)

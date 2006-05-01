@@ -21,11 +21,12 @@
 
 #include "AttractWindow.h"
 
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 #include "primitives.h"
 
 
 extern C3UI	*g_c3ui;
+extern ColorSet *g_colorSet;
 
 
 static const MBCHAR *k_CTP2_BUTTON_LDL_LAYER_UP			= "layerup";

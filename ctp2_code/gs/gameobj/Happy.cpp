@@ -3,7 +3,6 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Happiness handling
-// Id           : $Id$
 //
 //----------------------------------------------------------------------------
 //
@@ -28,18 +27,14 @@
 // - Reimplemented m_timedChanges as std::list, to prevent Asserts
 // - Added Copy method to copy data from another instance into this
 //   instance, savely. - Jul 7th 2005 Martin Gühmann
-// - Added happiness boni for players civilisation and city's city style. 
-//   (Oct 7th 2005 Martin Gühmann)
-// - Added GoodHappinessIncrease if a good give a happy bonus then if the city 
-//   is buying or collecting then it will add to that city's happiness (4-27-2006 by E)
 //
 //----------------------------------------------------------------------------
 
 #include "c3.h"                 // Pre-compiled header
 #include "Happy.h"              // Own declarations: consistency check
 
-#include "CivArchive.h"
-#include "Player.h"             // g_player
+#include "civarchive.h"
+#include "player.h"             // g_player
 #include "ConstDB.h"            // g_theConstDB
 #include "UnitPool.h"
 #include "citydata.h"
@@ -97,7 +92,7 @@ Happy::Happy()
 	m_pad                   (0),
 	m_too_many_cities       (0.0),
 	m_timed                 (0.0),
-	m_crime                 (0.0),
+	m_crime                 (0.0), 
 	m_timedChanges          (0),
 	m_tracker               (new HappyTracker())
 { ; }
@@ -580,28 +575,6 @@ void Happy::CountAffectivePop(CityData &cd)
 {
 }
 
-//----------------------------------------------------------------------------
-//
-// Name       : Happy::CalcHappiness
-//
-// Description: Calculates the city's happiness.
-//
-// Parameters : CityData &cd:              The city data to calculate 
-//                                         the happiness for.
-//              BOOL projectedOnly:        Calculate only projections.
-//              sint32 &delta_martial_law: Filled with the difference 
-//                                         of old and ne happiness
-//              BOOL isFirstPass:          Whether the method was already
-//                                         called this turn.
-//
-// Globals    : g_slicEngine: The slic engine
-//              g_player:     The list of players
-//
-// Returns    : -
-//
-// Remark(s)  : -
-//
-//----------------------------------------------------------------------------
 void Happy::CalcHappiness(CityData &cd, BOOL projectedOnly, 
                           sint32 &delta_martial_law, 
                           BOOL isFirstPass)
@@ -612,10 +585,8 @@ void Happy::CalcHappiness(CityData &cd, BOOL projectedOnly,
 	CountAffectivePop(cd);
 
 	
-	m_happiness  = CalcBase(p);
-	m_happiness += p->CityHappinessIncrease();
-	m_happiness += cd.StyleHappinessIncr();
-	m_happiness += cd.GoodHappinessIncr();		//EMOD 4-27-2006 to allow for luxury goods
+	m_happiness = CalcBase(p); 
+
 	
 	if(cd.m_owner == PLAYER_INDEX_VANDALS) {
 		return;
@@ -745,7 +716,7 @@ void Happy::CalcHappiness(CityData &cd, BOOL projectedOnly,
 	CalcCrime(cd, p); 
 
 	sint32 intHap = (sint32)m_happiness;
-	sint32 newHappiness = g_slicEngine->CallMod(mod_CityHappiness, intHap, cd.GetHomeCity(), intHap);
+	sint32 newHappiness = g_slicEngine->CallMod(mod_CityHappiness, intHap, cd.GetHomeCity().m_id, intHap);
 	if(intHap != newHappiness)
 		m_happiness = newHappiness;
 

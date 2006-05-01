@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : String database
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -27,12 +27,6 @@
 // - Crash prevention.
 // - Repaired memory leaks.
 // - Reimplemented ** as vector of *, to make it less error prone.
-// - Load default strings if they are missing in the database so that mods
-//   also have a full set of strings. (Jan 30th 2006 Martin Gühmann)
-// - If a nested import occurs, it is ignored instead of canceling the 
-//   string loading. (Jan 30th 2006 Martin Gühmann)
-// - Added export method so that the string database in the system can be 
-//   written to one textfile. Only experiental. (Jan 30th 2006 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
 
@@ -45,7 +39,6 @@
 #include "Token.h"
 
 extern sint32   g_abort_parse;
-extern bool g_load_defaults;
 
 
 namespace
@@ -72,27 +65,40 @@ namespace
 size_t ComputeHashIndex(MBCHAR const * id)
 {
 		unsigned short hash;
-
+#ifdef WIN32
 		__asm 
 		{
-          push eax              ; save registers
-          push ecx
-          push edx
-          xor  edx, edx         ; zero out working registers
-          xor  eax, eax
-          mov  ecx, id          ; get pointer to start of string
-		hashLoop:
-          mov  al, [ecx]        ; get character from string
-          add  dx, ax           ; add it to the running hash
-          rol  dx, 1            ; rotate the hash by one place
-          inc  ecx              ; point to next character in string
-          cmp  al, 0            ; check for end of string
-          jnz  hashLoop
-          mov  hash, dx         ; save the result
-          pop  edx              ; restore registers
-          pop  ecx
-          pop  eax
+			push eax              ; save registers
+			push ecx
+			push edx
+			xor  edx, edx         ; zero out working registers
+			xor  eax, eax
+			mov  ecx, id          ; get pointer to start of string
+			hashLoop:
+			mov  al, [ecx]        ; get character from string
+			add  dx, ax           ; add it to the running hash
+			rol  dx, 1            ; rotate the hash by one place
+			inc  ecx              ; point to next character in string
+			cmp  al, 0            ; check for end of string
+			jnz  hashLoop
+			mov  hash, dx         ; save the result
+			pop  edx              ; restore registers
+			pop  ecx
+			pop  eax
 		}
+#else
+		hash = 0;
+		const MBCHAR *p = id;
+		while (*p) {
+			// add a character
+			hash += (unsigned char)(*p++);
+			// rotate hash
+			if ((short)hash >= 0)
+				hash <<= 1;
+			else
+				hash <<= 1, ++hash;
+		}
+#endif
 		
 		return static_cast<size_t>(hash % STRDB_NUM_HEADS);
 	}
@@ -121,8 +127,10 @@ StringDB::~StringDB()
 	}
 }
 
-
-StringRecord const * const & StringDB::GetHead(MBCHAR const * id) const
+// TODO: Confirm if commenting out the const is the correct solution
+//   to the problem of this method, which suffers from a
+//   "returning reference to temporary" warning
+StringRecord /*const*/ * const & StringDB::GetHead(MBCHAR const * id) const
 {
 	return m_head[ComputeHashIndex(id)];
 }
@@ -282,7 +290,7 @@ bool StringDB::GetText(MBCHAR const * get_id, MBCHAR ** new_text) const
 MBCHAR * StringDB::GetIdStr(StringId const & index) const
 { 
 	Assert(0 <= index);
-	Assert(static_cast<size_t>(index) < m_all.size());
+	Assert(index < (signed) m_all.size());
 	return (index < 0) || (index >= static_cast<sint32>(m_all.size())) ? NULL : m_all[index]->m_id;
 }
 
@@ -467,35 +475,20 @@ MBCHAR const * StringDB::GetNameStr(MBCHAR const * s) const
 }
 
 
-//----------------------------------------------------------------------------
-//
-// Name       : StringDB::ParseAStringEntry
-//
-// Description: Parses a string entry from the ID to its actual text velue, 
-//              duplicates are added and numbered so that they are unique.
-//
-// Parameters : Token       : strToken string token from the parsed file
-//
-// Globals    : -
-//
-// Returns    : bool        : new string has been added
-//
-// Remark(s)  : -
-//
-//----------------------------------------------------------------------------
-bool StringDB::ParseAStringEntry(Token *strToken)
+sint32 StringDB::ParseAStringEntry(Token *strToken)
+
 {
 	char id[k_MAX_TOKEN_LEN];
 	char text[k_MAX_TEXT_LEN];
 
 	if (strToken->GetType() == TOKEN_EOF) {
-		return false;
+		return FALSE;
 	}
 	
 	if (strToken->GetType() != TOKEN_STRING) {
 		c3errors_ErrorDialog (strToken->ErrStr(), "Missing string id");
 		g_abort_parse = TRUE;
-		return false;
+		return FALSE;
 	} else {
 		strToken->GetString(id);
 	}
@@ -506,11 +499,11 @@ bool StringDB::ParseAStringEntry(Token *strToken)
 	if ( strToken->GetType() == TOKEN_MISSING_QUOTE)  {
 		c3errors_ErrorDialog (strToken->ErrStr(), "Could not find end quote for id %s", id);
 		g_abort_parse = TRUE;
-		return false;
+		return FALSE;
 	} else if ( strToken->GetType() != TOKEN_QUOTED_STRING) { 
 		c3errors_ErrorDialog (strToken->ErrStr(), "Could not find text for id %s", id);
 		g_abort_parse = TRUE;
-		return false;
+		return FALSE;
 	} else {
 		strToken->GetString(text);
 	}
@@ -518,69 +511,12 @@ bool StringDB::ParseAStringEntry(Token *strToken)
 	strToken->Next();
 
 	if (!InsertStr(id, text)) {
-			c3errors_ErrorDialog (strToken->ErrStr(), "Could not insert string into string db");
+			c3errors_ErrorDialog (strToken->ErrStr(), "Could not inset string into string db");
 			g_abort_parse = TRUE;
-			return false; 
+			return FALSE; 
 	}
 
-	return true;
-}
-
-//----------------------------------------------------------------------------
-//
-// Name       : StringDB::ParseAStringEntryNoDuplicate
-//
-// Description: Parses a string entry from the ID to its actual text velue, 
-//              are ignored duplicates.
-//
-// Parameters : Token       : strToken string token from the parsed file
-//
-// Globals    : -
-//
-// Returns    : bool        : new string has been added
-//
-// Remark(s)  : -
-//
-//----------------------------------------------------------------------------
-bool StringDB::ParseAStringEntryNoDuplicates(Token *strToken)
-{
-	char id[k_MAX_TOKEN_LEN];
-	char text[k_MAX_TEXT_LEN];
-
-	if (strToken->GetType() == TOKEN_EOF) {
-		return false;
-	}
-	
-	if (strToken->GetType() != TOKEN_STRING) {
-		c3errors_ErrorDialog (strToken->ErrStr(), "Missing string id");
-		g_abort_parse = TRUE;
-		return false;
-	} else {
-		strToken->GetString(id);
-	}
-
-
-	strToken->Next();
-
-	if ( strToken->GetType() == TOKEN_MISSING_QUOTE)  {
-		c3errors_ErrorDialog (strToken->ErrStr(), "Could not find end quote for id %s", id);
-		g_abort_parse = TRUE;
-		return false;
-	} else if ( strToken->GetType() != TOKEN_QUOTED_STRING) { 
-		c3errors_ErrorDialog (strToken->ErrStr(), "Could not find text for id %s", id);
-		g_abort_parse = TRUE;
-		return false;
-	} else {
-		strToken->GetString(text);
-	}
-
-	strToken->Next();
-
-
-	StringRecord *  newRec;
-	AddStrNode(GetHead(id), id, text, newRec);
-
-	return true;
+	return TRUE; 
 }
 
 //----------------------------------------------------------------------------
@@ -600,8 +536,6 @@ bool StringDB::ParseAStringEntryNoDuplicates(Token *strToken)
 //----------------------------------------------------------------------------
 bool StringDB::Parse(MBCHAR * filename)
 {
-	g_load_defaults = true;
-
 	Token *	strToken = new Token(filename, C3DIR_GAMEDATA);
 
 	while (ParseAStringEntry(strToken))
@@ -611,49 +545,12 @@ bool StringDB::Parse(MBCHAR * filename)
 
 	delete strToken;	// or make it an auto_ptr
 
-	if(g_load_defaults){
-		strToken = new Token("Strings.txt", C3DIR_GAMEDATA);
-		while (ParseAStringEntryNoDuplicates(strToken))
-		{
-			// No action: ParseAStringEntry fills m_head and m_all.
-		}
-		delete strToken;	// or make it an auto_ptr
-	}
-
 	if (g_abort_parse)
 	{
 		return false;
 	}
 
 	InsertStr("UNIT_MYSTERY", "???");
-	// Use export here so that the strings are in order of loading.
-	// Nice way to find duplicates in the string database.
-//	Export("AllStrings.txt"); 
 	Btree2Array();		// re-index all entries
 	return true;
 }
-
-#include "CivPaths.h"
-extern CivPaths *g_civPaths;
-
-void StringDB::Export(MBCHAR * file)
-{
-
-	char buff[_MAX_PATH];
-	MBCHAR *path = new MBCHAR[_MAX_PATH];
-	g_civPaths->GetSpecificPath(C3DIR_GAMEDATA, path, TRUE);
-	sprintf(buff, "%s%s%s", path, FILE_SEP, file);
-
-	FILE* fout = fopen(buff, "w");
-
-
-	DPRINTF(k_DBG_GAMESTATE, ("%s\n", buff));
-	for(sint32 i = 0; i < m_all.size(); ++i){
-
-		c3files_fprintf(fout, "%s\t\"%s\"\n", m_all[i]->m_id, m_all[i]->m_text, m_all[i]->m_index);
-	}
-
-	c3files_fclose(fout);
-	delete path;
-}
-

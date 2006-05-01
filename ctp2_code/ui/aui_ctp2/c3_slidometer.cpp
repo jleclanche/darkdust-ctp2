@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : The civilization 3 slidometer
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -46,13 +46,15 @@
 #include "c3ui.h"
 
 #include "primitives.h"
-#include "colorset.h"       // g_colorSet
+#include "colorset.h"
 
 #include "c3_slidometer.h"
 
-#include "SlicEngine.h"     // g_slicEngine
+#include "SlicEngine.h"
 
 extern C3UI			*g_c3ui;
+extern SlicEngine	*g_slicEngine;
+extern ColorSet		*g_colorSet;
 
 
 

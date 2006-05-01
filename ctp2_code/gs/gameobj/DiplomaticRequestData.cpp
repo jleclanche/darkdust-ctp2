@@ -9,8 +9,6 @@
 
 
 #include "c3.h"
-#include "DiplomaticRequestData.h"
-
 #include "c3errors.h"
 
 #include "Globals.h"
@@ -22,6 +20,7 @@
 #include "message.h"
 #include "DiplomaticRequest.h"
 #include "MessageData.h"
+#include "DiplomaticRequestData.h"
 #include "MessagePool.h"
 #include "StrDB.h"
 #include "UnitData.h"
@@ -58,40 +57,64 @@ extern TradePool *g_theTradePool;
 
 
 
-DiplomaticRequestData::DiplomaticRequestData(const ID id) 
-: 
-    GAMEOBJ             (id.m_id),
-	m_round             (g_turn ? g_turn->GetRound() : 0),
-    m_owner             (PLAYER_INDEX_INVALID),
-	m_recipient         (PLAYER_INDEX_INVALID),
-	m_thirdParty        (PLAYER_INDEX_INVALID),
-    m_request           (REQUEST_TYPE_NULL),
-    m_response          (REQUEST_RESPONSE_TYPE_NULL),
-    m_tone              (k_MESSAGE_TONE_NEUTRAL),
-    m_advance           (0),
-    m_reciprocalAdvance (0),	
-    m_targetCity        (),
-	m_reciprocalCity    (),
-	m_amount            (0)
-{ ; }
+DiplomaticRequestData::DiplomaticRequestData(const ID id) : GAMEOBJ(id.m_id)
+	{
+	
+    m_round = g_turn->GetRound() ;
+
+	m_owner = PLAYER_INDEX_INVALID ;
+	m_recipient = PLAYER_INDEX_INVALID ;
+	m_thirdParty = PLAYER_INDEX_INVALID ;
+	m_request = REQUEST_TYPE_NULL ;
+	m_response = REQUEST_RESPONSE_TYPE_NULL ;
+
+	m_advance = 0;
+	m_reciprocalAdvance = 0;
+	m_targetCity = 0;
+	m_reciprocalCity = 0;
+	m_amount = 0 ;
+	m_tone = k_MESSAGE_TONE_NEUTRAL;
 
 
-DiplomaticRequestData::DiplomaticRequestData(const ID id, const PLAYER_INDEX owner, const PLAYER_INDEX recipient, const REQUEST_TYPE request)
-: 
-    GAMEOBJ             (id.m_id),
-	m_round             (g_turn ? g_turn->GetRound() : 0),
-    m_owner             (owner),
-	m_recipient         (recipient),
-	m_thirdParty        (PLAYER_INDEX_INVALID),
-    m_request           (request),
-    m_response          (REQUEST_RESPONSE_TYPE_NULL),
-    m_tone              (k_MESSAGE_TONE_NEUTRAL),
-    m_advance           (9),
-    m_reciprocalAdvance (0),	
-    m_targetCity        (),
-	m_reciprocalCity    (),
-	m_amount            (0)
-{ ; }
+	}
+
+
+
+
+
+
+
+
+DiplomaticRequestData::DiplomaticRequestData(const ID id, const PLAYER_INDEX owner, const PLAYER_INDEX recipient, const REQUEST_TYPE request) : GAMEOBJ(id.m_id)
+	{
+	m_owner = owner ;
+	m_recipient = recipient ;
+	m_request = request ;
+
+	
+	m_round = g_turn->GetRound() ;
+	m_thirdParty = PLAYER_INDEX_INVALID ;
+	m_response = REQUEST_RESPONSE_TYPE_NULL ;
+
+	m_advance = 9;
+	m_reciprocalAdvance = 0;
+	m_targetCity = 0;
+	m_reciprocalCity = 0;
+	m_amount = 0 ;
+	m_tone = k_MESSAGE_TONE_NEUTRAL;
+
+
+	}
+
+
+
+
+
+
+
+
+
+
 
 
 void DiplomaticRequestData::Serialize(CivArchive &archive)
@@ -259,11 +282,13 @@ void DiplomaticRequestData::Dump(const sint32 i)
 			break ;
 
 		case REQUEST_TYPE_DEMAND_ADVANCE :
-			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : Demand Advance #%d\n", i, m_owner, m_recipient, m_advance)) ;
+			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : Demand Advance #%d\n", i, m_owner, m_recipient,
+			        m_advance)) ;
 			break ;
 
 		case REQUEST_TYPE_DEMAND_CITY :
-			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : demand City #%d\n", i, m_owner, m_recipient, m_targetCity)) ;
+			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : demand City #%d\n", i, m_owner, m_recipient,
+			        m_targetCity.m_id)) ;
 			break ;
 
 		case REQUEST_TYPE_DEMAND_MAP :
@@ -271,7 +296,8 @@ void DiplomaticRequestData::Dump(const sint32 i)
 			break ;
 
 		case REQUEST_TYPE_DEMAND_GOLD :
-			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : demand %d Gold\n", i, m_owner, m_recipient, m_amount)) ;
+			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : demand %d Gold\n", i, m_owner, m_recipient,
+			        m_amount.GetLevel())) ;
 			break ;
 
 		case REQUEST_TYPE_DEMAND_STOP_TRADE :
@@ -295,7 +321,7 @@ void DiplomaticRequestData::Dump(const sint32 i)
 			break ;
 
 		case REQUEST_TYPE_OFFER_CITY :								
-			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : offer of City #%d\n", i, m_owner, m_recipient, m_targetCity)) ;
+			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : offer of City #%d\n", i, m_owner, m_recipient, m_targetCity.m_id)) ;
 			break ;
 
 		case REQUEST_TYPE_OFFER_MAP :								
@@ -303,7 +329,7 @@ void DiplomaticRequestData::Dump(const sint32 i)
 			break ;
 
 		case REQUEST_TYPE_OFFER_GOLD :								
-			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : offer of %d Gold\n", i, m_owner, m_recipient, m_amount)) ;
+			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : offer of %d Gold\n", i, m_owner, m_recipient, m_amount.GetLevel())) ;
 			break ;
 
 		case REQUEST_TYPE_OFFER_CEASE_FIRE :						
@@ -315,7 +341,7 @@ void DiplomaticRequestData::Dump(const sint32 i)
 			break ;
 
 		case REQUEST_TYPE_OFFER_PACT_CAPTURE_CITY :					
-			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : offer pact to capture City #%d\n", i, m_owner, m_recipient, m_targetCity)) ;
+			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : offer pact to capture City #%d\n", i, m_owner, m_recipient, m_targetCity.m_id)) ;
 			break ;
 
 		case REQUEST_TYPE_OFFER_PACT_END_POLLUTION :			
@@ -327,7 +353,7 @@ void DiplomaticRequestData::Dump(const sint32 i)
 			break ;
 
 		case REQUEST_TYPE_EXCHANGE_CITY :							
-			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : exchange City #%d for City #%d\n", i, m_owner, m_recipient, m_reciprocalCity, m_targetCity)) ;
+			DPRINTF(k_DBG_INFO, ("%d - From P%d to P%d : exchange City #%d for City #%d\n", i, m_owner, m_recipient, m_reciprocalCity.m_id, m_targetCity.m_id)) ;
 			break ;
 
 		case REQUEST_TYPE_EXCHANGE_MAP :

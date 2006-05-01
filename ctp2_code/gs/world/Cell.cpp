@@ -78,6 +78,14 @@ int Cell::PlayerLandArea(int player)
 	Assert(player<k_MAX_PLAYERS);
 
 #ifdef _DEBUG
+	
+	
+	
+	
+	
+	
+	
+	static t=0;
 	int t1 = m_playerLandArea[player+1];
 	int arr[k_MAX_PLAYERS+1];
 	g_theWorld->WholePlayerLandArea(arr);
@@ -244,7 +252,7 @@ sint32 Cell::RemoveUnitReference(const Unit &u)
 
        return TRUE; 
    } else if (u == GetCity()) { 
-        SetCity(Unit());
+        SetCity(Unit(0));
         return TRUE;
    } else {
 
@@ -732,23 +740,19 @@ sint32 Cell::GetNumTradeRoutes() const
 
 TradeRoute Cell::GetTradeRoute(sint32 index) const
 {
-	static TradeRoute invalidRoute;
+	static TradeRoute r(0);
+	if(!m_objects)
+		return r;
 
-	if (m_objects)
-    {
-	    sint32 c = 0;
-	    for (sint32 i = 0; i < m_objects->Num(); ++i) 
-        {
-		    if ((m_objects->Access(i).m_id & k_ID_TYPE_MASK) == k_BIT_GAME_OBJ_TYPE_TRADE_ROUTE) 
-            {
-			    if (c == index)
-				    return TradeRoute(m_objects->Access(i).m_id);
-			    c++;
-		    }
-	    }
-    }
-
-	return invalidRoute;
+	sint32 i, c = 0;
+	for(i = 0; i < m_objects->Num(); i++) {
+		if((m_objects->Access(i).m_id & k_ID_TYPE_MASK) == k_BIT_GAME_OBJ_TYPE_TRADE_ROUTE) {
+			if(c == index)
+				return TradeRoute(m_objects->Access(i).m_id);
+			c++;
+		}
+	}
+	return r;
 }
 
 void Cell::InsertImprovement(const TerrainImprovement &imp)
@@ -874,15 +878,15 @@ CellUnitList *Cell::UnitArmy()
 
 Unit &Cell::AccessUnit(sint32 index)
 {
-	static Unit invalid;
+	static Unit zero(0);
 	Assert(m_unit_army);
 	if(!m_unit_army) {
-		return invalid;
+		return zero;
 	}
 
 	Assert(index >= 0 && index < m_unit_army->Num());
 	if(index < 0 || index >= m_unit_army->Num()) {
-		return invalid;
+		return zero;
 	}
 
 	return m_unit_army->Access(index);
@@ -902,13 +906,17 @@ void Cell::SetCity(const Unit &c)
 
 Unit Cell::GetCity() const
 {
-	if (m_env & k_MASK_ENV_CITY) 
-    {
+	static Unit u(0);
+	if(m_env & k_MASK_ENV_CITY) {
+		
+		
+		
 		return m_city;
-	} 
-    else 
-    {
-		return Unit();
+	} else {
+		
+		
+		
+		return u;
 	}
 }
 
@@ -958,23 +966,24 @@ TerrainImprovement Cell::AccessImprovement(sint32 index)
 			}
 		}
 	}
-
 	Assert(FALSE);
-	return TerrainImprovement();
+	static TerrainImprovement t(0);
+	return t;
 }
 
 void Cell::CreateGoodyHut()
 {
-	if (!m_jabba) 
-    {
+	if ( !m_jabba ) {
 		m_jabba = new GoodyHut();
 	}
 }
 
 void Cell::DeleteGoodyHut()
 {
-	delete m_jabba;
-	m_jabba = NULL;
+	if (m_jabba != NULL) {
+		delete m_jabba;
+		m_jabba = NULL;
+	}
 }
 
 BOOL Cell::HasWormhole() const
@@ -1176,7 +1185,8 @@ ID Cell::GetObject(sint32 index)
 	if(m_objects)	  
 		return m_objects->Access(index);
 
-	return ID();
+	static ID id(0);
+	return id;
 }
 
 void Cell::InsertDBImprovement(sint32 type)

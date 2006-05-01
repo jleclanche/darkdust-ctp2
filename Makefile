@@ -44,12 +44,15 @@ all:
 	# for a description of its use.    # \
 	####################################
 
-bootstrap:
+bootstrap-anet: ctp2_code/libs/anet ctp2_code/libs/anet/Makefile
+	$(MAKE) -C $< bootstrap
+	
+bootstrap: bootstrap-anet
 	@echo "Bootstraping Civilization Call to Power"
 	@echo " "
 	@echo "This is no official release by activision."
 	@echo " "
-	aclocal -I ctp2_code/os/autoconf
+	aclocal -I ctp2_code/os/autoconf -I ctp2_code/libs/anet/macros
 	autoheader
 	libtoolize --force --copy
 	automake --foreign --add-missing --copy
@@ -72,9 +75,6 @@ playtest:
 	cp -uv ctp2_code/ctp/dll/map/*.dll $(PLAYTEST)/ctp2_program/ctp/dll/map/
 	cp -uv ctp2_code/ctp/anet* $(PLAYTEST)/ctp2_program/ctp/
 	cp -uv ctp2_code/ctp/ctp2.* $(PLAYTEST)/ctp2_program/ctp/
-	cp -uv ctp2_code/ctp/zlib1.dll $(PLAYTEST)/ctp2_program/ctp/
-	cp -uv ctp2_code/ctp/jpeg62.dll $(PLAYTEST)/ctp2_program/ctp/
-	cp -uv ctp2_code/ctp/libtiff3.dll $(PLAYTEST)/ctp2_program/ctp/
 	#cp -uv ctp2_code/ctp/appstr.txt $(PLAYTEST)/ctp2_program/ctp/
 	cp -uv doc/user/playtest/*.txt $(PLAYTEST)/
 	mkdir -p $(PLAYTEST)/doc

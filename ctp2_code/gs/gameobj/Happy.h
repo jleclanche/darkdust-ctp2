@@ -17,6 +17,9 @@
 //
 // Compiler flags
 //
+// _MSC_VER
+// - Compiler version (for the Microsoft C++ compiler only)
+//
 //----------------------------------------------------------------------------
 //
 // Modifications from the original Activision code:
@@ -27,7 +30,7 @@
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -55,7 +58,7 @@ class HappyTimer;
 //----------------------------------------------------------------------------
 
 #include "HappyTracker.h"   // HAPPY_REASON, HappyTracker
-#include "Player.h"         // PLAYER_INDEX, Player
+#include "player.h"         // PLAYER_INDEX, Player
 
 class CityData; 
 class CivArchive;

@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Multiplayer player select window
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -265,9 +265,10 @@ void PlayerSelectWindow::Update(void)
 
 AUI_ERRCODE PlayerSelectWindow::Idle( void )
 {
-	NETFunc::Message *m;
-
-	while(m = g_netfunc->GetMessage()) {
+	NETFunc::Message *m = 0;
+	while ((m = g_netfunc->GetMessage())) {
+		
+		
 		
 		g_netfunc->HandleMessage(m);
 

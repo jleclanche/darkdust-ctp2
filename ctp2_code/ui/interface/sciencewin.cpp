@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Science window
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -53,7 +53,7 @@
 
 #include "pixelutils.h"
 #include "c3_switch.h"
-#include "colorset.h"               // g_colorSet
+#include "colorset.h"
 #include "tileset.h"
 #include "c3_icon.h"
 
@@ -72,14 +72,14 @@
 #include "aui_listbox.h"
 #include "c3_listbox.h"
 
-#include "StrDB.h"                  // g_theStringDB
+#include "StrDB.h"
 #include "BuildingRecord.h"
 #include "WonderRecord.h"
 #include "Unit.h"
 #include "UnitData.h"
 #include "citydata.h"
 #include "Advances.h"
-#include "globals.h"
+#include "Globals.h"
 #include "AdvanceRecord.h"
 
 #include "player.h"
@@ -90,9 +90,9 @@
 #include "debugwindow.h"
 
 #include "UnitData.h"
-#include "player.h"                 // g_player
+#include "player.h"
 #include "PlayHap.h"
-#include "SelItem.h"                // g_selected_item
+#include "SelItem.h"
 #include "Sci.h"
 
 #include "chart.h"
@@ -115,11 +115,16 @@
 #include "keypress.h"
 
 #include "AdvanceBranchRecord.h"
-#include "c3math.h"		            // AsPercentage
+#include "c3math.h"		// AsPercentage
 
-extern sint32			    g_modalWindow;
+
 extern C3UI					*g_c3ui;
+extern Player				**g_player;
+extern SelectedItem			*g_selected_item; 
 extern DebugWindow			*g_debugWindow;
+extern StringDB				*g_theStringDB;
+extern ColorSet				*g_colorSet;
+
 extern aui_Surface			*g_sharedSurface;
 
 
@@ -175,6 +180,8 @@ static c3_Static		*s_civText;
 
 
 
+
+extern sint32			g_modalWindow;
 
 void sciencewin_ExitCallback( aui_Control *control, uint32 action, uint32 data, void *cookie )
 {
@@ -1472,7 +1479,7 @@ sint32 ScienceWin::UpdateData( SCI_UPDATE update )
 	return 0;
 }
 
-void ScienceWin::UpdateList(void)
+sint32 ScienceWin::UpdateList( void )
 {
 	AUI_ERRCODE errcode;
 	MBCHAR		ldlBlock[ k_AUI_LDL_MAXBLOCK + 1 ];
@@ -1503,6 +1510,8 @@ void ScienceWin::UpdateList(void)
 			}
 		}
 	}
+
+	return 0;
 }
 
 

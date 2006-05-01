@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Army manager window
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -29,13 +29,12 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
-#include "armymanagerwindow.h"
-
 #include "aui_uniqueid.h"
 #include "aui_ldl.h"
 #include "aui_blitter.h"
 #include "c3ui.h"
 
+#include "armymanagerwindow.h"
 #include "Army.h"
 #include "ArmyData.h"
 #include "ArmyPool.h"
@@ -54,7 +53,7 @@
 #include "ctp2_Static.h"
 #include "ctp2_button.h"
 #include "player.h"
-#include "aicause.h"
+#include "AICause.h"
 
 #include "pointerlist.h"
 
@@ -63,13 +62,14 @@
 #include "GameEventUser.h"
 #include "Events.h"
 #include "primitives.h"
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 
 #include "network.h"
 
 #include "UnitPool.h"
 
 extern C3UI *g_c3ui;
+extern ColorSet	*g_colorSet;
 
 static ArmyManagerWindow *s_armyWindow = NULL;
 static MBCHAR *s_armyWindowBlock = "ArmyManager";
@@ -113,10 +113,12 @@ ArmyManagerWindow::~ArmyManagerWindow()
 	if(m_armies) {
 		m_armies->DeleteAll();
 		delete m_armies;
+		m_armies = NULL;
 	}
 
 	if(m_window) {
 		aui_Ldl::DeleteHierarchyFromRoot(s_armyWindowBlock);
+		m_window = NULL;
 	}
 }
 
@@ -681,7 +683,8 @@ void ArmyManagerWindow::AddSelectedUnits()
 	}
 
 	sint32 i;
-	CellUnitList units;
+	static CellUnitList units;
+	units.Clear();
 
 	for(i = 0; i < k_MAX_ARMY_SIZE; i++) {		
 		MBCHAR switchName[k_MAX_NAME_LEN];
@@ -706,7 +709,7 @@ void ArmyManagerWindow::AddSelectedUnits()
 				g_network.SendGroupRequest(units, node->m_army);
 			}
 		} else {
-			g_network.SendGroupRequest(units, Army());
+			g_network.SendGroupRequest(units, Army(0));
 		}
 		return;
 	}
@@ -799,7 +802,8 @@ void ArmyManagerWindow::RemoveSelectedUnits()
 	theArmy = node->m_army;
 	sint32 i;
 
-	CellUnitList units;
+	static CellUnitList units;
+	units.Clear();
 
 	for(i = 0; i < k_MAX_ARMY_SIZE; i++) {		
 		MBCHAR switchName[k_MAX_NAME_LEN];
@@ -854,7 +858,8 @@ void ArmyManagerWindow::InArmy(aui_Control *control, uint32 action, uint32 data,
 
 	bool enableRemoveButton=true;
 	bool enableRemoveAllButton=false;
-	for(int i = 0; i < k_MAX_ARMY_SIZE; i++) {		
+	int i;
+	for(i = 0; i < k_MAX_ARMY_SIZE; i++) {		
 		MBCHAR switchName[k_MAX_NAME_LEN];
 		sprintf(switchName, "InArmyBox.Unit%d", i);		
 		ctp2_Switch *sw = (ctp2_Switch *)aui_Ldl::GetObject(s_armyWindowBlock, switchName);
@@ -889,7 +894,8 @@ void ArmyManagerWindow::OutOfArmy(aui_Control *control, uint32 action, uint32 da
 	bool enableAddAllButton=false;
 	ctp2_ListBox *armyList = (ctp2_ListBox *)aui_Ldl::GetObject(s_armyWindowBlock, "ArmiesList");
 	ctp2_ListItem *item = (ctp2_ListItem *)armyList->GetSelectedItem();
-	for(int i = 0; i < k_MAX_ARMY_SIZE; i++) {		
+	int i;
+	for(i = 0; i < k_MAX_ARMY_SIZE; i++) {		
 		MBCHAR switchName[k_MAX_NAME_LEN];
 		sprintf(switchName, "OutOfArmyBox.Unit%d", i);		
 		ctp2_Switch *sw = (ctp2_Switch *)aui_Ldl::GetObject(s_armyWindowBlock, switchName);
@@ -917,7 +923,7 @@ AUI_ERRCODE ArmyManagerWindow::DrawHealthCallbackInArmy(ctp2_Static *control, au
 	if(s_armyWindow->m_inArmy[(int)cookie].IsValid())
 	{
 		maxhp=s_armyWindow->m_inArmy[(int)cookie].GetDBRec()->GetMaxHP();
-		curhp=s_armyWindow->m_inArmy[(int)cookie].GetHP();
+		curhp=(sint32) s_armyWindow->m_inArmy[(int)cookie].GetHP();
 		width=rect.right-rect.left;
 		hpwidth=width * curhp / maxhp;
 		Pixel16 drawColor=(	hpwidth > (width/2)?g_colorSet->GetColor(COLOR_GREEN):
@@ -938,7 +944,7 @@ AUI_ERRCODE ArmyManagerWindow::DrawHealthCallbackOutOfArmy(ctp2_Static *control,
 	if(s_armyWindow->m_outOfArmy[(int)cookie].IsValid())
 	{
 		maxhp=s_armyWindow->m_outOfArmy[(int)cookie].GetDBRec()->GetMaxHP();
-		curhp=s_armyWindow->m_outOfArmy[(int)cookie].GetHP();
+		curhp=(sint32) s_armyWindow->m_outOfArmy[(int)cookie].GetHP();
 		width=rect.right-rect.left;
 		hpwidth=width * curhp / maxhp;
 		Pixel16 drawColor=(	hpwidth > (width/2)?g_colorSet->GetColor(COLOR_GREEN):

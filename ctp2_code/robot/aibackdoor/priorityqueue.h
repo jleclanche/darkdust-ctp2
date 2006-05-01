@@ -36,7 +36,7 @@
 //
 //----------------------------------------------------------------------------
 
-#if defined(_MSC_VER)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -44,6 +44,9 @@
 #define __DA_PRIORITY_QUEUE__ 1
 
 #include "dynarr.h"
+#ifdef _DEBUG
+#include "World.h"
+#endif
 
 template <class T> class DAPriorityQueue { 
 	DynamicArray<T*> m_queue; 

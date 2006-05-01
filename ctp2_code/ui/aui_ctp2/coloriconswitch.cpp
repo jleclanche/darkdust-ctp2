@@ -12,7 +12,6 @@
 
 
 #include "c3.h"
-#include "coloriconswitch.h"
 
 #include "aui.h"
 #include "pattern.h"
@@ -22,12 +21,20 @@
 #include "aui_ldl.h"
 
 #include "pixelutils.h"
-#include "colorset.h"       // g_colorSet
-#include "CivPaths.h"       // g_civPaths
+#include "colorset.h"
+
+#include "CivPaths.h"
+
+
 #include "primitives.h"
+
+#include "coloriconswitch.h"
+
 #include "c3ui.h"
 
 extern C3UI			*g_c3ui;
+extern CivPaths		*g_civPaths;
+extern ColorSet		*g_colorSet;
 
 
 ColorIconSwitch::ColorIconSwitch(

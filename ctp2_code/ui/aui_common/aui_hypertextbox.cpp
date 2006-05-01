@@ -19,6 +19,10 @@
 
 #include "aui_hypertextbox.h"
 
+#ifdef _MSC_VER
+#pragma optimize ("", off)
+#endif
+
 aui_HyperTextBox::aui_HyperTextBox(
 	AUI_ERRCODE *retval,
 	uint32 id,
@@ -175,7 +179,11 @@ AUI_ERRCODE aui_HyperTextBox::CreateRanger( MBCHAR *ldlBlock )
 
 aui_HyperTextBox::~aui_HyperTextBox()
 {
-	delete m_ranger;
+	if ( m_ranger )
+	{
+		delete m_ranger;
+		m_ranger = NULL;
+	}
 }
 
 
@@ -410,9 +418,9 @@ AUI_ERRCODE aui_HyperTextBox::AddHyperStatics( const MBCHAR *hyperText )
 				}
 
 				
-				if (m_hyperStaticList->L() > k_AUI_HYPERTEXTBOX_LDL_MAXSTATICS)
+				if ( m_hyperStaticList->L() > k_AUI_HYPERTEXTBOX_LDL_MAXSTATICS )
 				{
-					delete m_hyperStaticList->RemoveHead();
+					DestroyHyperStatic( m_hyperStaticList->RemoveHead() );
 
 					sint32 topY = m_hyperStaticList->GetHead()->Y();
 					ListPos pos = m_hyperStaticList->GetHeadPosition();
@@ -553,4 +561,7 @@ void HyperTextBoxRangerActionCallback(
 		hypertextbox->RangerMoved();
 	}
 }
+#ifdef _MSC_VER
+#pragma optimize ("", on)
+#endif
 

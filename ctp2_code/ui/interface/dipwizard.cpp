@@ -78,19 +78,20 @@
 
 #include "DiplomacyDetails.h"
 #include "AgreementMatrix.h"
-#include "gold.h"
+#include "Gold.h"
 
 #include "network.h"
 #include "UnitData.h"
 
 #include "primitives.h"
-#include "colorset.h"                   // g_colorSet
+#include "colorset.h"
 
-extern C3UI       *g_c3ui;
+extern ColorSet   *g_colorSet;
 
 static DipWizard  *s_dipWizard;
 static MBCHAR     *s_dipWizardBlock = "DipWizard";
 
+extern C3UI       *g_c3ui;
 
 ctp2_Static       *DipWizard::m_stages[DIP_WIZ_STAGE_MAX];
 ctp2_Button       *DipWizard::m_toneButtons[DIPLOMATIC_TONE_MAX];

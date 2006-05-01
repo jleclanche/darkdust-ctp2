@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : The credit screen
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -30,9 +30,12 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
+
+
 #include "creditsscreen.h"
 
-#include <algorithm>	            // std::fill
+#include <algorithm>	// std::fill
+
 #include "aui_action.h"
 #include "aui_uniqueid.h"
 #include "aui_ldl.h"
@@ -46,11 +49,15 @@
 #include "ctp2_button.h"
 #include "UIUtils.h"
 #include "primitives.h"
-#include "soundmanager.h"           // g_soundManager
+#include "soundmanager.h"
+
 #include "aui_bitmapfont.h"
 #include "MessageBoxDialog.h"
-#include "colorset.h"               // g_colorSet
+#include "colorset.h"
+
+
 #include "StrDB.h"
+#include "aui_Factory.h"
 
 
 #define k_C3_ANIMATION_MODIFIER				20
@@ -62,7 +69,7 @@
 #define k_C3_ANIMATION_BLEND_SPEED			"blendSpeed"
 
 
-#define k_CREDITS_BITS_PER_PIXEL			16
+const sint32 k_CREDITS_BITS_PER_PIXEL =			16;
 #define k_LDL_CREDITS_WINDOW				"CreditsScreen"
 #define k_LDL_CREDITS_EXIT_BUTTON			"ExitButton"
 #define k_LDL_CREDITS_PAUSE_BUTTON			"PauseButton"
@@ -85,8 +92,8 @@
 
 
 
-const k_CreditsLineLen = 80;
-const kCreditsTextNumFonts = 6;
+const size_t k_CreditsLineLen = 80;
+const size_t kCreditsTextNumFonts = 6;
 
 
 
@@ -94,6 +101,7 @@ extern sint32		g_ScreenWidth;
 extern sint32		g_ScreenHeight;
 extern C3UI*		g_c3ui;
 extern StringDB*	g_theStringDB;
+extern SoundManager	*g_soundManager;
 
 
 CreditsWindow*			g_creditsWindow = NULL;		
@@ -102,7 +110,12 @@ CreditsWindow*			g_creditsWindow = NULL;
 C3Window *GetInitialPlayScreen();
 
 
-AUI_ACTION_BASIC(RemoveCreditsAction);
+class RemoveCreditsAction : public aui_Action
+{
+public:
+	virtual ActionCallback Execute;
+};
+
 
 void RemoveCreditsAction::Execute(aui_Control *control, uint32 action, uint32 data)
 {
@@ -489,8 +502,8 @@ AUI_ERRCODE c3_TriggeredAnimation::DrawBlendImage(aui_Surface *destSurf, RECT *d
 	RECT lastRect = { 0, 0, lastSurf->Width(), lastSurf->Height() };
 
 	
-	aui_DirectSurface *backSurface = new aui_DirectSurface(&errcode, srcRect.right, srcRect.bottom,
-		k_C3_ANIMATION_BITS_PER_PIXEL, g_c3ui->DD());
+	aui_Surface *backSurface = aui_Factory::new_Surface(errcode, srcRect.right, srcRect.bottom,
+		k_C3_ANIMATION_BITS_PER_PIXEL);
 	Assert(AUI_NEWOK(backSurface, errcode));
 
 	
@@ -500,8 +513,7 @@ AUI_ERRCODE c3_TriggeredAnimation::DrawBlendImage(aui_Surface *destSurf, RECT *d
 	
 	if(m_imagebltflag == AUI_IMAGEBASE_BLTFLAG_CHROMAKEY) {
 		
-		aui_DirectSurface *frontSurface = new aui_DirectSurface(&errcode, lastRect.right, lastRect.bottom,
-			k_C3_ANIMATION_BITS_PER_PIXEL, g_c3ui->DD());
+		aui_Surface *frontSurface = aui_Factory::new_Surface(errcode, lastRect.right, lastRect.bottom, k_C3_ANIMATION_BITS_PER_PIXEL);
 		Assert(AUI_NEWOK(frontSurface, errcode));
 		
 		
@@ -530,8 +542,8 @@ AUI_ERRCODE c3_TriggeredAnimation::DrawBlendImage(aui_Surface *destSurf, RECT *d
 	
 	if(m_imagebltflag == AUI_IMAGEBASE_BLTFLAG_CHROMAKEY) {
 		
-		aui_DirectSurface *frontSurface = new aui_DirectSurface(&errcode, srcRect.right, srcRect.bottom,
-			k_C3_ANIMATION_BITS_PER_PIXEL, g_c3ui->DD());
+		aui_Surface *frontSurface = aui_Factory::new_Surface(errcode, srcRect.right, srcRect.bottom,
+			k_C3_ANIMATION_BITS_PER_PIXEL);
 		Assert(AUI_NEWOK(frontSurface, errcode));
 		
 		
@@ -798,7 +810,7 @@ public:
 			delete pFoo;
 		}
 
-		for (int i = 0; i < kCreditsTextNumFonts; i++)
+		for (int i = 0; (unsigned) i < kCreditsTextNumFonts; i++)
 		{
 			if (m_fonts[i])
 				g_c3ui->UnloadBitmapFont(m_fonts[i]);
@@ -1236,6 +1248,7 @@ void cCreditsPage::ResetLines(void)
 
 
 
+extern ColorSet		*g_colorSet;
 AUI_ERRCODE c3_CreditsText::DrawThis(aui_Surface *pSurface, sint32 x, sint32 y)
 {
 
@@ -1303,7 +1316,7 @@ c3_CreditsText * c3_CreditsText::Parse(FILE *textfile)
 	MBCHAR errorStr[128];
 	char c;
 	eTokenType tokenType;
-	uint32 currFont = -1;
+	uint32 currFont = (unsigned) -1;
 	int i;
 	bool done = false;
 	bool gettingText = false;
@@ -1323,6 +1336,11 @@ c3_CreditsText * c3_CreditsText::Parse(FILE *textfile)
 			
 			for (i = 0; ((i < 127) && (!IsDelimeter(c))); i++, c = (char)fgetc(textfile) )
 			{
+				if (c == '\r')
+				{
+					i--;
+					continue;
+				}
 				currToken[i] = c;
 				if (IsComment(c))
 				{
@@ -1339,14 +1357,17 @@ c3_CreditsText * c3_CreditsText::Parse(FILE *textfile)
 		}
 		else
 		{
-			
 			c = (char)fgetc(textfile);
-			for (i = 0; ((i < k_CreditsLineLen) && (c != '\n')); i++, c = (char)fgetc(textfile) )
+			for (i = 0; ((i < 127) && (c != '\n'));
+				i++, c = (char)fgetc(textfile) )
 			{
+				if (c == '\r')
+				{
+					i--;
+					continue;
+				}
 				currToken[i] = c;
 #if 0
-				
-				
 				if (IsComment(c)) 
 				{
 					ReadToEOL(textfile);
@@ -1376,7 +1397,7 @@ c3_CreditsText * c3_CreditsText::Parse(FILE *textfile)
 			case kFont:
 			{
 				currFont = GetFontNumber(currToken);
-				if ((currFont == -1) || (currFont > m_numFonts) )
+				if ((currFont == (unsigned) -1) || (currFont > m_numFonts) )
 				{
 					sprintf(errorStr, "%s line %d: Bad font specifier '%s'", k_CREDITS_FILENAME, m_currTextfileLine, currToken);
 					MessageBoxDialog::Information(errorStr, "CreditsError");
@@ -1416,7 +1437,7 @@ c3_CreditsText * c3_CreditsText::Parse(FILE *textfile)
 			{
 				m_definingFont = TRUE;
 				m_currFontNumber = GetFontNumber(currToken);
-				if (m_currFontNumber == -1)
+				if (m_currFontNumber == (unsigned) -1)
 				{
 					sprintf(errorStr, "%s line %d: Bad font definition '%s'", k_CREDITS_FILENAME, m_currTextfileLine, currToken);
 					MessageBoxDialog::Information(errorStr, "CreditsError");
@@ -1429,7 +1450,7 @@ c3_CreditsText * c3_CreditsText::Parse(FILE *textfile)
 			case kFontSize:
 			{
 				m_currFontSize = GetFontSize(currToken);
-				if (m_currFontSize == -1)
+				if (m_currFontSize == (unsigned) -1)
 				{
 					sprintf(errorStr, "%s line %d: Bad font size '%s'", k_CREDITS_FILENAME, m_currTextfileLine, currToken);
 					MessageBoxDialog::Information(errorStr, "CreditsError");
@@ -1640,7 +1661,7 @@ uint32 c3_CreditsText::GetNumberFromToken(MBCHAR *pToken)
 
 	if (error)
 	{
-		return -1;
+		return (unsigned) -1;
 	}
 
 	return atoi(pFoo);
@@ -1654,7 +1675,7 @@ uint32 c3_CreditsText::GetFontNumber(MBCHAR *pToken)
 
 	if ((retval < 0)  || (retval > kCreditsTextNumFonts))
 	{
-		return -1;
+		return (unsigned) -1;
 	}
 
 	return retval;

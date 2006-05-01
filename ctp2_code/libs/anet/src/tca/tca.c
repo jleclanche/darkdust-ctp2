@@ -30,9 +30,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "eclock.h"
 #include "mywcs.h"		/* extra wcs functions */
 #define D2DES
-#include "../3rdparty/d3des/d3des.h"
-#include "../3rdparty/md5/global.h"		/* for md5 */ 
-#include "../3rdparty/md5/md5.h"
+#include "3rdparty/d3des/d3des.h"
+#include "3rdparty/md5/global.h"		/* for md5 */ 
+#include "3rdparty/md5/md5.h"
 
 /* Secret stuff the caller doesn't really need to know:
  *
@@ -399,7 +399,7 @@ dp_result_t tca_pwchange_validate(tca_t *tca, tcapw_uid_t uid, const tca_challen
 	tcapw_entry_t entry;
 	tcapw_hpw_t newhpw;
 	char correct_response[tca_LEN_RESPONSE];
-	char buf[tca_LEN_RESPONSE];  /* tca_LEN_RESPONSE >= tcapw_LEN_HASHPW */
+	unsigned char buf[tca_LEN_RESPONSE];  /* tca_LEN_RESPONSE >= tcapw_LEN_HASHPW */
 	char email[tcapw_MAXLEN_EMAIL];
 	int flags;
 	
@@ -444,8 +444,8 @@ dp_result_t tca_pwchange_validate(tca_t *tca, tcapw_uid_t uid, const tca_challen
 	return tcapw_entry_change(tca->tdb, uid, &newhpw, flags, email);
 }
 
-const char newuser_magic[9] = "^Ct:vN3[";
-const char newuser_magic2[9] = "o35(v&:T";
+const unsigned char newuser_magic[9] = "^Ct:vN3[";
+const unsigned char newuser_magic2[9] = "o35(v&:T";
 
 /*--------------------------------------------------------------------------
   Generate a newuser request.
@@ -515,7 +515,7 @@ dp_result_t tca_newuser_validate(tca_t *tca, const tca_challenge_t *challenge, t
 	tcapw_hpw_t hpw;
 	tcapw_uname_t uname;
 	unsigned char buf[16];
-	char test_magic[8];
+	unsigned char test_magic[8];
 	char email[tcapw_MAXLEN_EMAIL + 1];
 	int flags;
 	

@@ -17,6 +17,8 @@
 //
 // Compiler flags
 // 
+// _MSC_VER		
+// - Use Microsoft C++ extensions when set.
 //
 //----------------------------------------------------------------------------
 //
@@ -27,7 +29,7 @@
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -50,9 +52,9 @@ public:
 				MBCHAR *ldlBlock,
 				ControlActionCallback *ActionFunc = NULL,
 				void *cookie = NULL) :
-	aui_Button(retval, id, ldlBlock, ActionFunc, cookie),
 		aui_ImageBase(ldlBlock),
-		aui_TextBase(ldlBlock, NULL)
+		aui_TextBase(ldlBlock, NULL),
+		aui_Button(retval, id, ldlBlock, ActionFunc, cookie)
 	{ *retval = InitCommonLdl(ldlBlock, NULL, 0, 0, 0, 0); }
 
 	
@@ -66,9 +68,9 @@ public:
 				sint32 height,
 				ControlActionCallback *ActionFunc = NULL,
 				void *cookie = NULL) :
-	aui_Button(retval, id, ldlBlock, ActionFunc, cookie),
 		aui_ImageBase(ldlBlock),
-		aui_TextBase(ldlBlock, NULL)
+		aui_TextBase(ldlBlock, NULL),
+		aui_Button(retval, id, ldlBlock, ActionFunc, cookie)
 	{ *retval = InitCommonLdl(ldlBlock, ldlTemplate,
 		x, y, width, height); }
 
@@ -85,10 +87,17 @@ public:
 								 sint32 x = 0, sint32 y = 0);
 
 	
+#if defined(_MSC_VER)
+	virtual MouseEventCallback MouseLGrabInside;
+	virtual MouseEventCallback MouseLDropInside;
+	virtual MouseEventCallback MouseLDragOver;
+	virtual MouseEventCallback MouseLDragAway;
+#else
 	virtual void	MouseLGrabInside(aui_MouseEvent * mouseData);
 	virtual void	MouseLDropInside(aui_MouseEvent * mouseData);
 	virtual void	MouseLDragOver(aui_MouseEvent * mouseData);
 	virtual void	MouseLDragAway(aui_MouseEvent * mouseData);
+#endif
 	
 	static const sint32 k_CTP2_BUTTON_LAYER_FLAG_UP;
 	static const sint32 k_CTP2_BUTTON_LAYER_FLAG_DOWN;

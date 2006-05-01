@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Activision User Interface hyper text base elements
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -149,12 +149,18 @@ AUI_ERRCODE aui_HyperTextBase::InitCommon(
 
 aui_HyperTextBase::~aui_HyperTextBase()
 {
-	delete[] m_hyperText;
+	if ( m_hyperText )
+	{
+		delete[] m_hyperText;
+		m_hyperText = NULL;
+	}
 
-	if (m_hyperStaticList)
+	if ( m_hyperStaticList )
 	{
 		RemoveHyperStatics();
+
 		delete m_hyperStaticList;
+		m_hyperStaticList = NULL;
 	}
 }
 
@@ -201,6 +207,7 @@ AUI_ERRCODE aui_HyperTextBase::AddHyperStatics( const MBCHAR *hyperText )
 {
 	if ( !hyperText )
 	{
+		
 		RemoveHyperStatics();
 		hyperText = m_hyperText;
 	}
@@ -208,6 +215,7 @@ AUI_ERRCODE aui_HyperTextBase::AddHyperStatics( const MBCHAR *hyperText )
 	sint32 len = strlen( hyperText );
 	if ( !len ) return AUI_ERRCODE_OK;
 
+	
 	aui_Static *hs = CreateHyperStatic(
 		hyperText,
 		len,
@@ -226,21 +234,18 @@ AUI_ERRCODE aui_HyperTextBase::AddHyperStatics( const MBCHAR *hyperText )
 	m_hyperStaticList->AddTail( hs );
 
 	if ( m_hyperStaticList->L() > k_AUI_HYPERTEXTBOX_LDL_MAXSTATICS )
-    {
-		delete m_hyperStaticList->RemoveHead();
-    }
+		DestroyHyperStatic( m_hyperStaticList->RemoveHead() );
 
 	return AUI_ERRCODE_OK;
 }
 
 
 
-void aui_HyperTextBase::RemoveHyperStatics(void)
+void aui_HyperTextBase::RemoveHyperStatics( void )
 {
-	for (sint32 i = m_hyperStaticList->L(); i; --i)
-    {
-		delete m_hyperStaticList->RemoveTail();
-    }
+	ListPos position = m_hyperStaticList->GetHeadPosition();
+	for ( sint32 i = m_hyperStaticList->L(); i; i-- )
+		DestroyHyperStatic( m_hyperStaticList->RemoveTail() );
 }
 
 
@@ -295,6 +300,17 @@ aui_Static *aui_HyperTextBase::CreateHyperStatic(
 
 	return hs;
 }
+
+
+
+void aui_HyperTextBase::DestroyHyperStatic( aui_Static *hs )
+{
+	Assert( hs != NULL );
+	if ( !hs ) return;
+
+	delete hs;
+}
+
 
 
 AUI_ERRCODE aui_HyperTextBase::DrawThisHyperText(

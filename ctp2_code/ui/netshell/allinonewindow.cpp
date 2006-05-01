@@ -176,10 +176,7 @@ AllinoneWindow::AllinoneWindow(
 
 AUI_ERRCODE AllinoneWindow::InitCommon( void )
 {
-    if (!g_allinoneWindow)
-    {
-	    g_allinoneWindow = this;
-    }
+	g_allinoneWindow = this;
 
 	m_controls = new aui_Control *[ m_numControls = CONTROL_MAX ];
 	Assert( m_controls != NULL );
@@ -1169,7 +1166,8 @@ AUI_ERRCODE AllinoneWindow::CreateControls( void )
 
 	sint32 numStyles = st.GetNumStrings();
 	ctp2_Static *label = NULL;
-	for ( sint32 i = 0; i < numStyles; i++ )
+	sint32 i;
+	for ( i = 0; i < numStyles; i++ )
 	{
 		ns_ListItem *item = new ns_ListItem(
 			&errcode,
@@ -1225,9 +1223,14 @@ AllinoneWindow::~AllinoneWindow()
 	sint32 i;
 	for ( i = 0; i < numActions; i++ )
 	{
-		delete m_dbActionArray[i];
+		if ( m_dbActionArray[ i ] )
+		{
+			delete m_dbActionArray[ i ];
+			m_dbActionArray[ i ] = NULL;
+		}
 	}
 
+	
 	((aui_DropDown *)m_controls[ CONTROL_PLAYSTYLEDROPDOWN ])->
 		GetListBox()->RemoveItems( TRUE );
 
@@ -1301,15 +1304,60 @@ AllinoneWindow::~AllinoneWindow()
 		delete item;
 	}
 
-	delete m_aiplayerList;
-	delete m_messageKicked;
-	delete m_messageGameSetup;
-	delete m_messageGameEnter;
-	delete m_messageGameCreate;
-	delete m_messageGameHost;
-	delete m_messageLaunched;
-	delete m_playStyleValueStrings;
-	delete m_PPTStrings;
+	if ( m_aiplayerList )
+	{
+		delete m_aiplayerList;
+		m_aiplayerList = NULL;
+	}
+
+	if ( m_messageKicked )
+	{
+		delete m_messageKicked;
+		m_messageKicked = NULL;
+	}
+
+	if ( m_messageGameSetup )
+	{
+		delete m_messageGameSetup;
+		m_messageGameSetup = NULL;
+	}
+
+	if ( m_messageGameEnter )
+	{
+		delete m_messageGameEnter;
+		m_messageGameEnter = NULL;
+	}
+
+	if ( m_messageGameCreate )
+	{
+		delete m_messageGameCreate;
+		m_messageGameCreate = NULL;
+	}
+
+	if ( m_messageGameHost )
+	{
+		delete m_messageGameHost;
+		m_messageGameHost = NULL;
+	}
+
+	if ( m_messageLaunched )
+	{
+		delete m_messageLaunched;
+		m_messageLaunched = NULL;
+	}
+
+	if ( m_playStyleValueStrings )
+	{
+		delete m_playStyleValueStrings;
+		m_playStyleValueStrings = NULL;
+	}
+
+	if ( m_PPTStrings )
+	{
+		delete m_PPTStrings;
+		m_PPTStrings = NULL;
+	}
+
 	delete m_messageRequestDenied;
 
 	agesscreen_Cleanup();
@@ -1321,10 +1369,7 @@ AllinoneWindow::~AllinoneWindow()
 	custommapscreen_Cleanup();
 	spnewgamediffscreen_Cleanup();
 
-    if (this == g_allinoneWindow)
-    {
-	    g_allinoneWindow = NULL;
-    }
+	g_allinoneWindow = NULL;
 }
 
 
@@ -1365,7 +1410,8 @@ AUI_ERRCODE AllinoneWindow::CreateExclusions( void )
 
 		listbox =
 			(aui_ListBox *)m_controls[ CONTROL_UNITSLISTBOX ];
-		for ( sint32 i = listbox->NumItems(); i; i-- )
+		sint32 i;
+		for ( i = listbox->NumItems(); i; i-- )
 		{
 			aui_Item *item = listbox->GetItemByIndex( 0 );
 			listbox->RemoveItem( item->Id() );
@@ -1489,6 +1535,7 @@ AUI_ERRCODE AllinoneWindow::CreateExclusions( void )
 
 	ListPos pos = unitList.GetHeadPosition();
 
+	/// \todo Check wether even increasement is wanted
 	for ( i++; i < m_numAvailUnits; i++ )
 	{
 		if ( !g_nsUnits->m_noIndex[ i ] )
@@ -1945,7 +1992,7 @@ sint32 AllinoneWindow::FindTribe( uint16 key, BOOL isAI, BOOL *isFemale )
 		TribeSlot *tribeSlots = g_gamesetup.GetTribeSlots();
 
 		for ( sint32 i = 0; i < k_NS_MAX_PLAYERS; i++ )
-			if ( tribeSlots[ i ].key == key && tribeSlots[ i ].isAI == isAI )
+			if ( tribeSlots[ i ].key == key && (BOOL) tribeSlots[ i ].isAI == isAI )
 			{
 				if ( isFemale ) *isFemale = tribeSlots[ i ].isFemale;
 				return tribeSlots[ i ].tribe;
@@ -1974,7 +2021,7 @@ sint32 AllinoneWindow::FindTribe( uint16 key, BOOL isAI, BOOL *isFemale )
 						{
 							if (
 								g_gamesetup.GetSavedTribeSlots()[ j ].tribe == i &&
-								g_gamesetup.GetSavedTribeSlots()[ j ].isAI == isAI )
+								(BOOL) g_gamesetup.GetSavedTribeSlots()[ j ].isAI == isAI )
 							{
 								if ( isFemale ) *isFemale = g_gamesetup.GetSavedTribeSlots()[ j ].isFemale;
 								return i;
@@ -2079,7 +2126,7 @@ BOOL AllinoneWindow::AssignTribe(
 	sint32 i;
 	for ( i = 0; i < k_NS_MAX_PLAYERS; i++ )
 	{
-		if ( tribeSlots[ i ].key == key && tribeSlots[ i ].isAI == isAI )
+		if ( tribeSlots[ i ].key == key && (BOOL) tribeSlots[ i ].isAI == isAI )
 		{
 			memset( tribeSlots + i, 0, sizeof( TribeSlot ) );
 			break;
@@ -2738,7 +2785,7 @@ AUI_ERRCODE AllinoneWindow::Idle( void )
 #ifdef WIN32
 						PostMessage( g_ui->TheHWND(), WM_CLOSE, 0, 0 );
 #endif
-				}
+					}
 				}
 
 			}
@@ -3142,7 +3189,7 @@ AUI_ERRCODE AllinoneWindow::Idle( void )
 #ifdef WIN32	
 			PostMessage( g_ui->TheHWND(), WM_CLOSE, 0, 0 );
 #endif
-	}
+		}
 	}
 			
 	if(joinedgame && g_netfunc->GetStatus() == NETFunc::OK) {
@@ -3196,7 +3243,7 @@ AUI_ERRCODE AllinoneWindow::Idle( void )
 			{
 				sint32 i;
 				
-				for (i = 0; i < k_MAX_PLAYERS; i++) {
+				for(sint32 i = 0; i < k_MAX_PLAYERS; i++) {
 					if(m_civGuids[i].guid == *g_network.GetGuid()) {
 						RequestTribe( m_civGuids[ i ].civIndex + 1 );
 						break;
@@ -4033,8 +4080,9 @@ void AllinoneWindow::PlayersListBoxAction::Execute(
 	if ( action != AUI_LISTBOX_ACTION_SELECT ) return;
 
 	ns_HPlayerListBox *listbox = (ns_HPlayerListBox *)control;
-	tech_WLList<sint32>	justSelectedList;
-	tech_WLList<sint32>	justDeselectedList;
+
+	static tech_WLList<sint32> justSelectedList;
+	static tech_WLList<sint32> justDeselectedList;
 	sint32 index;
 
 	listbox->WhatsChanged(justSelectedList,justDeselectedList);
@@ -4089,9 +4137,6 @@ void AllinoneWindow::PlayersListBoxAction::Execute(
 		s = (aui_Switch *)w->FindControl( w->CONTROL_PPTSWITCH );
 		s->SetState(k_PPT_PUBLIC);
 	}
-
-	justSelectedList.DeleteAll();
-	justDeselectedList.DeleteAll();
 }
 
 
@@ -4935,7 +4980,7 @@ void AllinoneWindow::CancelButtonAction::Execute(
 #ifdef WIN32
 		PostMessage( g_ui->TheHWND(), WM_CLOSE, 0, 0 );
 #endif
-}
+	}
 }
 
 
@@ -6192,9 +6237,9 @@ void AllinoneTribeCallback(
 	
 	if ( !item->GetPlayer() && !item->GetAIPlayer() ) return;
 
-	uint16 key = item->IsAI() ?
-		key = *(uint16 *)item->GetAIPlayer()->GetKey()->buf :
-		key = *(uint16 *)item->GetPlayer()->GetKey()->buf;
+	uint16 key = ( item->IsAI() ?
+		*(uint16 *)item->GetAIPlayer()->GetKey()->buf :
+		*(uint16 *)item->GetPlayer()->GetKey()->buf );
 
 	
 	

@@ -4,17 +4,6 @@
 #ifndef __REGARD_H__
 #define __REGARD_H__ 1
 
-class Regard;
-enum REGARD_TYPE
-	{
-    REGARD_TYPE_INSANE_HATRED,
-	REGARD_TYPE_HOTWAR,
-    REGARD_TYPE_COLDWAR, 
-	REGARD_TYPE_NEUTRAL,
-	REGARD_TYPE_FRIENDLY,
-	REGARD_TYPE_LOVE
-};
-
 class CivArchive;
 
 

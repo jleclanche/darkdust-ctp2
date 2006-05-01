@@ -40,12 +40,12 @@
 #ifndef __GREATLIBRARY_H__
 #define __GREATLIBRARY_H__
 
+#include "ctp2_enums.h"
 #include <vector>	// std::vector
 
 class GreatLibrary;
 class Great_Library_Item;
 class TechListItem;
-
 #define k_GL_TREE_LEFT		5
 #define k_GL_TREE_TOP		40
 #define k_GL_TREE_WIDTH		750
@@ -76,22 +76,6 @@ class TechListItem;
 size_t const	k_MAX_GL_ENTRY		= 8192;
 size_t const	GL_MAX_DB_NAME_SIZE	= 30; 
 
-enum DATABASE {
-	DATABASE_DEFAULT,
-	DATABASE_UNITS,
-	DATABASE_BUILDINGS,
-	DATABASE_WONDERS,
-	DATABASE_ADVANCES,
-	DATABASE_TERRAIN,
-	DATABASE_CONCEPTS,
-	DATABASE_GOVERNMENTS,
-	DATABASE_TILE_IMPROVEMENTS,
-	DATABASE_RESOURCE,
-	DATABASE_ORDERS,
-	DATABASE_SEARCH,
-
-	DATABASE_MAX
-};
 
 enum LIB_STRING {
 	LIB_STRING_INDEX,
@@ -103,7 +87,9 @@ enum LIB_STRING {
 
 class Chart;
 class ctp2_HyperTextBox;
+#ifdef WIN32
 class DirectVideo;
+#endif
 class ctp2_Static;
 class aui_StringTable;
 class ctp2_Button;
@@ -199,7 +185,9 @@ protected:
 	ctp2_HyperTextBox	*m_techRequirementsText;
 	ctp2_HyperTextBox	*m_techVariablesText;
 
+#ifdef WIN32
 	DirectVideo		*m_techMovie;
+#endif
 	ctp2_Static		*m_techStillShot;
 
 	aui_StringTable	*m_string;
@@ -273,6 +261,8 @@ public:
 
 	
 	void Back();
+
+	
 	void Forward();
 
 	void Display( void );
@@ -284,8 +274,8 @@ public:
 
 
 
-	void    ClearHistory(void);
-	void    HandleSetGoal(void);
+	sint32 GreatLibrary::ClearHistory( void );
+	sint32 HandleSetGoal( void );
 
 	MBCHAR const *  GetItemName(int database, int item) const;      // lexicographic index
     MBCHAR const *  GetObjectName(int database, int index) const;   // database index
@@ -296,8 +286,8 @@ public:
 		int the_database
 	);
 
-	void    HandleIndexButton( ctp2_Button *button );
-	void    HandleListButton
+	sint32 HandleIndexButton( ctp2_Button *button );
+	sint32 HandleListButton
 	( 
 		aui_Control *control, 
 		uint32 action, 
@@ -305,7 +295,7 @@ public:
 		void *cookie 
 	);
 
-	void UpdateList(DATABASE database);
+	sint32 UpdateList( DATABASE database );
 
 	BOOL GetSci( void ) { return m_sci; }
 	void SetSci( BOOL sci ) { m_sci = sci; }

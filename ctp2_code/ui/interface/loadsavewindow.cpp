@@ -32,7 +32,7 @@
 //----------------------------------------------------------------------------
 
 #include "c3.h"
-#include "loadsavewindow.h"
+
 
 #include "aui.h"
 #include "aui_ldl.h"
@@ -45,6 +45,7 @@
 #include "aui_stringtable.h"
 #include "aui_tabgroup.h"
 #include "aui_directsurface.h"
+
 #include "c3ui.h"
 #include "c3_button.h"
 #include "c3_static.h"
@@ -54,22 +55,43 @@
 #include "texttab.h"
 #include "pointerlist.h"
 #include "c3textfield.h"
-#include "colorset.h"               // g_colorSet
-#include "player.h"                 // g_player
-#include "StrDB.h"                  // g_theStringDB
-#include "profileDB.h"              // g_theProfileDB
-#include "TurnCnt.h"                // g_turn
+
+#include "StrDB.h"
+#include "profileDB.h"
+#include "TurnCnt.h"
+
 #include "spnewgamewindow.h" 
+#include "loadsavewindow.h"
+
+
 #include "linegraph.h"
 #include "infowin.h"
+
+
 #include "radarmap.h"
+
 #include "pixelutils.h"
-#include "SelItem.h"                // g_selected_item
+
 #include "TurnYearStatus.h"
 
 extern C3UI							*g_c3ui;
+extern StringDB						*g_theStringDB;
+extern ProfileDB					*g_theProfileDB;
+extern TurnCount					*g_turn;
+
+#include "player.h"
+extern Player						**g_player;
+
+
+#include "colorset.h"
+extern ColorSet						*g_colorSet;
+
+extern LoadSaveWindow				*g_loadsaveWindow;
+
 extern sint32						g_is565Format;
 
+#include "SelItem.h"
+extern SelectedItem					*g_selected_item;
 
 #define k_LOADSAVE_AUTOSORT_COL		-2
 
@@ -602,9 +624,10 @@ BOOL LoadSaveWindow::CreateSaveInfoIfNeeded( SaveInfo *&info )
 
 		m_tabGroup->ShouldDraw(TRUE);
 
-		
+
+		sint32 i;		
 		sint32 numCivs = 0;
-		for (sint32 i=1; i<k_MAX_PLAYERS; i++) {
+		for (i=1; i<k_MAX_PLAYERS; i++) {
 			
 			MBCHAR			s[_MAX_PATH];
 			PLAYER_INDEX	currentCiv = g_selected_item->GetVisiblePlayer();
@@ -686,7 +709,7 @@ void LoadSaveWindow::GetPowerGraph(SaveInfo *info)
 	if (infowin_UpdateGraph(myGraph, xCount, yCount, &graphData)) return;
 
 	
-	aui_DirectSurface	*surf = myGraph->GetGraphSurface();
+	aui_Surface	*surf = myGraph->GetGraphSurface();
 
 	if (info->powerGraphWidth > 0 && 
 		info->powerGraphHeight > 0 && 
@@ -744,7 +767,7 @@ void LoadSaveWindow::GetRadarMap(SaveInfo *info)
 	if (!radarMap) return;
 
 	
-	aui_DirectSurface	*surf = (aui_DirectSurface *)radarMap->GetMapSurface();
+	aui_Surface	*surf = (aui_Surface *)radarMap->GetMapSurface();
 
 	radarMap->RenderMap(surf);	
 

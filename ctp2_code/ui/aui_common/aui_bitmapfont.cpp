@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : Activision User Interface bitmap font
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -68,7 +68,7 @@ TT_Engine aui_BitmapFont::m_ttEngine = { NULL };
 
 aui_BitmapFont::aui_BitmapFont(
 	AUI_ERRCODE *retval,
-	MBCHAR const *descriptor )
+	const MBCHAR *descriptor )
 	:
 	aui_Base()
 {
@@ -115,7 +115,7 @@ void aui_BitmapFont::DescriptorToAttributes(
 
 
 
-AUI_ERRCODE aui_BitmapFont::InitCommon( MBCHAR const *descriptor )
+AUI_ERRCODE aui_BitmapFont::InitCommon( const MBCHAR *descriptor )
 {
 	AUI_ERRCODE errcode = SetFilename( descriptor );
 	Assert( AUI_SUCCESS(errcode) );
@@ -181,18 +181,19 @@ AUI_ERRCODE aui_BitmapFont::InitCommon( MBCHAR const *descriptor )
 		Assert( error == 0 );
 		if ( error ) return AUI_ERRCODE_HACK;
 
-		
+#ifdef WIN32		
 		static MBCHAR fontdir[ MAX_PATH + 1 ];
 		sint32 last;
 		if ( (last = GetWindowsDirectory( fontdir, MAX_PATH ) - 1) > 1 )
 		{
-			if ( fontdir[ last ] == '\\' )
+			if ( fontdir[ last ] == FILE_SEPC )
 				fontdir[ last ] = '\0';
 
-			strcat( fontdir, "\\fonts" );
+			strcat( fontdir, FILE_SEP "fonts" );
 
 			g_ui->GetBitmapFontResource()->AddSearchPath( fontdir );
 		}
+#endif
 	}
 	return AUI_ERRCODE_OK;
 }
@@ -221,7 +222,7 @@ aui_BitmapFont::~aui_BitmapFont()
 
 
 
-AUI_ERRCODE aui_BitmapFont::SetFilename( MBCHAR const * descriptor )
+AUI_ERRCODE aui_BitmapFont::SetFilename( const MBCHAR *descriptor )
 {
 	memset( m_descriptor, '\0', sizeof( m_descriptor ) );
 
@@ -266,7 +267,8 @@ AUI_ERRCODE aui_BitmapFont::Load( void )
 	Assert( n != 0 );
 	if ( !n ) return AUI_ERRCODE_HACK;
 
-	for ( uint16 i = 0; i < n; i++ )
+	uint16 i;
+	for ( i = 0; i < n; i++ )
 	{
 		uint16 platform, encoding;
 		TT_Get_CharMap_ID( m_ttFace, i, &platform, &encoding );
@@ -287,7 +289,10 @@ AUI_ERRCODE aui_BitmapFont::Load( void )
 	if ( i == n ) return AUI_ERRCODE_HACK;
 
 	
-	SetPointSize( m_pointSize );
+	// make sure that SetPointSize() does not return immediately
+	int s = m_pointSize;
+	m_pointSize = 0;
+	SetPointSize( s );
 
 	return AUI_ERRCODE_OK;
 }
@@ -314,7 +319,7 @@ AUI_ERRCODE aui_BitmapFont::Unload( void )
 
 
 
-AUI_ERRCODE aui_BitmapFont::SetTTFFile( MBCHAR *ttffile )
+AUI_ERRCODE aui_BitmapFont::SetTTFFile( const MBCHAR *ttffile )
 {
 	
 	Assert( !IsLoaded() );
@@ -333,6 +338,9 @@ AUI_ERRCODE aui_BitmapFont::SetTTFFile( MBCHAR *ttffile )
 
 AUI_ERRCODE aui_BitmapFont::SetPointSize( sint32 pointSize )
 {
+	// no need to do anything if the point size matches already
+	if (pointSize > 0 && m_pointSize == pointSize)
+		return AUI_ERRCODE_OK;
 	
 	
 	Assert( !HasCached() );
@@ -766,7 +774,7 @@ aui_BitmapFont::GlyphInfo *aui_BitmapFont::GetGlyphInfo( const MBCHAR *pc )
 			//	rect of gi->surface is "unrocked".
 			errcode = gi->surface->Unlock( bitmap.bitmap );
 			Assert( AUI_SUCCESS(errcode) );
-			   if ( !AUI_SUCCESS(errcode) ) goto Error;
+			if ( !AUI_SUCCESS(errcode) ) goto Error;
 		}
 
 		TT_Done_Glyph( ttGlyph );
@@ -1421,10 +1429,13 @@ AUI_ERRCODE aui_BitmapFont::RenderGlyph16(
 						if ( *srcBuf == 255 )
 							*destBuf++ = pixelColor;
 						else
-							*destBuf++ = aui_Pixel::Blend555(
+						{
+							*destBuf = aui_Pixel::Blend555(
 								pixelColor,
 								*destBuf,
 								*srcBuf >> 3 );
+							destBuf++;
+						}
 					}
 					else
 						destBuf++;
@@ -1446,10 +1457,13 @@ AUI_ERRCODE aui_BitmapFont::RenderGlyph16(
 						if ( *srcBuf == 255 )
 							*destBuf++ = pixelColor;
 						else
-							*destBuf++ = aui_Pixel::Blend565(
+						{
+							*destBuf = aui_Pixel::Blend565(
 								pixelColor,
 								*destBuf,
 								*srcBuf >> 3 );
+							destBuf++;
+						}
 					}
 					else
 						destBuf++;

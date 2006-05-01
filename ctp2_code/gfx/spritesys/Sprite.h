@@ -24,7 +24,6 @@
 // - Added separate counters in Sprite-derived classes to prevent crashes.
 //
 //----------------------------------------------------------------------------
-
 #ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
@@ -87,20 +86,19 @@ class Token;
 //----------------------------------------------------------------------------
  
 typedef  void (Sprite::*_SPRITE_DRAWLOW1)(Pixel16 *frame, 
-										  sint32 drawX, sint32 drawY, 
-										  sint32 width, sint32 height,
-										  uint16 transparency, 
-										  Pixel16 outlineColor, 
-										  uint16 flags);
-
+					  sint32 drawX, sint32 drawY, 
+					  sint32 width, sint32 height,
+					  uint16 transparency, 
+					  Pixel16 outlineColor, 
+					  uint16 flags);
 
 typedef  void (Sprite::*_SPRITE_DRAWLOW2)(Pixel16 *frame, 
-										  sint32 drawX, sint32 drawY, 
-										  sint32 destwidth, sint32 destheight,
-										  uint16 transparency, 
-										  Pixel16 outlineColor, 
-										  uint16 flags,
-										  BOOL reversed);
+					  sint32 drawX, sint32 drawY, 
+					  sint32 destwidth, sint32 destheight,
+					  uint16 transparency, 
+					  Pixel16 outlineColor, 
+					  uint16 flags,
+					  BOOL reversed);
 
 class Sprite 
 {
@@ -123,8 +121,8 @@ public:
 	void			UnlockSurface(void);
 	void			SetSurface(void);
 
-	uint16			GetType(void) { return static_cast<uint16>(m_type); }
-	void			SetType(uint16 type) { m_type = static_cast<SPRITETYPE>(type); }
+	uint16			GetType(void) { return m_type; }
+	void			SetType(uint16 type) { m_type = (SPRITETYPE)type; }
 
 	uint16			GetWidth(void) { return m_width; }
 	uint16			GetHeight(void) { return m_height; }
@@ -154,7 +152,9 @@ public:
 	void			SetCurrentFrame(sint16 cFrame) { m_currentFrame = cFrame; };
 
 	Pixel16*		GetFrameData(uint16 frameNum);
+	size_t			GetFrameDataSize(uint16 frameNum);
 	Pixel16*		GetMiniFrameData(uint16 frameNum);
+	size_t			GetMiniFrameDataSize(uint16 frameNum);
 
 	uint16			GetFirstFrame(void) const { return m_firstFrame; }
 	void			SetFirstFrame(uint16 frame) { m_firstFrame = frame; }
@@ -162,8 +162,11 @@ public:
 	void			SetFrameData(uint16 frameNum, Pixel16 *data);
 	void			SetMiniFrameData(uint16 frameNum, Pixel16 *data);
 
-	virtual sint32	ParseFromTokens(Token *theToken);
-	virtual void	AllocateFrameArrays(size_t count);
+	sint32			ParseFromTokens(Token *theToken);
+
+	void			AllocateFrameArrays(size_t count);
+	void			AllocateFrameArraysBasic(void);
+
 	
 	void			InitializeDrawLow();
 
@@ -334,7 +337,9 @@ protected:
 
 	uint16			m_numFrames;
 	Pixel16			**m_frames;
+	size_t                  *m_framesSizes;
 	Pixel16			**m_miniframes;
+	size_t                  *m_miniframesSizes;
 	uint16			m_firstFrame;
 	uint16			m_currentFrame;
 

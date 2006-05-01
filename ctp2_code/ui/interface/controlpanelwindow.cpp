@@ -104,7 +104,7 @@
 
 #include "c3cmdline.h"
 #include "SelItem.h"
-#include "player.h"                     // g_player
+#include "player.h"
 #include "c3window.h"
 #include "ctp2_Window.h"
 #include "ctp2_Menu.h"
@@ -124,27 +124,27 @@
 #include "IconRecord.h"
 #include "SelItem.h"
 #include "TurnCnt.h"
-#include "UnitPool.h"                   // g_theUnitPool
+#include "UnitPool.h"
 #include "Unit.h"
 #include "UnitData.h"
 #include "UnitRecord.h"
-#include "StrDB.h"                      // g_theStringDB
+#include "StrDB.h"
 #include "screenutils.h"
 #include "Advances.h"
 #include "AdvanceRecord.h"
 #include "advanceutil.h"
 #include "ArmyData.h"
-#include "ArmyPool.h"                   // g_theArmyPool
+#include "ArmyPool.h"
 #include "cellunitlist.h"
 #include "Cell.h"
-#include "World.h"                      // g_theWorld
-#include "director.h"                   // g_director
+#include "World.h"
+#include "director.h"
 #include "Events.h"
 #include "GameEventUser.h"
 #include "TerrainRecord.h"
 
 #include "pixelutils.h"
-#include "colorset.h"                   // g_colorSet
+#include "colorset.h"
 #include "primitives.h"
 
 #include "controlpanelwindow.h"
@@ -182,7 +182,7 @@
 #include "aui_progressbar.h"
 #include "aui_tipwindow.h"
 
-#include "order.h"
+#include "Order.h"
 
 #include "soundmanager.h"
 #include "gamesounds.h"
@@ -196,8 +196,8 @@
 #include "helptile.h"
 
 #include "SpecialAttackWindow.h"
-#include "gameinit.h"                   // g_startHotseatGame
-#include <string>                       // std::string
+#include "gameinit.h"            // g_startHotseatGame
+#include <string>                // std::string
 
 extern ProgressWindow *g_theProgressWindow;
 
@@ -223,8 +223,17 @@ extern ProgressWindow *g_theProgressWindow;
 extern sint32               g_ScreenWidth;
 extern sint32               g_ScreenHeight;
 extern C3UI                 *g_c3ui;
+extern Background           *g_background;
+extern UnitPool             *g_theUnitPool;
+extern StringDB             *g_theStringDB;
 extern InfoBar              *g_infoBar;
+extern Player               **g_player;
+extern World                *g_theWorld;
 extern CursorManager        *g_cursorManager;
+extern ArmyPool             *g_theArmyPool;
+extern Director             *g_director;
+extern ColorSet             *g_colorSet;
+
 extern KEYMAP               *theKeyMap;
 
 
@@ -251,10 +260,14 @@ void UnitPanelNextUnitCallback(aui_Control *control, uint32 action, uint32 data,
 void UnitPanelListBoxCallback (aui_Control *control, uint32 action, uint32 data, void *cookie);
 
 
-#define k_CPW_THOUSAND  1000
-#define k_CPW_MILLION   1000000
-#define k_CPW_BILLION   1000000000
-#define k_CPW_TRILLION  1000000000000
+const uint64 k_CPW_THOUSAND	= 1000;
+const uint64 k_CPW_MILLION	= 1000000;
+const uint64 k_CPW_BILLION	= 1000000000;
+#ifdef __GNUC__
+const uint64 k_CPW_TRILLION	= 1000000000000ULL;
+#else
+const uint64 k_CPW_TRILLION     = 1000000000000;
+#endif
 
 void TurnNextUnitButtonActionCallback( aui_Control *control, uint32 action, uint32 data, void *cookie )
 {
@@ -599,6 +612,10 @@ HideControlPanel()
 
 void controlpanelwindow_DisbandCity(bool response, void *userData)
 {
+	Assert(userData);
+	if (!userData)
+		return;
+
 	if(response) {
 		Unit city(reinterpret_cast<uint32>(userData));
 		if(city.IsValid()) {
@@ -675,7 +692,7 @@ void ContextMenuCallback(ctp2_Menu *menu, CTP2_MENU_ACTION action, sint32 itemIn
 			break;
 		default:
 		{
-			Army a;
+			Army a(0);
 			if(!g_selected_item->GetSelectedArmy(a)) {
 				MapPoint pos = g_selected_item->GetCurSelectPos();
 				Cell *cell = g_theWorld->GetCell(pos);
@@ -1912,7 +1929,7 @@ ControlPanelWindow::OrderDeliveryUpdate()
 	ArmyData *data=army.AccessData();
 
 	if(data==NULL){
-		specialAttackWindow_DisplayData(pos, -1);
+		specialAttackWindow_DisplayData(pos, static_cast<sint32>(-1));
 		return;
 	}
 
@@ -1943,14 +1960,14 @@ ControlPanelWindow::OrderDeliveryUpdate()
 			} else {
 				g_cursorManager->SetCursor(CURSORINDEX_MOVE);
 			}
-			specialAttackWindow_DisplayData(pos, -1);
+			specialAttackWindow_DisplayData(pos, static_cast<sint32>(-1));
 		} else {
 			g_cursorManager->SetCursor(Order::GetCursor(m_currentOrder));
 			if(army->CheckWasEnemyVisible(pos, true)){
-				specialAttackWindow_DisplayData(pos, m_currentOrder->GetIndex());
+				specialAttackWindow_DisplayData(pos, static_cast<sint32>(m_currentOrder->GetIndex()));
 			}
 			else{
-				specialAttackWindow_DisplayData(pos, -1);
+				specialAttackWindow_DisplayData(pos, static_cast<sint32>(-1));
 			}
 		}
 	} else {
@@ -1959,7 +1976,7 @@ ControlPanelWindow::OrderDeliveryUpdate()
 		} else {
 			g_cursorManager->SetCursor(Order::GetCursor(m_currentOrder));
 		}
-		specialAttackWindow_DisplayData(pos, -1);
+		specialAttackWindow_DisplayData(pos, static_cast<sint32>(-1));
 	}
 
 }
@@ -2160,8 +2177,8 @@ ControlPanelWindow::OrderDeliveryClick(const MapPoint &pos)
 					}
 				}
 			}
-				
-			army->PerformOrderHere(m_currentOrder, &g_selected_item->GetBadPath());
+			Path badpath = g_selected_item->GetBadPath();
+			army->PerformOrderHere(m_currentOrder, &badpath);
 			handled = true;
 		}
 		else if (g_selected_item->GetGoodPath()->GetMovesRemaining() > 0 ) {
@@ -2300,7 +2317,7 @@ void ControlPanelWindow::ClearTargetingMode()
 	MapPoint pos;
 	g_tiledMap->GetMouseTilePos(pos);
 	tileimptracker_DisplayData(pos, -1);
-	specialAttackWindow_DisplayData(pos, -1);
+	specialAttackWindow_DisplayData(pos, static_cast<sint32>(-1));
 }
 
 void
@@ -2523,7 +2540,7 @@ void ControlPanelWindow::AddMessage(Message &message,bool initializing)
 	m_messageList->RangerMoved();
 }
 
-void ControlPanelWindow::SetMessageRead(Message &msg)
+void ControlPanelWindow::SetMessageRead(const Message &msg)
 {
 	sint32 n;
 	for(n = 0; n < m_messageList->NumItems(); n++) {
@@ -2730,8 +2747,8 @@ ControlPanelWindow::CreateTileImpBanks()
 	m_tileImpPanes[CP_TERRAFORM_LAND ]=(ctp2_Static*)aui_Ldl::GetObject("ControlPanelWindow.ControlPanel.ControlTabPanel.TilesTab.TabPanel.tfLandButtonBank"   );
 
 
-	
-	for	(sint32 i=0;i<CP_TILEIMP_MAX;i++)
+	sint32 i;
+	for	(i=0;i<CP_TILEIMP_MAX;i++)
 	{
 		if ((m_activatorButtons[i]!=NULL)&&(i<CP_TILEIMP_MAX))
 			m_activatorButtons[i]->SetActionFuncAndCookie(TileImpSelectionCallback,(void *)i);
@@ -3739,7 +3756,7 @@ Army
 ControlPanelWindow::UnitPanelGetCurrent()
 {
 	
-	Army army;
+	Army army(0);
 
 	
 	sint32 p_index = g_selected_item->GetVisiblePlayer();
@@ -4018,10 +4035,8 @@ ControlPanelWindow::ToggleTerraforming()
 	TileImpPanelRedisplay();
 }
 
-
-
 void	
-ControlPanelWindow::SetStack(Army &selectedArmy, CellUnitList *fullArmy, Unit singleUnit)
+ControlPanelWindow::SetStack(const Army &selectedArmy, CellUnitList *fullArmy, Unit singleUnit)
 {
 
 }

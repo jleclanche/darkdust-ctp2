@@ -29,8 +29,7 @@
 // - None
 //
 //----------------------------------------------------------------------------
-
-#if defined(_MSC_VER) && (_MSC_VER >= 1200)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 

@@ -13,7 +13,16 @@
 #ifndef _TRADEROUTE_H_
 #define _TRADEROUTE_H_
 
-class TradeRoute;
+#include "ctp2_enums.h"
+#include "ID.h"
+
+template <class T> class DynamicArray;
+class TradeRouteData;
+
+class Unit;
+class MapPoint;
+typedef sint32 PLAYER_INDEX;
+typedef sint32 StringId;
 
 enum CAUSE_KILL_TRADE_ROUTE {
 	CAUSE_KILL_TRADE_ROUTE_UNKNOWN,
@@ -30,31 +39,19 @@ enum CAUSE_KILL_TRADE_ROUTE {
 	CAUSE_KILL_TRADE_ROUTE_RESET,
 };
 
-enum ROUTE_TYPE {
-	ROUTE_TYPE_RESOURCE,
-	ROUTE_TYPE_FOOD,
-	ROUTE_TYPE_GOLD,
-	ROUTE_TYPE_SLAVE, 
-};
-
-
-#include "DB.h"     // StringId
-#include "ID.h"     // ID
-#include "Player.h" // PLAYER_INDEX
-
-template <class T> class DynamicArray;
-class TradeRouteData;
-class Unit;
-class MapPoint;
-
-
 class TradeRoute : public ID
 {
+private:
 public:
-	TradeRoute () : ID() { ; } ;
-	TradeRoute (sint32 val) : ID (val) { ; };
-	TradeRoute (uint32 val) : ID (val) { ; };
+	TradeRoute () : ID() { return; } ;
+	TradeRoute (sint32 val) : ID (val) { return; };
+	TradeRoute (uint32 val) : ID (val) { return; };
 
+#if defined WIN32
+	TradeRoute (const int val) : ID (val) { return; };
+	TradeRoute (const unsigned int val) : ID (val) { return; };
+#endif
+   
 	TradeRouteData *operator -> () const { return AccessData(); }
 	bool IsValid() const;
 
@@ -96,7 +93,7 @@ public:
 	BOOL IsSelectedPathSame();
 	BOOL IsPosInSelectedPath(const MapPoint &pos);
 	BOOL IsPosInPath(const MapPoint &pos);
-	void ClearSelectedCellData(TradeRoute &route);
+	void ClearSelectedCellData(const TradeRoute &route);
 	void UpdateSelectedCellData(TradeRoute &route);
 	sint32 GetPathSelectionState() const;
 	void SetPathSelectionState(sint32 state);
@@ -124,4 +121,6 @@ public:
 	void DontAdjustPointsWhenKilled();
 };
 
+#else
+class TradeRoute;
 #endif

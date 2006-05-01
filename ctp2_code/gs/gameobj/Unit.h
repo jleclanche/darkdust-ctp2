@@ -18,6 +18,9 @@
 //
 // Compiler flags
 // 
+// _MSC_VER
+// - Compiler version (for the Microsoft C++ compiler only)
+//
 // CTP1_TRADE
 // - Creates an executable with trade like in CTP1. Currently broken.
 //
@@ -39,7 +42,7 @@
 //
 //----------------------------------------------------------------------------
 
-#if defined(HAVE_PRAGMA_ONCE)
+#ifdef HAVE_PRAGMA_ONCE
 #pragma once
 #endif
 
@@ -48,191 +51,14 @@
 
 #include <string>
 
-class Unit;
-
-enum OPTIMISE_STATE {
-	OPTIMISE_STATE_NONE,
-	OPTIMISE_STATE_FOOD,
-	OPTIMISE_STATE_PRODUCTION,
-	OPTIMISE_STATE_GOLD,
-	OPTIMISE_STATE_HAPPINESS,
-	OPTIMISE_STATE_SCIENCE,
-	OPTIMISE_STATE_INVALID,
-} ;
-
-enum CITY_ATTITUDE { 
-   CITY_ATTITUDE_CONTENT,
-   CITY_ATTITUDE_WE_LOVE_THE_KING, 
-   CITY_ATTITUDE_HAPPY,
-   CITY_ATTITUDE_DISORDER,
-};
-
-enum RADIUS_OP {
-    RADIUS_OP_UKNOWN = -1, 
-	RADIUS_OP_REMOVE_IMPROVEMENTS = 0,
-	RADIUS_OP_KILL_UNITS,
-	RADIUS_OP_RESET_OWNER,
-	RADIUS_OP_KILL_TILE,
-	RADIUS_OP_ADD_GOODS,
-	RADIUS_OP_COUNT_GOODS,
-};
-
-enum CONVERTED_BY {
-	CONVERTED_BY_CLERIC,
-	CONVERTED_BY_TELEVANGELIST,
-	CONVERTED_BY_NOTHING
-};
-
-enum UPRISING_CAUSE {
-	UPRISING_CAUSE_NONE,
-	UPRISING_CAUSE_SLAVE_STARVED,
-	UPRISING_CAUSE_UNGUARDED_SLAVES,
-	UPRISING_CAUSE_INCITED,
-	UPRISING_CAUSE_INTERNAL, 
-};
-
-enum POP_TYPE {
-	POP_WORKER,
-	POP_SCIENTIST,
-	POP_ENTERTAINER,
-	POP_FARMER,
-	POP_LABORER,
-	POP_MERCHANT,
-	POP_SLAVE,
-	POP_MAX
-};
-
-enum UNIT_COMMAND {
-	UNIT_COMMAND_NEAREST_CITY,
-	UNIT_COMMAND_NEAREST_FORT,
-	UNIT_COMMAND_NEAREST_AIRFIELD,
-	UNIT_COMMAND_ENTRENCH,
-	UNIT_COMMAND_SLEEP
-};
-
-enum UNIT_ORDER_TYPE {
-	UNIT_ORDER_NONE,
-	UNIT_ORDER_MOVE,
-	UNIT_ORDER_PATROL,
-	UNIT_ORDER_CIRCULAR_PATROL,
-	UNIT_ORDER_ENTRENCH,
-	UNIT_ORDER_SLEEP,
-	UNIT_ORDER_DETRENCH,
-	UNIT_ORDER_UNLOAD,
-	UNIT_ORDER_MOVE_TO,
-	UNIT_ORDER_TELEPORT_TO,
-
-	
-	UNIT_ORDER_EXPEL_TO,
-	UNIT_ORDER_GROUP,
-	UNIT_ORDER_UNGROUP,
-	UNIT_ORDER_INVESTIGATE_CITY,
-	UNIT_ORDER_NULLIFY_WALLS,
-	UNIT_ORDER_STEAL_TECHNOLOGY,
-	UNIT_ORDER_INCITE_REVOLUTION,
-	UNIT_ORDER_ASSASSINATE,
-	UNIT_ORDER_INVESTIGATE_READINESS,
-	UNIT_ORDER_BOMBARD,
-
-	
-	UNIT_ORDER_SUE,
-	UNIT_ORDER_FRANCHISE,
-	UNIT_ORDER_SUE_FRANCHISE,
-	UNIT_ORDER_EXPEL,
-	UNIT_ORDER_ESTABLISH_EMBASSY,
-	UNIT_ORDER_THROW_PARTY,
-	UNIT_ORDER_CAUSE_UNHAPPINESS,
-	UNIT_ORDER_PLANT_NUKE,
-	UNIT_ORDER_SLAVE_RAID,
-	UNIT_ORDER_ENSLAVE_SETTLER,
-
-	
-	UNIT_ORDER_UNDERGROUND_RAILWAY,
-	UNIT_ORDER_INCITE_UPRISING,
-	UNIT_ORDER_BIO_INFECT,
-	UNIT_ORDER_NANO_INFECT,
-	UNIT_ORDER_CONVERT,
-	UNIT_ORDER_REFORM,
-	UNIT_ORDER_INDULGENCE,
-	UNIT_ORDER_SOOTHSAY,
-	UNIT_ORDER_CREATE_PARK,
-	UNIT_ORDER_PILLAGE,
-
-	
-	UNIT_ORDER_INJOIN,
-	UNIT_ORDER_INTERCEPT_TRADE,
-	UNIT_ORDER_PARADROP_MOVE,
-	UNIT_ORDER_SET_UNLOAD_MOVEMENT_POINTS,
-	UNIT_ORDER_GROUP_UNIT,
-	UNIT_ORDER_DISBAND,
-	UNIT_ORDER_FINISH_ATTACK,
-	UNIT_ORDER_UNLOAD_ONE_UNIT,
-	UNIT_ORDER_BOARD_TRANSPORT,
-	UNIT_ORDER_WAKE_UP,
-
-	
-	UNIT_ORDER_PILLAGE_UNCONDITIONALLY,
-	UNIT_ORDER_MOVE_THEN_UNLOAD,
-	UNIT_ORDER_ADVERTISE,
-    UNIT_ORDER_INFORM_AI_CAPTURE_CITY, 
-	UNIT_ORDER_UNLOAD_SELECTED_STACK,
-	UNIT_ORDER_ADD_EVENT,
-	UNIT_ORDER_SETTLE, 
-	UNIT_ORDER_LAUNCH,
-	UNIT_ORDER_TARGET,
-	UNIT_ORDER_CLEAR_TARGET,
-
-	
-	UNIT_ORDER_PLAGUE,
-	UNIT_ORDER_VICTORY_MOVE,
-
-	UNIT_ORDER_MAX
-};
-
-enum SPECATTACK {
-	SPECATTACK_NONE = -1,
-
-	SPECATTACK_NUKE,
-	SPECATTACK_HEARGOSSIP,
-	SPECATTACK_THROWPARTY,
-	SPECATTACK_ESTABLISHEMBASSY,
-	SPECATTACK_INCITEREVOLUTION,
-	SPECATTACK_BOMBCABINET,
-	SPECATTACK_CREATEFRANCHISE,
-	SPECATTACK_CAUSEUNHAPPINESS,
-	SPECATTACK_CONDUCTHIT,
-	SPECATTACK_BIOTERROR,
-	SPECATTACK_NANOTERROR,
-	SPECATTACK_SLAVERAID,
-	SPECATTACK_ENSLAVESETTLER,
-	SPECATTACK_SLAVEUPRISING,
-	SPECATTACK_FREESLAVES,
-	SPECATTACK_SELLINDULGENCE,
-	SPECATTACK_CONVERTCITY,
-	SPECATTACK_PLANTNUKE,
-	SPECATTACK_SOOTHSAY,
-	SPECATTACK_CREATEPARK,
-	SPECATTACK_INJOIN,
-	SPECATTACK_SPY,
-	SPECATTACK_STEALTECH,
-	SPECATTACK_REVOLUTION,
-	SPECATTACK_REFORMCITY,
-
-	SPECATTACK_MAX
-};
-
+#include "ctp2_enums.h"
 #include "ID.h"
 #include "dbtypes.h"
-#include "directions.h"     // WORLD_DIRECTION
 #include "gstypes.h"
-#include "Advances.h"       // AdvanceType
-#include "AICause.h"        // CAUSE_...
-#include "HappyTracker.h"   // HAPPY_REASON
-#include "MapPoint.h"       // MapPoint
-#include "Order.h"          // ORDER_RESULT
-#include "OrderRecord.h"    // For order valid check
+#include "AICause.h"
+#include "OrderRecord.h" // For order valid check
 
-class CityData;
+class MapPoint;
 class UnitData;
 class UnitRecord; 
 class UnitDynamicArray;
@@ -243,15 +69,20 @@ class Resources;
 class Army;
 class CellUnitList;
 class SlicObject;
+class CityData;
 class aui_Surface;
 
 #define k_UNIT_VERSION_MAJOR    0
 #define k_UNIT_VERSION_MINOR    0
 
+enum CAUSE_REMOVE_ARMY;
+enum CAUSE_REMOVE_CITY; 
+enum CAUSE_NEW_ARMY;
+typedef sint32 AdvanceType;
 
-class Unit : public ID 
-{
-private:
+enum WORLD_DIRECTION;
+
+class Unit : public ID {
 	void RemoveAllReferences(const CAUSE_REMOVE_ARMY cause, sint32 killedBy);
 
 public:
@@ -259,6 +90,10 @@ public:
 	Unit (sint32 val) : ID (val) { return; };
 	Unit (uint32 val) : ID (val) { return; };
 	Unit (ID i) : ID (i.m_id) { return; };
+#if defined(WIN32)
+	Unit (const int val) : ID (val) { return; };
+	Unit (const unsigned int val) : ID (val) { return; };
+#endif
 	
 	UnitData *operator -> () const { return AccessData(); }
 #ifdef _DEBUG
@@ -267,6 +102,7 @@ public:
 #endif
 
 	const UnitRecord * GetDBRec() const;
+	const UnitRecord * GetDBRec(UnitData *u) const;
 	const UnitData * GetData(void) const;
 	UnitData * AccessData(void) const; 
 	void KillUnit(const CAUSE_REMOVE_ARMY cause, PLAYER_INDEX killedBy);
@@ -314,7 +150,6 @@ public:
 	sint32 GetFirstMoveThisTurn() const;
 
 	sint32 GetShieldHunger() const;
-	sint32 GetGoldHunger() const;
 	sint32 GetFoodHunger() const;
 
 	sint32 IsIgnoresZOC() const;
@@ -323,7 +158,6 @@ public:
 	sint32 GetMovementTypeSea() const;
 	sint32 GetMovementTypeShallowWater() const;
 	sint32 GetMovementTypeAir() const;
-	sint32 GetAllTerrainAsImprovement() const;  //EMOD
 	sint32 GetMovementTypeSpace() const;
 	sint32 GetMovementTypeMountain() const;
 	sint32 IsSameMovementType(uint32 bit_field) const;
@@ -367,7 +201,6 @@ public:
 	BOOL CanBeachAssault() const;
 
 	bool IsImmobile()const; //PFT
-	bool CantGroup()const; //by E
 	sint32 ResetMovement();
 
 	BOOL CanExpelPop()const;
@@ -543,7 +376,7 @@ public:
 
 	
 	void SetSpriteState(SpriteState *s);
-	SpriteState * GetSpriteState() const;
+	SpriteState * GetSpriteState();
 	void SetActor(UnitActor *a);
 	UnitActor * GetActor();
 
@@ -585,7 +418,7 @@ public:
 	BOOL HasForceField() const;
 
 	ORDER_RESULT InvestigateCity(Unit &c);
-	ORDER_RESULT StealTechnology(Unit &c, sint32 whichAdvance);
+	ORDER_RESULT StealTechnology(const Unit &c, sint32 whichAdvance);
 	ORDER_RESULT InciteRevolution(Unit &c);
 	ORDER_RESULT AssassinateRuler(Unit &c);
 	ORDER_RESULT InvestigateReadiness(Unit &c);
@@ -647,7 +480,7 @@ public:
 	void Cloak();
 	void Uncloak();
 
-#if 0 // CTP1 space layer
+#if 0
 	BOOL CanOpenRiftGate() const;
 	BOOL HasOpenRiftGate(MapPoint &destination) const;
 	BOOL OpenRiftGate(const MapPoint &destination);
@@ -751,7 +584,7 @@ public:
 
 	void AddEndGameObject(sint32 type);
 
-	BOOL SendSlaveTo(Unit &dest);
+	BOOL SendSlaveTo(const Unit &dest);
 
 	void SetFullHappinessTurns(sint32 turns);
 
@@ -790,5 +623,8 @@ public:
 };
 
 uint32 Unit_Unit_GetVersion(void) ;
+#else
+
+class Unit;
 
 #endif

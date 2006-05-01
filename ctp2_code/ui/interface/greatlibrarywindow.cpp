@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : The window of the Great Libary
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -24,7 +24,7 @@
 //
 // Modifications from the original Activision code:
 //
-// - Memory leaks repaired in LoadText by Martin Gühmann.
+// - Memory leaks repaired in LoadText by MartinGühmann.
 // - Added variable and requirement retriever methods. (Sep 13th 2005 Martin Gühmann)
 //
 //----------------------------------------------------------------------------
@@ -96,6 +96,7 @@
 
 const int GreatLibraryWindow::GREAT_LIBRARY_PANEL_BLANK = 999;
 
+extern ColorSet						*g_colorSet;
 extern CivPaths						*g_civPaths;
 extern sint32						g_ScreenWidth;
 extern sint32						g_ScreenHeight;
@@ -259,6 +260,7 @@ GreatLibraryWindow::~GreatLibraryWindow()
 
 AUI_ERRCODE GreatLibraryWindow::Idle ( void )
 {
+#ifdef WIN32
 	if ( !m_techMovie ) return AUI_ERRCODE_OK;
 
 	if ( m_techMovie->Open() ) {
@@ -271,7 +273,7 @@ AUI_ERRCODE GreatLibraryWindow::Idle ( void )
 			m_techMovie = NULL;
 		}
 	}
-
+#endif
 	return AUI_ERRCODE_OK;
 }
 
@@ -299,6 +301,7 @@ AUI_ERRCODE GreatLibraryWindow::Idle ( void )
 //----------------------------------------------------------------------------
 sint32 GreatLibraryWindow::LoadText(ctp2_HyperTextBox *textbox, char *filename, SlicObject &so)
 {
+    char *text;
 
 
     if (textbox == NULL)
@@ -311,11 +314,11 @@ sint32 GreatLibraryWindow::LoadText(ctp2_HyperTextBox *textbox, char *filename, 
 	strcpy(lower_case_filename, filename);
 
 	
-	for (int j = 0; j < strlen(lower_case_filename); j++)
+	for (int j = 0; (unsigned) j < strlen(lower_case_filename); j++)
 		lower_case_filename[j] = tolower(lower_case_filename[j]);
 
 	
-    char * text = GreatLibrary::m_great_library_info->Look_Up_Data(lower_case_filename);
+	text = GreatLibrary::m_great_library_info->Look_Up_Data(lower_case_filename);
 
 	delete [] lower_case_filename;
 
@@ -376,8 +379,8 @@ sint32 GreatLibraryWindow::LoadVariablesText ( SlicObject &so )
 
 sint32 GreatLibraryWindow::LoadTechMovie ( void )
 {
+#ifdef WIN32
 	MBCHAR fullPath[256];
-
 	
 	if (!m_techMovie) return 0;
 	if (!strcmp(m_movie_file,"null")) return 0;
@@ -397,7 +400,9 @@ sint32 GreatLibraryWindow::LoadTechMovie ( void )
 
 
 	return 1;
-
+#else
+	return 0;
+#endif
 }
 
 sint32 GreatLibraryWindow::LoadTechStill( void )
@@ -423,15 +428,17 @@ sint32 GreatLibraryWindow::LoadTechStill( void )
 
 void GreatLibraryWindow::PlayTechMovie ( void )
 {
+#ifdef WIN32
 	m_techMovie->PlayAll();
+#endif
 }
 
 sint32 GreatLibraryWindow::SetTechMode ( sint32 theMode, DATABASE theDatabase )
 {
-	m_mode      = theMode;
-	m_database  = theDatabase;
+	m_mode = theMode;
+	m_database = theDatabase;
 
-	const IconRecord *  iconRec = NULL;
+	const IconRecord *iconRec = NULL;
 
 	
 	switch ( theDatabase ) {
@@ -609,7 +616,7 @@ char * GreatLibraryWindow::GetIconRecText
 			return NULL;
 
 		
-		for (int j = 0; j < strlen(lower_case_filename); j++)
+		for (int j = 0; (unsigned) j < strlen(lower_case_filename); j++)
 			lower_case_filename[j] = tolower(lower_case_filename[j]);
 
 		

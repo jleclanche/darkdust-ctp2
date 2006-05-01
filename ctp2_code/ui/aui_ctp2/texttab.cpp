@@ -26,13 +26,15 @@
 
 #include "primitives.h"
 
-#include "colorset.h"           // g_colorSet
+#include "colorset.h"
 #include "textutils.h"
 
 #include "texttab.h"
 
-#include "SlicEngine.h"         // g_slicEngine
+#include "SlicEngine.h"
 
+extern ColorSet		*g_colorSet;
+extern SlicEngine	*g_slicEngine;
 extern C3UI			*g_c3ui;
 
 

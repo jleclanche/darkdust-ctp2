@@ -3,7 +3,7 @@
 // Project      : Call To Power 2
 // File type    : C++ source
 // Description  : The load/save map window
-// Id           : $Id$
+// Id           : $Id:$
 //
 //----------------------------------------------------------------------------
 //
@@ -484,7 +484,7 @@ void LoadSaveMapWindow::GetRadarMap(SaveMapInfo *info)
 	if (!radarMap) return;
 
 	
-	aui_DirectSurface	*surf = (aui_DirectSurface *)radarMap->GetMapSurface();
+	aui_Surface	*surf = (aui_Surface *)radarMap->GetMapSurface();
 
 	radarMap->RenderMap(surf);	
 
