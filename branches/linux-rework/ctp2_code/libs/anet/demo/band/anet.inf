@@ -1,9 +1,0 @@
-[ActiveNet]
-Cmdline=-f band.in
-Name=band
-Run=band.exe
-SessionType=64
-Platform=1
-Language=1
-Version=0.9
-ShellOpts=/oldconsole

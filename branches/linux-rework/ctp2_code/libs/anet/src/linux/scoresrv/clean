@@ -1,6 +1,0 @@
-#!/bin/sh
-# Clean for score server
-rm -fr normal
-rm -fr debug
-rm -fr profile
-rm -fr log

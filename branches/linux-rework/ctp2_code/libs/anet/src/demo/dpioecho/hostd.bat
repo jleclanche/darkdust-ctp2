@@ -1,1 +1,0 @@
-dpioechod -n=anet\winets2d.dll

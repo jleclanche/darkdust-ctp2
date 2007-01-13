@@ -1,6 +1,0 @@
-# remote enum player server
-# Create a session with one player, sit around for 2 minutes plus change.
-host
-newp foo
-sleep 150
-quit

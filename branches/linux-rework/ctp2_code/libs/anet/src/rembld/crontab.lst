@@ -1,3 +1,0 @@
-# crontab entries for build server
-#
-*/5 * * * * ~/build/restartb >> /dev/null
