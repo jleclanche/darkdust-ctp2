@@ -1,0 +1,192 @@
+# 11
+
+// Note: first personality is always used for the barbarians and should never be used
+// for normal AI's because it effects what strategies they use.
+PERSONALITY_KAHN {
+  Exploration: Wide
+  Expansion: Maximum
+  Discovery: Military
+  Conquest: Agressive
+  Trustworthiness: Chaotic
+  Alignment: Evil
+
+  StrongGreeting DIP_GREETING_FIRST_FOREIGN_4
+  WeakGreeting DIP_GREETING_FIRST_FOREIGN_3
+
+  ThreatFollowThrough 0.5
+  Description PERSONALITY_KAHN_DESCRIPTION
+}
+
+PERSONALITY_GHANDI {
+  Exploration: Minimal
+  Expansion: Minimum
+  Discovery: Military
+  Conquest: Passive
+  Trustworthiness: Lawful
+  Alignment: Good
+
+  StrongGreeting DIP_GREETING_FIRST_FOREIGN_1
+  WeakGreeting DIP_GREETING_FIRST_FOREIGN_2
+
+  Description PERSONALITY_CEASAR_DESCRIPTION
+
+  ThreatFollowThrough 0.9
+}
+
+PERSONALITY_STALIN {
+  Exploration: Minimal
+  Expansion: Average
+  Discovery: Military
+  Conquest: Agressive
+  Trustworthiness: Chaotic
+  Alignment: Evil
+
+  StrongGreeting DIP_GREETING_FIRST_FOREIGN_4
+  WeakGreeting DIP_GREETING_FIRST_FOREIGN_3
+
+  ThreatFollowThrough 0.8
+  Description PERSONALITY_STALIN_DESCRIPTION
+}
+
+PERSONALITY_CEASAR {
+  Exploration: Medium
+  Expansion: Maximum
+  Discovery: Military
+  Conquest: Agressive
+  Trustworthiness: Lawful
+  Alignment: Neutral
+
+  StrongGreeting DIP_GREETING_FIRST_FOREIGN_0
+  WeakGreeting DIP_GREETING_FIRST_FOREIGN_3
+
+  ThreatFollowThrough 0.9
+  Description PERSONALITY_CEASAR_DESCRIPTION
+}
+
+PERSONALITY_DEGAULLE {
+  Exploration: Medium
+  Expansion: Average
+  Discovery: Military
+  Conquest: Neutral
+  Trustworthiness: Lawful
+  Alignment: Good
+
+  StrongGreeting DIP_GREETING_FIRST_FOREIGN_0
+  WeakGreeting DIP_GREETING_FIRST_FOREIGN_2
+
+  ThreatFollowThrough 0.9
+
+  Description PERSONALITY_DEGAULLE_DESCRIPTION
+}
+
+PERSONALITY_MEDICI {
+  Exploration: Minimal
+  Expansion: Minimum
+  Discovery: Military
+  Conquest: Passive
+  Trustworthiness: Lawful
+  Alignment: Good
+
+  StrongGreeting DIP_GREETING_FIRST_FOREIGN_1
+  WeakGreeting DIP_GREETING_FIRST_FOREIGN_2
+
+  Description PERSONALITY_CEASAR_DESCRIPTION
+
+  ThreatFollowThrough 0.9
+}
+
+PERSONALITY_TELLER {
+  Exploration: Minimal
+  Expansion: Average
+  Discovery: Scientist
+  Conquest: Agressive
+  Trustworthiness: Lawful
+  Alignment: Neutral
+
+  StrongGreeting DIP_GREETING_FIRST_FOREIGN_0
+  WeakGreeting DIP_GREETING_FIRST_FOREIGN_2
+
+  ThreatFollowThrough 0.9
+
+  Description PERSONALITY_TELLER_DESCRIPTION
+}
+
+PERSONALITY_STRANGELOVE {
+  Exploration: Medium
+  Expansion: Average
+  Discovery: Scientist
+  Conquest: Agressive
+  Trustworthiness: Chaotic
+  Alignment: Evil
+
+  StrongGreeting DIP_GREETING_FIRST_FOREIGN_4
+  WeakGreeting DIP_GREETING_FIRST_FOREIGN_2
+
+  ThreatFollowThrough 0.7
+
+  Description PERSONALITY_STRANGELOVE_DESCRIPTION
+}
+
+PERSONALITY_CALLENBACH {
+  Exploration: Medium
+  Expansion: Average
+  Discovery: Military
+  Conquest: Agressive
+  Trustworthiness: Chaotic
+  Alignment: Evil
+
+  Description PERSONALITY_STALIN_DESCRIPTION
+
+  StrongGreeting DIP_GREETING_FIRST_FOREIGN_4
+  WeakGreeting DIP_GREETING_FIRST_FOREIGN_4
+
+  ThreatFollowThrough 0.5
+}
+
+PERSONALITY_ALEXANDER1 {
+  Exploration: Minimal
+  Expansion: Minimum
+  Discovery: Military
+  Conquest: Passive
+  Trustworthiness: Lawful
+  Alignment: Good
+
+  StrongGreeting DIP_GREETING_FIRST_FOREIGN_1
+  WeakGreeting DIP_GREETING_FIRST_FOREIGN_2
+
+  Description PERSONALITY_CEASAR_DESCRIPTION
+
+  ThreatFollowThrough 0.9
+}
+
+PERSONALITY_ALEXANDER2 {
+  Exploration: Minimal
+  Expansion: Minimum
+  Discovery: Military
+  Conquest: Neutral
+  Trustworthiness: Neutral
+  Alignment: Neutral
+
+  StrongGreeting DIP_GREETING_FIRST_FOREIGN_3
+  WeakGreeting DIP_GREETING_FIRST_FOREIGN_3
+
+  Description PERSONALITY_DEGAULLE_DESCRIPTION
+
+  ThreatFollowThrough 0.7
+}
+
+PERSONALITY_ALEXANDER3 {
+  Exploration: Medium
+  Expansion: Average
+  Discovery: Military
+  Conquest: Agressive
+  Trustworthiness: Chaotic
+  Alignment: Evil
+
+  Description PERSONALITY_STALIN_DESCRIPTION
+
+  StrongGreeting DIP_GREETING_FIRST_FOREIGN_4
+  WeakGreeting DIP_GREETING_FIRST_FOREIGN_4
+
+  ThreatFollowThrough 0.5
+}
